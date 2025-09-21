@@ -82,6 +82,20 @@ export const getPhotosForConsultation = async (consultationId: number): Promise<
 };
 
 /**
+ * Elimina todas las fotos asociadas a una consulta o borrador específico.
+ * Útil para limpiar un borrador cuando se inicia una nueva consulta.
+ */
+export const deletePhotosForConsultation = async (consultationId: number): Promise<void> => {
+  try {
+    const dbInstance = await db;
+    await dbInstance.runAsync('DELETE FROM photos WHERE consultation_id = ?', consultationId);
+  } catch (error) {
+    console.error('Error deleting photos for consultation:', error);
+    throw new Error('No se pudieron eliminar las fotos.');
+  }
+};
+
+/**
  * Mueve todas las fotos asociadas a un borrador (draftId) a una consulta existente (consultationId).
  * Útil en el flujo de edición para preservar las fotos nuevas al guardar.
  */
@@ -99,7 +113,7 @@ export const moveDraftPhotosToConsultation = async (draftId: number, consultatio
   }
 };
 
-export const finalizeConsultation = async (draftId: number, patientId: number, consultationData: NewConsultation): Promise<number> => {
+export const finalizeConsultation = async (draftId: number, patientId: number, consultationData: any): Promise<number> => {
   try {
     const dbInstance = await db;
     const result = await dbInstance.runAsync(
@@ -199,14 +213,14 @@ export const createDraftFromConsultation = async (patientId: number, consultatio
         consultationData.medical_conditions = JSON.parse(consultationData.medical_conditions);
       } catch {
         // Si falla el parseo, se asigna un valor por defecto seguro
-        consultationData.medical_conditions = [];
+        (consultationData as any).medical_conditions = [] as any;
       }
     }
     if (typeof consultationData.habits === 'string') {
       try {
         consultationData.habits = JSON.parse(consultationData.habits);
       } catch {
-        consultationData.habits = {};
+        (consultationData as any).habits = {} as any;
       }
     }
 
@@ -238,7 +252,7 @@ export const createDraftFromConsultation = async (patientId: number, consultatio
  * @param consultationId El ID de la consulta a actualizar.
  * @param data El objeto con los nuevos datos para la consulta.
  */
-export const updateConsultation = async (consultationId: number, data: NewConsultation): Promise<void> => {
+export const updateConsultation = async (consultationId: number, data: any): Promise<void> => {
   try {
     const dbInstance = await db;
     await dbInstance.runAsync(

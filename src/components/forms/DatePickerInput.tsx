@@ -6,14 +6,16 @@ interface DatePickerInputProps {
   title: string;
   date: Date | null;
   onDateChange: (newDate: Date) => void;
+  disabled?: boolean;
 }
 
-export const DatePickerInput = ({ title, date, onDateChange }: DatePickerInputProps) => {
+export const DatePickerInput = ({ title, date, onDateChange, disabled = false }: DatePickerInputProps) => {
   const [showPicker, setShowPicker] = useState(false);
 
   const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
     // En Android el picker se cierra solo, en iOS no.
     setShowPicker(Platform.OS === 'ios');
+    if (disabled) return;
     if (event.type === 'set' && selectedDate) {
       onDateChange(selectedDate);
     }
@@ -26,9 +28,9 @@ export const DatePickerInput = ({ title, date, onDateChange }: DatePickerInputPr
   return (
     <View style={styles.container}>
       <Text style={styles.title}>{title}</Text>
-      <Pressable onPress={() => setShowPicker(true)}>
-        <View style={styles.inputBox}>
-          <Text style={styles.dateText}>{formattedDate}</Text>
+      <Pressable disabled={disabled} onPress={() => !disabled && setShowPicker(true)}>
+        <View style={[styles.inputBox, disabled && styles.inputBoxDisabled]}>
+          <Text style={[styles.dateText, disabled && styles.dateTextDisabled]}>{formattedDate}</Text>
         </View>
       </Pressable>
 
@@ -63,8 +65,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
   },
+  inputBoxDisabled: {
+    backgroundColor: '#f7f7f7',
+    borderColor: '#ddd',
+  },
   dateText: {
     fontSize: 16,
     color: '#333',
+  },
+  dateTextDisabled: {
+    color: '#666',
   },
 });

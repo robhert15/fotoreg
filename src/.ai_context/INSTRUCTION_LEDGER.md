@@ -354,3 +354,35 @@
 - **Artefactos Generados:**
   - Nueva función `deleteDraft` en la API de datos.
   - Lógica de guardado condicional en `handleFinalSave` en `NewConsultationScreen.tsx`.
+
+
+  ---
+## Tarea (Edición In-Place): Extracción de ConsultationForm
+
+- **ID:** `REFACTOR-FORM-001`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para la refactorización principal: extraer la UI y lógica del formulario de `NewConsultationScreen` a un nuevo componente reutilizable `ConsultationForm`.
+- **Artefactos Generados:**
+  - Instrucción para IA Desarrolladora.
+  - Creación del esqueleto de `src/components/forms/ConsultationForm.tsx`.
+  - Simplificación de `src/screens/NewConsultationScreen.tsx`.
+
+  ---
+## Tarea (Edición In-Place): Implementación en Detalle
+
+- **ID:** `REFACTOR-EDIT-002`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para refactorizar por completo `ConsultationDetailScreen`. Ahora utiliza el componente `ConsultationForm` y contiene toda la lógica de estado para alternar entre los modos de solo lectura y edición, así como los botones y funciones para guardar o cancelar los cambios.
+- **Artefactos Generados:**
+  - Instrucción para IA Desarrolladora.
+  - Implementación completa de la lógica de edición "in-place" en `src/screens/ConsultationDetailScreen.tsx`.
+
+  ---
+## Tarea (Edición In-Place): Limpieza Arquitectónica
+
+- **ID:** `REFACTOR-CLEANUP-003`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para simplificar `NewConsultationScreen`, eliminando la lógica de edición redundante. El componente ahora se adhiere al Principio de Responsabilidad Única, dedicándose exclusivamente a la creación de nuevas consultas.
+- **Artefactos Generados:**
+  - Instrucción para IA Desarrolladora.
+  - Refactorización y simplificación de `src/screens/NewConsultationScreen.tsx`.

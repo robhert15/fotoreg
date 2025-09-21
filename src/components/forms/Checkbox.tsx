@@ -7,15 +7,16 @@ interface CheckboxProps {
   label: string;
   isChecked: boolean;
   onPress: () => void;
+  disabled?: boolean;
 }
 
-const Checkbox = ({ label, isChecked, onPress }: CheckboxProps) => {
+const Checkbox = ({ label, isChecked, onPress, disabled = false }: CheckboxProps) => {
   return (
-    <Pressable style={styles.checkboxContainer} onPress={onPress}>
-      <View style={[styles.checkboxBase, isChecked && styles.checkboxChecked]}>
+    <Pressable style={[styles.checkboxContainer, disabled && styles.disabled]} onPress={onPress} disabled={disabled}>
+      <View style={[styles.checkboxBase, isChecked && styles.checkboxChecked, disabled && styles.checkboxDisabled]}>
         {isChecked && <Ionicons name="checkmark" size={18} color="white" />}
       </View>
-      <Text style={styles.checkboxLabel}>{label}</Text>
+      <Text style={[styles.checkboxLabel, disabled && styles.checkboxLabelDisabled]}>{label}</Text>
     </Pressable>
   );
 };
@@ -26,12 +27,14 @@ interface CheckboxGroupProps {
   options: string[];
   selectedOptions?: string[]; // permite controlar la selección desde el componente padre
   onSelectionChange: (selected: string[]) => void;
+  disabled?: boolean;
 }
 
-export const CheckboxGroup = ({ title, options, onSelectionChange, selectedOptions: controlledSelected }: CheckboxGroupProps) => {
+export const CheckboxGroup = ({ title, options, onSelectionChange, selectedOptions: controlledSelected, disabled = false }: CheckboxGroupProps) => {
   const selectedOptions = controlledSelected || [];
 
   const handleToggle = (option: string) => {
+    if (disabled) return;
     const newSelection = selectedOptions.includes(option)
       ? selectedOptions.filter((item) => item !== option)
       : [...selectedOptions, option];
@@ -47,6 +50,7 @@ export const CheckboxGroup = ({ title, options, onSelectionChange, selectedOptio
           label={option}
           isChecked={selectedOptions.includes(option)}
           onPress={() => handleToggle(option)}
+          disabled={disabled}
         />
       ))}
     </View>
@@ -81,8 +85,18 @@ const styles = StyleSheet.create({
   checkboxChecked: {
     backgroundColor: '#007bff',
   },
+  checkboxDisabled: {
+    borderColor: '#bbb',
+    backgroundColor: '#e9ecef',
+  },
   checkboxLabel: {
     fontSize: 16,
     color: '#333',
+  },
+  checkboxLabelDisabled: {
+    color: '#888',
+  },
+  disabled: {
+    opacity: 0.6,
   },
 });
