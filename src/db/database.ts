@@ -37,11 +37,12 @@ export const initializeDatabase = async () => {
         FOREIGN KEY (patient_id) REFERENCES patients (id)
       );`,
       // Tabla de Fotos
-      `CREATE TABLE IF NOT EXISTS photos (
+      `DROP TABLE IF EXISTS photos;`,
+      `CREATE TABLE photos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         consultation_id INTEGER NOT NULL,
         local_uri TEXT NOT NULL,
-        stage TEXT NOT NULL CHECK(stage IN ('antes', 'despues')),
+        stage TEXT NOT NULL CHECK(stage IN ('antes', 'despues', 'voucher')),
         taken_at TEXT NOT NULL
       );`,
     ];

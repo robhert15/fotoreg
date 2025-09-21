@@ -50,7 +50,7 @@ export const updateDraft = async (draftId: number, data: Partial<NewConsultation
   }
 };
 
-export const addPhoto = async (consultationId: number, uri: string, stage: 'antes' | 'despues'): Promise<void> => {
+export const addPhoto = async (consultationId: number, uri: string, stage: 'antes' | 'despues' | 'voucher'): Promise<void> => {
   try {
     const dbInstance = await db;
     const now = new Date().toISOString();

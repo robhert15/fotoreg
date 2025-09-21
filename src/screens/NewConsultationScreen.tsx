@@ -10,7 +10,7 @@ import {
   deleteDraft,
 } from '@/db/api/consultations';
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
-import { Colors } from '@/constants/theme';
+import { globalStyles } from '@/styles/globalStyles';
 
 // --- FIN componentes internos ---
 
@@ -106,11 +106,11 @@ export default function NewConsultationScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Nueva Consulta</Text>
+    <SafeAreaView style={globalStyles.container}>
+      <View style={globalStyles.header}>
+        <Text style={globalStyles.title}>Nueva Consulta</Text>
       </View>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
         <ConsultationForm
           formData={formData}
           setFormData={setFormData}
@@ -118,57 +118,14 @@ export default function NewConsultationScreen() {
           draftId={draftId}
         />
       </ScrollView>
-      <View style={styles.footer}>
-        <Pressable style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
-          <Text style={styles.buttonText}>Cancelar</Text>
+      <View style={globalStyles.footer}>
+        <Pressable style={[globalStyles.button, globalStyles.buttonCancel, { marginRight: 10 }]} onPress={handleCancel}>
+          <Text style={globalStyles.buttonText}>Cancelar</Text>
         </Pressable>
-        <Pressable style={[styles.button, styles.saveButton]} onPress={handleFinalSave}>
-          <Text style={styles.buttonText}>Guardar Consulta</Text>
+        <Pressable style={[globalStyles.button, globalStyles.buttonPrimary, { marginLeft: 10 }]} onPress={handleFinalSave}>
+          <Text style={globalStyles.buttonText}>Guardar Consulta</Text>
         </Pressable>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.background },
-  header: {
-    backgroundColor: Colors.white,
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.lightGray,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  scroll: { flex: 1 },
-  content: { padding: 16, paddingBottom: 120, flexGrow: 1 },
-  footer: {
-    flexDirection: 'row',
-    padding: 20,
-    backgroundColor: Colors.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.lightGray,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButton: {
-    backgroundColor: Colors.primary,
-    marginLeft: 10,
-  },
-  cancelButton: {
-    backgroundColor: '#6c757d',
-    marginRight: 10,
-  },
-  buttonText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});

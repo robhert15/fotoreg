@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Pressable
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { getConsultationById, updateConsultation, createDraftFromConsultation, moveDraftPhotosToConsultation, deleteDraft } from '@/db/api/consultations';
 import { Consultation } from '@/types';
-import { Colors } from '@/constants/theme';
+import { globalStyles } from '@/styles/globalStyles';
+import { Colors } from '@/constants/theme'; // Keep for ActivityIndicator color
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
 
 
@@ -91,12 +92,12 @@ export default function ConsultationDetailScreen() {
   };
 
   if (loading) {
-    return <View style={styles.centered}><ActivityIndicator size="large" color={Colors.primary} /></View>;
+    return <View style={[globalStyles.container, { justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={Colors.light.primary} /></View>;
   }
 
   return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <View style={globalStyles.container}>
+      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
         <ConsultationForm
           formData={consultation as any}
           setFormData={setConsultation as any}
@@ -106,19 +107,19 @@ export default function ConsultationDetailScreen() {
         />
       </ScrollView>
       
-      <View style={styles.footer}>
+      <View style={globalStyles.footer}>
         {isEditing ? (
           <>
-            <Pressable style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
-              <Text style={styles.buttonText}>Cancelar</Text>
+            <Pressable style={[globalStyles.button, globalStyles.buttonCancel, { marginRight: 10 }]} onPress={handleCancel}>
+              <Text style={globalStyles.buttonText}>Cancelar</Text>
             </Pressable>
-            <Pressable style={[styles.button, styles.saveButton]} onPress={handleSave}>
-              <Text style={styles.buttonText}>Guardar Cambios</Text>
+            <Pressable style={[globalStyles.button, globalStyles.buttonPrimary, { marginLeft: 10 }]} onPress={handleSave}>
+              <Text style={globalStyles.buttonText}>Guardar Cambios</Text>
             </Pressable>
           </>
         ) : (
-          <Pressable style={[styles.button, styles.editButton]} onPress={handleStartEdit}>
-            <Text style={styles.buttonText}>Editar</Text>
+          <Pressable style={[globalStyles.button, globalStyles.buttonPrimary]} onPress={handleStartEdit}>
+            <Text style={globalStyles.buttonText}>Editar</Text>
           </Pressable>
         )}
       </View>
@@ -126,38 +127,3 @@ export default function ConsultationDetailScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
-  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  content: { padding: 16, paddingBottom: 120 },
-  footer: {
-    flexDirection: 'row',
-    padding: 20,
-    backgroundColor: Colors.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.lightGray,
-  },
-  button: {
-    flex: 1,
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editButton: {
-    backgroundColor: Colors.primary,
-  },
-  saveButton: {
-    backgroundColor: Colors.primary,
-    marginLeft: 10,
-  },
-  cancelButton: {
-    backgroundColor: '#6c757d',
-    marginRight: 10,
-  },
-  buttonText: {
-    color: Colors.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});

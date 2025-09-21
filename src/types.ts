@@ -46,6 +46,6 @@ export interface Photo {
   id: number;
   consultation_id: number;
   local_uri: string;
-  stage: 'antes' | 'despues';
+  stage: 'antes' | 'despues' | 'voucher';
   taken_at: string;
 }

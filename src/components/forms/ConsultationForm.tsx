@@ -1,11 +1,12 @@
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert, ScrollView } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert } from 'react-native';
+import { globalStyles } from '@/styles/globalStyles';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { DatePickerInput } from './DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
 import { RadioGroup } from './RadioGroup';
 import ImageViewing from 'react-native-image-viewing';
-import { NewConsultation, Photo } from '@/types';
+import { NewConsultation, Photo } from '@/types/index';
 import { addPhoto, getPhotosForConsultation } from '@/db/api/consultations';
 
 export interface ConsultationFormProps {
@@ -15,6 +16,7 @@ export interface ConsultationFormProps {
   draftId: number | null;
   consultationId?: number; // para combinar fotos en modo edición/lectura
 }
+
 
 export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   formData,
@@ -28,7 +30,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   // ---------- Handlers de campos simples ----------
   const handleSimpleChange = (
     field: keyof NewConsultation,
-    value: string | boolean | null
+    value: any
   ) => {
     if (isReadOnly) return;
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -108,7 +110,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
     }, [draftId, consultationId])
   );
 
-  const handleTakePhoto = (stage: 'antes' | 'despues') => {
+  const handleTakePhoto = (stage: 'antes' | 'despues' | 'voucher') => {
     if (isReadOnly) return;
     if (!draftId) {
       Alert.alert('Error', 'No se puede añadir una foto sin un borrador activo.');
@@ -129,9 +131,23 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
   const beforePhotos = photos.filter((p) => p.stage === 'antes');
   const afterPhotos = photos.filter((p) => p.stage === 'despues');
+  const voucherPhotos = photos.filter((p) => p.stage === 'voucher');
 
-  const openViewer = (group: 'antes' | 'despues', startIndex: number) => {
-    const groupList = (group === 'antes' ? beforePhotos : afterPhotos).map((p) => ({ uri: p.local_uri }));
+  const openViewer = (group: 'antes' | 'despues' | 'voucher', startIndex: number) => {
+    let groupList: { uri: string }[] = [];
+    switch (group) {
+      case 'antes':
+        groupList = beforePhotos.map((p) => ({ uri: p.local_uri }));
+        break;
+      case 'despues':
+        groupList = afterPhotos.map((p) => ({ uri: p.local_uri }));
+        break;
+      case 'voucher':
+        groupList = voucherPhotos.map((p) => ({ uri: p.local_uri }));
+        break;
+      default:
+        groupList = [];
+    }
     setViewerImages(groupList);
     setViewerIndex(startIndex);
     setViewerVisible(true);
@@ -139,15 +155,15 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
   const renderPhotoItem = ({ item, index }: { item: Photo; index: number }) => (
     <Pressable onPress={() => openViewer(item.stage, index)}>
-      <Image source={{ uri: item.local_uri }} style={styles.thumbnail} />
+      <Image source={{ uri: item.local_uri }} style={globalStyles.thumbnail} />
     </Pressable>
   );
 
   return (
     <View>
       {/* Consulta */}
-      <Text style={styles.sectionTitle}>Consulta</Text>
-      <View style={styles.sectionBox}>
+      <Text style={globalStyles.sectionTitle}>Consulta</Text>
+      <View style={globalStyles.sectionBox}>
         <DatePickerInput
           title="Fecha de la Consulta"
           date={formData.consultation_date ? new Date(formData.consultation_date) : new Date()}
@@ -155,28 +171,28 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
           disabled={isReadOnly}
         />
         <TextInput
-          style={[styles.input, isReadOnly && styles.inputDisabled]}
+          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
           placeholder="Motivo de la visita"
           value={formData.reason || ''}
           onChangeText={(t: string) => handleSimpleChange('reason', t)}
           editable={!isReadOnly}
         />
         <TextInput
-          style={[styles.input, isReadOnly && styles.inputDisabled]}
+          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
           placeholder="Diagnóstico"
           value={formData.diagnosis || ''}
           onChangeText={(t: string) => handleSimpleChange('diagnosis', t)}
           editable={!isReadOnly}
         />
         <TextInput
-          style={[styles.input, isReadOnly && styles.inputDisabled]}
+          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
           placeholder="Tratamiento"
           value={formData.treatment || ''}
           onChangeText={(t: string) => handleSimpleChange('treatment', t)}
           editable={!isReadOnly}
         />
         <TextInput
-          style={[styles.input, { height: 100 }, isReadOnly && styles.inputDisabled]}
+          style={[globalStyles.input, { height: 100 }, isReadOnly && globalStyles.inputDisabled]}
           placeholder="Notas adicionales"
           multiline
           value={formData.notes || ''}
@@ -186,8 +202,8 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       </View>
 
       {/* Historial */}
-      <Text style={styles.sectionTitle}>Historial</Text>
-      <View style={styles.sectionBox}>
+      <Text style={globalStyles.sectionTitle}>Historial</Text>
+      <View style={globalStyles.sectionBox}>
         <CheckboxGroup
           title="¿Padece alguna de las siguientes condiciones?"
           options={medicalConditionsOptions}
@@ -196,7 +212,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
           disabled={isReadOnly}
         />
         {hasDiabetes && (
-          <View style={styles.conditionalContainer}>
+          <View style={globalStyles.conditionalContainer}>
             <RadioGroup
               title="¿Cómo tiene controlada la diabetes?"
               options={["Controlada", "No Controlada"]}
@@ -209,8 +225,8 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       </View>
 
       {/* Hábitos */}
-      <Text style={styles.sectionTitle}>Hábitos</Text>
-      <View style={styles.sectionBox}>
+      <Text style={globalStyles.sectionTitle}>Hábitos</Text>
+      <View style={globalStyles.sectionBox}>
         <RadioGroup
           title="¿Fuma?"
           options={["Sí", "No"]}
@@ -230,7 +246,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
           disabled={isReadOnly}
         />
         <TextInput
-          style={[styles.input, isReadOnly && styles.inputDisabled]}
+          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
           placeholder="Tipo de Calzado Habitual"
           value={formData.shoe_type || ''}
           onChangeText={handleShoeTypeChange}
@@ -239,28 +255,24 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       </View>
 
       {/* Fotos */}
-      <Text style={styles.sectionTitle}>Fotos</Text>
-      <View style={styles.sectionBox}>
+      <Text style={globalStyles.sectionTitle}>Fotos</Text>
+      <View style={globalStyles.sectionBox}>
         {!isReadOnly && (
           <View>
-            <Text style={styles.groupTitle}>Fotos de Inicio (Antes)</Text>
+            <Text style={globalStyles.label}>Fotos de Inicio (Antes)</Text>
             <Pressable
-              style={[styles.photoButton, (!draftId) && styles.photoButtonDisabled]}
+              style={[globalStyles.photoButton, !draftId && globalStyles.photoButtonDisabled]}
               onPress={() => handleTakePhoto('antes')}
               disabled={!draftId}
             >
-              <Text style={styles.photoButtonText}>+ Tomar Foto</Text>
+              <Text style={globalStyles.buttonText}>+ Tomar Foto</Text>
             </Pressable>
-            {!draftId && <Text style={styles.helperText}>Preparando borrador...</Text>}
+            {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
           </View>
         )}
         <FlatList
           data={beforePhotos}
-          renderItem={({ item, index }: { item: Photo; index: number }) => (
-            <Pressable onPress={() => openViewer('antes', index)}>
-              <Image source={{ uri: item.local_uri }} style={styles.thumbnail} />
-            </Pressable>
-          )}
+          renderItem={renderPhotoItem}
           keyExtractor={(item: Photo) => `before-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
@@ -268,52 +280,60 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
         />
         {!isReadOnly && (
           <View>
-            <Text style={styles.groupTitle}>Fotos de Seguimiento (Después)</Text>
+            <Text style={globalStyles.label}>Fotos de Seguimiento (Después)</Text>
             <Pressable
-              style={[styles.photoButton, (!draftId) && styles.photoButtonDisabled]}
+              style={[globalStyles.photoButton, !draftId && globalStyles.photoButtonDisabled]}
               onPress={() => handleTakePhoto('despues')}
               disabled={!draftId}
             >
-              <Text style={styles.photoButtonText}>+ Tomar Foto</Text>
+              <Text style={globalStyles.buttonText}>+ Tomar Foto</Text>
             </Pressable>
-            {!draftId && <Text style={styles.helperText}>Preparando borrador...</Text>}
+            {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
           </View>
         )}
         <FlatList
           data={afterPhotos}
-          renderItem={({ item, index }: { item: Photo; index: number }) => (
-            <Pressable onPress={() => openViewer('despues', index)}>
-              <Image source={{ uri: item.local_uri }} style={styles.thumbnail} />
-            </Pressable>
-          )}
+          renderItem={renderPhotoItem}
           keyExtractor={(item: Photo) => `after-${item.id}`}
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ paddingVertical: 10 }}
         />
-        <ImageViewing
-          images={viewerImages}
-          imageIndex={viewerIndex}
-          visible={viewerVisible}
-          onRequestClose={() => setViewerVisible(false)}
+      </View>
+
+      {/* Sección para Voucher */}
+      <Text style={globalStyles.sectionTitle}>Voucher de Pago</Text>
+      <View style={globalStyles.sectionBox}>
+        {!isReadOnly && (
+          <View>
+            <Text style={globalStyles.label}>Foto del Voucher</Text>
+            <Pressable
+              style={[globalStyles.photoButton, !draftId && globalStyles.photoButtonDisabled]}
+              onPress={() => handleTakePhoto('voucher')}
+              disabled={!draftId}
+            >
+              <Text style={globalStyles.buttonText}>+ Tomar Foto Voucher</Text>
+            </Pressable>
+            {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
+          </View>
+        )}
+        <FlatList
+          data={voucherPhotos}
+          renderItem={renderPhotoItem}
+          keyExtractor={(item: Photo) => `voucher-${item.id}`}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingVertical: 10 }}
         />
       </View>
+
+      <ImageViewing
+        images={viewerImages}
+        imageIndex={viewerIndex}
+        visible={viewerVisible}
+        onRequestClose={() => setViewerVisible(false)}
+      />
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#333', marginTop: 10, marginBottom: 8 },
-  sectionBox: { backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e0e0e0', padding: 12, marginBottom: 16 },
-  input: { height: 40, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, backgroundColor: '#fff', marginBottom: 12 },
-  groupTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 6 },
-  photoButton: { backgroundColor: '#30c7b5', paddingVertical: 10, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
-  photoButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  photoButtonDisabled: { backgroundColor: '#adb5bd' },
-  thumbnail: { width: 100, height: 100, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: '#ddd' },
-  conditionalContainer: { marginTop: 10, padding: 10, backgroundColor: '#f9f9f9', borderRadius: 8, borderWidth: 1, borderColor: '#e0e0e0' },
-  readonlyItem: { fontSize: 16, color: '#333', marginBottom: 6 },
-  label: { fontWeight: 'bold' },
-  inputDisabled: { backgroundColor: '#f7f7f7', color: '#666', borderColor: '#ddd' },
-  helperText: { marginTop: 6, color: '#666' },
-});
