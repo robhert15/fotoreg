@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.primary,
   },
   saveButton: {
-    backgroundColor: Colors.success,
+    backgroundColor: Colors.primary,
     marginLeft: 10,
   },
   cancelButton: {

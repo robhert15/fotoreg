@@ -307,7 +307,7 @@ const styles = StyleSheet.create({
   sectionBox: { backgroundColor: '#fff', borderRadius: 8, borderWidth: 1, borderColor: '#e0e0e0', padding: 12, marginBottom: 16 },
   input: { height: 40, borderColor: '#ccc', borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, backgroundColor: '#fff', marginBottom: 12 },
   groupTitle: { fontSize: 16, fontWeight: 'bold', color: '#333', marginBottom: 6 },
-  photoButton: { backgroundColor: '#6c757d', paddingVertical: 10, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
+  photoButton: { backgroundColor: '#30c7b5', paddingVertical: 10, borderRadius: 8, alignItems: 'center', marginBottom: 10 },
   photoButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   photoButtonDisabled: { backgroundColor: '#adb5bd' },
   thumbnail: { width: 100, height: 100, borderRadius: 8, marginRight: 10, borderWidth: 1, borderColor: '#ddd' },

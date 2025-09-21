@@ -159,7 +159,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   saveButton: {
-    backgroundColor: Colors.success,
+    backgroundColor: Colors.primary,
     marginLeft: 10,
   },
   cancelButton: {

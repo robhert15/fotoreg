@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { Colors } from '@/constants/theme';
 import { FlashList } from '@shopify/flash-list';
 import { Patient } from '@/types';
 import { findPatients } from '@/db/api/patients';
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     color: '#888',
   },
   addButton: {
-    backgroundColor: '#007bff',
+    backgroundColor: Colors.primary,
     margin: 20,
     paddingVertical: 15,
     borderRadius: 8,
