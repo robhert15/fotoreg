@@ -386,3 +386,14 @@
 - **Artefactos Generados:**
   - Instrucción para IA Desarrolladora.
   - Refactorización y simplificación de `src/screens/NewConsultationScreen.tsx`.
+
+  ---
+## Tarea (Rediseño): Implementación de Navegación por Pestañas
+
+- **ID:** `NAV-REDESIGN-001`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para la refactorización completa del sistema de navegación, implementando un Bottom Tab Navigator como base de la aplicación y anidando los flujos de Stack existentes.
+- **Artefactos Generados:**
+  - Instrucción para IA Desarrolladora (incluye instalación de dependencias).
+  - Creación de 3 pantallas placeholder.
+  - Refactorización completa de `src/navigation/AppNavigator.tsx`.

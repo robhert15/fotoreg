@@ -1,60 +1,111 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { NavigationContainer, RouteProp } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { Ionicons } from '@expo/vector-icons';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
-import PatientListScreen from '../screens/PatientListScreen';
-import AddPatientScreen from '../screens/AddPatientScreen';
-import PatientDetailScreen from '../screens/PatientDetailScreen';
-import NewConsultationScreen from '../screens/NewConsultationScreen';
-import CameraScreen from '../screens/CameraScreen';
-import ConsultationDetailScreen from '../screens/ConsultationDetailScreen';
-import { Patient } from '@/types';
+// Importa todas las pantallas
+import PatientListScreen from '@/screens/PatientListScreen';
+import PatientDetailScreen from '@/screens/PatientDetailScreen';
+import NewConsultationScreen from '@/screens/NewConsultationScreen';
+import ConsultationDetailScreen from '@/screens/ConsultationDetailScreen';
+import AddPatientScreen from '@/screens/AddPatientScreen';
+import CameraScreen from '@/screens/CameraScreen';
+import AppointmentsScreen from '@/screens/AppointmentsScreen';
+import ReportsScreen from '@/screens/ReportsScreen';
+import SettingsScreen from '@/screens/SettingsScreen';
 
+// Define los tipos para las rutas
 export type RootStackParamList = {
-  PatientList: undefined;
-  AddPatient: { onPatientAdded: () => void };
+  MainTabs: undefined;
   PatientDetail: { patientId: number };
   NewConsultation: { patientId: number; consultationId?: number };
-  Camera: { onPictureTaken: (uri: string) => void };
   ConsultationDetail: { consultationId: number };
+  AddPatient: { onPatientAdded: () => void };
+  Camera: { onPictureTaken: (uri: string) => void };
 };
 
-const Stack = createNativeStackNavigator<RootStackParamList>();
+export type BottomTabParamList = {
+  PatientsStack: undefined;
+  Appointments: undefined;
+  Reports: undefined;
+  Settings: undefined;
+};
 
+const Stack = createStackNavigator<RootStackParamList>();
+const Tab = createBottomTabNavigator<BottomTabParamList>();
+
+// Creamos un Stack anidado solo para el flujo de Pacientes
+function PatientsStackNavigator() {
+  return (
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="PatientList" component={PatientListScreen} />
+      {/* Las pantallas a las que se navega desde la lista van aquí */}
+    </Stack.Navigator>
+  );
+}
+
+// Creamos nuestro navegador de pestañas principal
+function MainTabNavigator() {
+  const primaryColor = useThemeColor({}, 'primary');
+  const grayColor = useThemeColor({}, 'icon'); // Usar el color 'icon' que ya existe
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }: { route: RouteProp<BottomTabParamList, keyof BottomTabParamList> }) => ({
+        headerShown: false,
+        tabBarActiveTintColor: primaryColor,
+        tabBarInactiveTintColor: grayColor,
+        tabBarStyle: {
+          position: 'absolute',
+          bottom: 30,
+          left: 20,
+          right: 20,
+          elevation: 5,
+          backgroundColor: '#ffffff',
+          borderRadius: 15,
+          height: 70,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.25,
+          shadowRadius: 3.84,
+        },
+        tabBarIcon: ({ color, size }: { color: string; size: number }) => {
+          let iconName;
+          if (route.name === 'PatientsStack') {
+            iconName = 'people';
+          } else if (route.name === 'Appointments') {
+            iconName = 'calendar';
+          } else if (route.name === 'Reports') {
+            iconName = 'stats-chart';
+          } else if (route.name === 'Settings') {
+            iconName = 'settings-sharp';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="PatientsStack" component={PatientsStackNavigator} options={{ title: 'Pacientes' }} />
+      <Tab.Screen name="Appointments" component={AppointmentsScreen} options={{ title: 'Citas' }} />
+      <Tab.Screen name="Reports" component={ReportsScreen} options={{ title: 'Reportes' }} />
+      <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Ajustes' }} />
+    </Tab.Navigator>
+  );
+}
+
+// El navegador principal ahora es un Stack que contiene el Tab Navigator y las pantallas modales
 export default function AppNavigator() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="PatientList">
-        <Stack.Screen 
-          name="PatientList" 
-          component={PatientListScreen} 
-          options={{ title: 'Pacientes' }} 
-        />
-        <Stack.Screen 
-          name="AddPatient" 
-          component={AddPatientScreen} 
-          options={{ title: 'Registrar Paciente' }} 
-        />
-        <Stack.Screen 
-          name="PatientDetail" 
-          component={PatientDetailScreen} 
-          options={{ title: 'Detalles del Paciente' }} 
-        />
-        <Stack.Screen 
-          name="NewConsultation" 
-          component={NewConsultationScreen} 
-          options={{ headerShown: false }} // El header personalizado está dentro de la pantalla
-        />
-        <Stack.Screen 
-          name="Camera" 
-          component={CameraScreen} 
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen 
-          name="ConsultationDetail" 
-          component={ConsultationDetailScreen} 
-          options={{ title: 'Detalles de la Consulta' }} 
-        />
+      <Stack.Navigator screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+        {/* Las pantallas que deben aparecer POR ENCIMA de las pestañas van aquí */}
+        <Stack.Screen name="PatientDetail" component={PatientDetailScreen} />
+        <Stack.Screen name="NewConsultation" component={NewConsultationScreen} />
+        <Stack.Screen name="ConsultationDetail" component={ConsultationDetailScreen} />
+        <Stack.Screen name="AddPatient" component={AddPatientScreen} />
+        <Stack.Screen name="Camera" component={CameraScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
