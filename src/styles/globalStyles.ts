@@ -9,6 +9,7 @@ export const globalStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: AppColors.background,
+    paddingBottom: 20, // Añade espacio en la parte inferior para los controles del sistema
   },
   header: {
     padding: 20,
@@ -20,12 +21,15 @@ export const globalStyles = StyleSheet.create({
     padding: 20,
     flex: 1,
   },
-  footer: {
+    footer: {
     flexDirection: 'row',
-    padding: 20,
+    paddingVertical: 10,    // Espacio vertical
+    paddingHorizontal: 20,  // Espacio horizontal
     backgroundColor: AppColors.white,
     borderTopWidth: 1,
     borderTopColor: AppColors.tabIconDefault,
+    gap: 10, // Espacio automático entre botones
+    marginBottom: 50, // Eleva el footer para darle más aire en la parte inferior
   },
   sectionBox: {
     backgroundColor: AppColors.white,
@@ -74,7 +78,7 @@ export const globalStyles = StyleSheet.create({
 
   // --- Botones ---
   button: {
-    flex: 1,
+    flex: 1, // Permite que el botón crezca para ocupar el espacio disponible
     paddingVertical: 15,
     borderRadius: 8,
     alignItems: 'center',
