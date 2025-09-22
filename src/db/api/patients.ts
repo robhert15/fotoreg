@@ -13,14 +13,14 @@ export const addPatient = async (patient: NewPatient): Promise<SQLiteRunResult> 
 
 export const findPatients = async (searchTerm: string): Promise<Patient[]> => {
   const dbInstance = await db;
-  const query = `
+        const query = `
     SELECT * FROM patients
     WHERE name LIKE ? OR documentNumber LIKE ?
     ORDER BY name ASC;
   `;
   const params = [`%${searchTerm}%`, `%${searchTerm}%`];
   
-  const result = await dbInstance.getAllAsync<Patient>(query, params);
+      const result = await dbInstance.getAllAsync<Patient>(query, params);
   return result;
 };
 

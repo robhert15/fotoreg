@@ -9,6 +9,12 @@ export interface Patient {
 }
 export type NewPatient = Omit<Patient, 'id'>;
 
+// Tipo extendido para la lista de pacientes, incluye datos de la última consulta
+export type PatientWithLastDiagnosis = Patient & {
+  last_visit?: string | null;
+  last_diagnosis?: string | null;
+};
+
 
 // --- Consultas (SIN PODOGRAMA) ---
 interface MedicalCondition {

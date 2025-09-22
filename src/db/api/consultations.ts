@@ -252,6 +252,19 @@ export const createDraftFromConsultation = async (patientId: number, consultatio
  * @param consultationId El ID de la consulta a actualizar.
  * @param data El objeto con los nuevos datos para la consulta.
  */
+export const getLastConsultationForPatient = async (patientId: number): Promise<Pick<Consultation, 'consultation_date' | 'diagnosis'> | null> => {
+  const dbInstance = await db;
+  const query = `
+    SELECT consultation_date, diagnosis 
+    FROM consultations 
+    WHERE patient_id = ? 
+    ORDER BY consultation_date DESC 
+    LIMIT 1;
+  `;
+  const result = await dbInstance.getFirstAsync<Pick<Consultation, 'consultation_date' | 'diagnosis'>>(query, patientId);
+  return result ?? null;
+};
+
 export const updateConsultation = async (consultationId: number, data: any): Promise<void> => {
   try {
     const dbInstance = await db;

@@ -3,10 +3,11 @@ import { View, Text, StyleSheet } from 'react-native';
 import { BaseCard } from './cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { Patient } from '@/types';
+import { PatientWithLastDiagnosis } from '@/types';
 
+// Tarjeta individual para un paciente en la lista
 interface PatientCardProps {
-  patient: Patient;
+  patient: PatientWithLastDiagnosis;
   onPress: () => void;
 }
 
@@ -28,9 +29,27 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
         </View>
       </View>
       <View style={styles.cardDetails}>
-        <View style={styles.detailItem}>
-          <Ionicons name="calendar-outline" size={14} color={primaryColor} />
-          <Text style={[styles.detailText, { color: textLightColor }]}>Última visita: 15 Sep</Text>
+                <View style={styles.detailsContainer}>
+          <View style={[styles.detailItem, { width: '55%' }]}>
+            <Ionicons name="calendar-outline" size={14} color={primaryColor} />
+            <Text style={[styles.detailText, { color: textLightColor }]} numberOfLines={1} ellipsizeMode="tail">
+              Última visita: {patient.last_visit ? new Date(patient.last_visit).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) : 'N/A'}
+            </Text>
+          </View>
+          <View style={[styles.detailItem, { width: '45%' }]}>
+            {patient.last_diagnosis ? (
+              <>
+                <Ionicons name="document-text-outline" size={14} color={primaryColor} />
+                <Text style={[styles.detailText, { color: textLightColor }]} numberOfLines={1} ellipsizeMode="tail">
+                  {patient.last_diagnosis}
+                </Text>
+              </>
+            ) : (
+              <Text style={[styles.detailText, { color: textLightColor, fontStyle: 'italic' }]}>
+                Sin Dx
+              </Text>
+            )}
+          </View>
         </View>
       </View>
     </BaseCard>
@@ -62,8 +81,12 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  cardDetails: {
+    cardDetails: {
     marginTop: 15,
+  },
+    detailsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   detailItem: {
     flexDirection: 'row',

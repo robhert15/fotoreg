@@ -51,6 +51,14 @@ export const initializeDatabase = async () => {
     for (const query of queries) {
       await dbInstance.runAsync(query);
     }
+
+    // Migración segura: agregar columna 'is_draft' si no existe
+    try {
+      await dbInstance.runAsync(`ALTER TABLE consultations ADD COLUMN is_draft INTEGER NOT NULL DEFAULT 0;`);
+    } catch (e) {
+      // Si la columna ya existe, ignorar el error
+    }
+
     console.log('Base de datos simplificada inicializada correctamente.');
   } catch (error) {
     console.error('Error inicializando la base de datos:', error);

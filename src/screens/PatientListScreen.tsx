@@ -5,8 +5,10 @@ import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
-import { Patient } from '@/types';
+import { Patient, PatientWithLastDiagnosis } from '@/types';
 import { findPatients } from '@/db/api/patients';
+import { getLastConsultationForPatient } from '@/db/api/consultations';
+
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { PatientCard } from '@/components/PatientCard';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -17,7 +19,7 @@ type PatientListNavigationProp = StackNavigationProp<any>;
 
 export default function PatientListScreen() {
   const navigation = useNavigation<PatientListNavigationProp>();
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<PatientWithLastDiagnosis[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
 
   // Carga de colores del tema
@@ -33,8 +35,18 @@ export default function PatientListScreen() {
 
   const loadPatients = useCallback(async () => {
     try {
-      const results = await findPatients(searchTerm);
-      setPatients(results);
+      const basicPatients = await findPatients(searchTerm);
+      const enrichedPatients = await Promise.all(
+        basicPatients.map(async (patient) => {
+          const lastConsultation = await getLastConsultationForPatient(patient.id);
+          return {
+            ...patient,
+            last_visit: lastConsultation?.consultation_date,
+            last_diagnosis: lastConsultation?.diagnosis,
+          };
+        })
+      );
+      setPatients(enrichedPatients);
     } catch (error) {
       Alert.alert('Error', 'No se pudieron buscar los pacientes.');
     }
@@ -51,8 +63,8 @@ export default function PatientListScreen() {
       <View style={globalStyles.contentContainer}>
         <FlatList
           data={patients}
-          keyExtractor={(item: Patient) => item.id.toString()}
-          renderItem={({ item }: { item: Patient }) => (
+          keyExtractor={(item: PatientWithLastDiagnosis) => item.id.toString()}
+          renderItem={({ item }: { item: PatientWithLastDiagnosis }) => (
             <PatientCard 
               patient={item}
               onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
