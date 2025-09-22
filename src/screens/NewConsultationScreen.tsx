@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NewConsultation } from '@/types';
 import { 
@@ -106,26 +108,27 @@ export default function NewConsultationScreen() {
   };
 
   return (
-    <SafeAreaView style={globalStyles.container}>
-      <View style={globalStyles.header}>
-        <Text style={globalStyles.title}>Nueva Consulta</Text>
+    <ScreenLayout title="Nueva Consulta">
+      <View style={globalStyles.contentContainer}>
+        <ScrollView 
+          contentContainerStyle={{ padding: 20, paddingBottom: 120 }} 
+          keyboardShouldPersistTaps="handled"
+        >
+          <ConsultationForm
+            formData={formData}
+            setFormData={setFormData}
+            isReadOnly={false}
+            draftId={draftId}
+          />
+        </ScrollView>
       </View>
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 16, paddingBottom: 120, flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-        <ConsultationForm
-          formData={formData}
-          setFormData={setFormData}
-          isReadOnly={false}
-          draftId={draftId}
-        />
-      </ScrollView>
-      <View style={globalStyles.footer}>
-        <Pressable style={[globalStyles.button, globalStyles.buttonCancel, { marginRight: 10 }]} onPress={handleCancel}>
-          <Text style={globalStyles.buttonText}>Cancelar</Text>
-        </Pressable>
-        <Pressable style={[globalStyles.button, globalStyles.buttonPrimary, { marginLeft: 10 }]} onPress={handleFinalSave}>
-          <Text style={globalStyles.buttonText}>Guardar Consulta</Text>
-        </Pressable>
-      </View>
-    </SafeAreaView>
+      {/* Botones de Acción Flotantes */}
+      <Pressable style={[globalStyles.fab, { right: 90, backgroundColor: '#6c757d' }]} onPress={handleCancel}>
+        <Ionicons name="close" size={24} color="white" />
+      </Pressable>
+      <Pressable style={globalStyles.fab} onPress={handleFinalSave}>
+        <Ionicons name="checkmark" size={24} color="white" />
+      </Pressable>
+    </ScreenLayout>
   );
 }

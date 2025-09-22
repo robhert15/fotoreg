@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, SafeAreaView, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, Alert } from 'react-native';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
+import { BaseCard } from '@/components/cards/BaseCard';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
@@ -48,35 +51,39 @@ export default function AddPatientScreen() {
     }
   };
 
-  return (
-    <SafeAreaView style={globalStyles.container}>
-      <View style={globalStyles.header}>
-        <Text style={globalStyles.title}>Registrar Paciente</Text>
+    return (
+    <ScreenLayout title="Registrar Paciente">
+      <View style={globalStyles.contentContainer}>
+        <ScrollView contentContainerStyle={{ padding: 20 }}>
+          <BaseCard>
+            <Text style={globalStyles.label}>Nombre Completo</Text>
+            <TextInput
+              style={globalStyles.input}
+              placeholder="Nombre y Apellido del paciente"
+              value={name}
+              onChangeText={setName}
+            />
+
+            <Text style={globalStyles.label}>Número de Documento</Text>
+            <TextInput
+              style={globalStyles.input}
+              placeholder="DNI o Cédula"
+              value={documentNumber}
+              onChangeText={setDocumentNumber}
+              keyboardType="numeric"
+            />
+          </BaseCard>
+        </ScrollView>
       </View>
 
-      <View style={globalStyles.formContainer}>
-        <Text style={globalStyles.label}>Nombre Completo</Text>
-        <TextInput
-          style={globalStyles.input}
-          placeholder="Nombre y Apellido del paciente"
-          value={name}
-          onChangeText={setName}
-        />
-
-        <Text style={globalStyles.label}>Número de Documento</Text>
-        <TextInput
-          style={globalStyles.input}
-          placeholder="DNI o Cédula"
-          value={documentNumber}
-          onChangeText={setDocumentNumber}
-          keyboardType="numeric"
-        />
-      </View>
-
-      <Pressable style={[globalStyles.button, globalStyles.buttonPrimary, { margin: 20 }]} onPress={handleSavePatient}>
-        <Text style={globalStyles.buttonText}>Guardar Paciente</Text>
+      {/* Botones de Acción Flotantes */}
+      <Pressable style={[globalStyles.fab, { right: 90, backgroundColor: '#6c757d' }]} onPress={() => navigation.goBack()}>
+        <Ionicons name="close" size={24} color="white" />
       </Pressable>
-    </SafeAreaView>
+      <Pressable style={globalStyles.fab} onPress={handleSavePatient}>
+        <Ionicons name="checkmark" size={24} color="white" />
+      </Pressable>
+    </ScreenLayout>
   );
 }
 

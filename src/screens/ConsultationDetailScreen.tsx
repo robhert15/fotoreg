@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { getConsultationById, updateConsultation, createDraftFromConsultation, moveDraftPhotosToConsultation, deleteDraft } from '@/db/api/consultations';
 import { Consultation } from '@/types';
@@ -91,39 +93,52 @@ export default function ConsultationDetailScreen() {
     }
   };
 
-  if (loading) {
-    return <View style={[globalStyles.container, { justifyContent: 'center', alignItems: 'center' }]}><ActivityIndicator size="large" color={Colors.light.primary} /></View>;
+    if (loading) {
+    return (
+      <ScreenLayout title="Cargando...">
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={Colors.light.primary} />
+        </View>
+      </ScreenLayout>
+    );
   }
 
+    const consultationDate = new Date(consultation.consultation_date || Date.now()).toLocaleDateString('es-ES', {
+    year: 'numeric', month: 'long', day: 'numeric'
+  });
+
   return (
-    <View style={globalStyles.container}>
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 120 }} keyboardShouldPersistTaps="handled">
-        <ConsultationForm
-          formData={consultation as any}
-          setFormData={setConsultation as any}
-          isReadOnly={!isEditing}
-          draftId={draftId}
-          consultationId={consultationId}
-        />
-      </ScrollView>
-      
-      <View style={globalStyles.footer}>
-        {isEditing ? (
-          <>
-            <Pressable style={[globalStyles.button, globalStyles.buttonCancel, { marginRight: 10 }]} onPress={handleCancel}>
-              <Text style={globalStyles.buttonText}>Cancelar</Text>
-            </Pressable>
-            <Pressable style={[globalStyles.button, globalStyles.buttonPrimary, { marginLeft: 10 }]} onPress={handleSave}>
-              <Text style={globalStyles.buttonText}>Guardar Cambios</Text>
-            </Pressable>
-          </>
-        ) : (
-          <Pressable style={[globalStyles.button, globalStyles.buttonPrimary]} onPress={handleStartEdit}>
-            <Text style={globalStyles.buttonText}>Editar</Text>
-          </Pressable>
-        )}
+    <ScreenLayout title={`Consulta del ${consultationDate}`}>
+      <View style={globalStyles.contentContainer}>
+        <ScrollView 
+          contentContainerStyle={{ padding: 20, paddingBottom: 150 }}
+          keyboardShouldPersistTaps="handled"
+        >
+          <ConsultationForm
+            formData={consultation as any}
+            setFormData={setConsultation as any}
+            isReadOnly={!isEditing}
+            draftId={draftId}
+            consultationId={consultationId}
+          />
+        </ScrollView>
       </View>
-    </View>
+
+      {isEditing ? (
+        <>
+          <Pressable style={[globalStyles.fab, { right: 90, backgroundColor: Colors.light.icon }]} onPress={handleCancel}>
+            <Ionicons name="close" size={24} color="white" />
+          </Pressable>
+          <Pressable style={globalStyles.fab} onPress={handleSave}>
+            <Ionicons name="checkmark" size={24} color="white" />
+          </Pressable>
+        </>
+      ) : (
+        <Pressable style={globalStyles.fab} onPress={handleStartEdit}>
+          <Ionicons name="pencil" size={24} color="white" />
+        </Pressable>
+      )}
+    </ScreenLayout>
   );
 }
 

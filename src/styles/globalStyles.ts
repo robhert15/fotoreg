@@ -211,7 +211,21 @@ export const globalStyles = StyleSheet.create({
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
-    shadowRadius: 4,
+        shadowRadius: 4,
+  },
+  // Mini Botón de Acción Flotante (para acciones dentro de tarjetas)
+  miniFab: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: AppColors.secondary,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
   },
 
   // --- Imágenes ---

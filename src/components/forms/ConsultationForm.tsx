@@ -1,6 +1,8 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { globalStyles } from '@/styles/globalStyles';
+import { BaseCard } from '../cards/BaseCard';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { DatePickerInput } from './DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
@@ -17,6 +19,15 @@ export interface ConsultationFormProps {
   consultationId?: number; // para combinar fotos en modo edición/lectura
 }
 
+
+const styles = StyleSheet.create({
+  photoActionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+});
 
 export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   formData,
@@ -159,172 +170,188 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
     </Pressable>
   );
 
-  return (
+    return (
     <View>
-      {/* Consulta */}
+      {/* --- Sección Consulta --- */}
       <Text style={globalStyles.sectionTitle}>Consulta</Text>
-      <View style={globalStyles.sectionBox}>
-        <DatePickerInput
-          title="Fecha de la Consulta"
-          date={formData.consultation_date ? new Date(formData.consultation_date) : new Date()}
-          onDateChange={(newDate: Date) => handleSimpleChange('consultation_date', newDate.toISOString())}
-          disabled={isReadOnly}
-        />
-        <TextInput
-          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
-          placeholder="Motivo de la visita"
-          value={formData.reason || ''}
-          onChangeText={(t: string) => handleSimpleChange('reason', t)}
-          editable={!isReadOnly}
-        />
-        <TextInput
-          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
-          placeholder="Diagnóstico"
-          value={formData.diagnosis || ''}
-          onChangeText={(t: string) => handleSimpleChange('diagnosis', t)}
-          editable={!isReadOnly}
-        />
-        <TextInput
-          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
-          placeholder="Tratamiento"
-          value={formData.treatment || ''}
-          onChangeText={(t: string) => handleSimpleChange('treatment', t)}
-          editable={!isReadOnly}
-        />
-        <TextInput
-          style={[globalStyles.input, { height: 100 }, isReadOnly && globalStyles.inputDisabled]}
-          placeholder="Notas adicionales"
-          multiline
-          value={formData.notes || ''}
-          onChangeText={(t: string) => handleSimpleChange('notes', t)}
-          editable={!isReadOnly}
-        />
+      <View style={{ marginBottom: 20 }}>
+        <BaseCard>
+          <DatePickerInput
+            title="Fecha de la Consulta"
+            date={formData.consultation_date ? new Date(formData.consultation_date) : new Date()}
+            onDateChange={(newDate: Date) => handleSimpleChange('consultation_date', newDate.toISOString())}
+            disabled={isReadOnly}
+          />
+          <TextInput
+            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            placeholder="Motivo de la visita"
+            value={formData.reason || ''}
+            onChangeText={(t: string) => handleSimpleChange('reason', t)}
+            editable={!isReadOnly}
+          />
+          <TextInput
+            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            placeholder="Diagnóstico"
+            value={formData.diagnosis || ''}
+            onChangeText={(t: string) => handleSimpleChange('diagnosis', t)}
+            editable={!isReadOnly}
+          />
+          <TextInput
+            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            placeholder="Tratamiento"
+            value={formData.treatment || ''}
+            onChangeText={(t: string) => handleSimpleChange('treatment', t)}
+            editable={!isReadOnly}
+          />
+          <TextInput
+            style={[globalStyles.input, { height: 100 }, isReadOnly && globalStyles.inputDisabled]}
+            placeholder="Notas adicionales"
+            multiline
+            value={formData.notes || ''}
+            onChangeText={(t: string) => handleSimpleChange('notes', t)}
+            editable={!isReadOnly}
+          />
+        </BaseCard>
       </View>
 
-      {/* Historial */}
+      {/* --- Sección Historial --- */}
       <Text style={globalStyles.sectionTitle}>Historial</Text>
-      <View style={globalStyles.sectionBox}>
-        <CheckboxGroup
-          title="¿Padece alguna de las siguientes condiciones?"
-          options={medicalConditionsOptions}
-          selectedOptions={selectedConditionNames}
-          onSelectionChange={handleConditionsChange}
-          disabled={isReadOnly}
-        />
-        {hasDiabetes && (
-          <View style={globalStyles.conditionalContainer}>
-            <RadioGroup
-              title="¿Cómo tiene controlada la diabetes?"
-              options={["Controlada", "No Controlada"]}
-              selectedValue={localConditions.find((c: any) => c.name === 'Diabetes')?.status || null}
-              onSelectionChange={(status: string | null) => updateConditionStatus('Diabetes', status)}
-              disabled={isReadOnly}
-            />
-          </View>
-        )}
+      <View style={{ marginBottom: 20 }}>
+        <BaseCard>
+          <CheckboxGroup
+            title="¿Padece alguna de las siguientes condiciones?"
+            options={medicalConditionsOptions}
+            selectedOptions={selectedConditionNames}
+            onSelectionChange={handleConditionsChange}
+            disabled={isReadOnly}
+          />
+          {hasDiabetes && (
+            <View style={globalStyles.conditionalContainer}>
+              <RadioGroup
+                title="¿Cómo tiene controlada la diabetes?"
+                options={["Controlada", "No Controlada"]}
+                selectedValue={localConditions.find((c: any) => c.name === 'Diabetes')?.status || null}
+                onSelectionChange={(status: string | null) => updateConditionStatus('Diabetes', status)}
+                disabled={isReadOnly}
+              />
+            </View>
+          )}
+        </BaseCard>
       </View>
 
-      {/* Hábitos */}
+      {/* --- Sección Hábitos --- */}
       <Text style={globalStyles.sectionTitle}>Hábitos</Text>
-      <View style={globalStyles.sectionBox}>
-        <RadioGroup
-          title="¿Fuma?"
-          options={["Sí", "No"]}
-          selectedValue={habits.is_smoker === true ? 'Sí' : habits.is_smoker === false ? 'No' : null}
-          onSelectionChange={(selection: string) =>
-            handleHabitChange('is_smoker', selection === 'Sí' ? true : selection === 'No' ? false : null)
-          }
-          disabled={isReadOnly}
-        />
-        <RadioGroup
-          title="¿Consume alcohol?"
-          options={["Sí", "No"]}
-          selectedValue={habits.consumes_alcohol === true ? 'Sí' : habits.consumes_alcohol === false ? 'No' : null}
-          onSelectionChange={(selection: string) =>
-            handleHabitChange('consumes_alcohol', selection === 'Sí' ? true : selection === 'No' ? false : null)
-          }
-          disabled={isReadOnly}
-        />
-        <TextInput
-          style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
-          placeholder="Tipo de Calzado Habitual"
-          value={formData.shoe_type || ''}
-          onChangeText={handleShoeTypeChange}
-          editable={!isReadOnly}
-        />
+      <View style={{ marginBottom: 20 }}>
+        <BaseCard>
+          <RadioGroup
+            title="¿Fuma?"
+            options={["Sí", "No"]}
+            selectedValue={habits.is_smoker === true ? 'Sí' : habits.is_smoker === false ? 'No' : null}
+            onSelectionChange={(selection: string) =>
+              handleHabitChange('is_smoker', selection === 'Sí' ? true : selection === 'No' ? false : null)
+            }
+            disabled={isReadOnly}
+          />
+          <RadioGroup
+            title="¿Consume alcohol?"
+            options={["Sí", "No"]}
+            selectedValue={habits.consumes_alcohol === true ? 'Sí' : habits.consumes_alcohol === false ? 'No' : null}
+            onSelectionChange={(selection: string) =>
+              handleHabitChange('consumes_alcohol', selection === 'Sí' ? true : selection === 'No' ? false : null)
+            }
+            disabled={isReadOnly}
+          />
+          <TextInput
+            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            placeholder="Tipo de Calzado Habitual"
+            value={formData.shoe_type || ''}
+            onChangeText={handleShoeTypeChange}
+            editable={!isReadOnly}
+          />
+        </BaseCard>
       </View>
 
-      {/* Fotos */}
+      {/* --- Sección Fotos --- */}
       <Text style={globalStyles.sectionTitle}>Fotos</Text>
-      <View style={globalStyles.sectionBox}>
-        {!isReadOnly && (
-          <View>
-            <Text style={globalStyles.label}>Fotos de Inicio (Antes)</Text>
-            <Pressable
-              style={[globalStyles.photoButton, !draftId && globalStyles.photoButtonDisabled]}
-              onPress={() => handleTakePhoto('antes')}
-              disabled={!draftId}
-            >
-              <Text style={globalStyles.buttonText}>+ Tomar Foto</Text>
-            </Pressable>
-            {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
-          </View>
-        )}
-        <FlatList
-          data={beforePhotos}
-          renderItem={renderPhotoItem}
-          keyExtractor={(item: Photo) => `before-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: 10 }}
-        />
-        {!isReadOnly && (
-          <View>
-            <Text style={globalStyles.label}>Fotos de Seguimiento (Después)</Text>
-            <Pressable
-              style={[globalStyles.photoButton, !draftId && globalStyles.photoButtonDisabled]}
-              onPress={() => handleTakePhoto('despues')}
-              disabled={!draftId}
-            >
-              <Text style={globalStyles.buttonText}>+ Tomar Foto</Text>
-            </Pressable>
-            {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
-          </View>
-        )}
-        <FlatList
-          data={afterPhotos}
-          renderItem={renderPhotoItem}
-          keyExtractor={(item: Photo) => `after-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: 10 }}
-        />
+      <View style={{ marginBottom: 20 }}>
+        <BaseCard>
+          {!isReadOnly && (
+            <>
+              <View style={styles.photoActionContainer}>
+                <Text style={globalStyles.label}>Fotos de Inicio (Antes)</Text>
+                <Pressable
+                  style={[globalStyles.miniFab, !draftId && globalStyles.inputDisabled]}
+                  onPress={() => handleTakePhoto('antes')}
+                  disabled={!draftId}
+                >
+                  <Ionicons name="camera" size={24} color="white" />
+                </Pressable>
+              </View>
+              {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
+            </>
+          )}
+          <FlatList
+            data={beforePhotos}
+            renderItem={renderPhotoItem}
+            keyExtractor={(item: Photo) => `before-${item.id}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: 10 }}
+          />
+          {!isReadOnly && (
+            <>
+              <View style={[styles.photoActionContainer, { marginTop: 20 }]}>
+                <Text style={globalStyles.label}>Fotos de Seguimiento (Después)</Text>
+                <Pressable
+                  style={[globalStyles.miniFab, !draftId && globalStyles.inputDisabled]}
+                  onPress={() => handleTakePhoto('despues')}
+                  disabled={!draftId}
+                >
+                  <Ionicons name="camera" size={24} color="white" />
+                </Pressable>
+              </View>
+              {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
+            </>
+          )}
+          <FlatList
+            data={afterPhotos}
+            renderItem={renderPhotoItem}
+            keyExtractor={(item: Photo) => `after-${item.id}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: 10 }}
+          />
+        </BaseCard>
       </View>
 
-      {/* Sección para Voucher */}
+      {/* --- Sección Voucher --- */}
       <Text style={globalStyles.sectionTitle}>Voucher de Pago</Text>
-      <View style={globalStyles.sectionBox}>
-        {!isReadOnly && (
-          <View>
-            <Text style={globalStyles.label}>Foto del Voucher</Text>
-            <Pressable
-              style={[globalStyles.photoButton, !draftId && globalStyles.photoButtonDisabled]}
-              onPress={() => handleTakePhoto('voucher')}
-              disabled={!draftId}
-            >
-              <Text style={globalStyles.buttonText}>+ Tomar Foto Voucher</Text>
-            </Pressable>
-            {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
-          </View>
-        )}
-        <FlatList
-          data={voucherPhotos}
-          renderItem={renderPhotoItem}
-          keyExtractor={(item: Photo) => `voucher-${item.id}`}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingVertical: 10 }}
-        />
+      <View style={{ marginBottom: 20 }}>
+        <BaseCard>
+          {!isReadOnly && (
+            <>
+              <View style={styles.photoActionContainer}>
+                <Text style={globalStyles.label}>Foto del Voucher</Text>
+                <Pressable
+                  style={[globalStyles.miniFab, !draftId && globalStyles.inputDisabled]}
+                  onPress={() => handleTakePhoto('voucher')}
+                  disabled={!draftId}
+                >
+                  <Ionicons name="camera" size={24} color="white" />
+                </Pressable>
+              </View>
+              {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
+            </>
+          )}
+          <FlatList
+            data={voucherPhotos}
+            renderItem={renderPhotoItem}
+            keyExtractor={(item: Photo) => `voucher-${item.id}`}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingVertical: 10 }}
+          />
+        </BaseCard>
       </View>
 
       <ImageViewing
