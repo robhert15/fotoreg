@@ -1,5 +1,7 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, Pressable, Alert } from 'react-native';
+import { globalStyles } from '@/styles/globalStyles';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -44,108 +46,60 @@ export default function PatientListScreen() {
     }, [loadPatients])
   );
 
-  return (
-    <View style={[styles.container, { backgroundColor: colors.white }]}>
-      <View style={[styles.header, {backgroundColor: colors.primary}]}>
-        <Text style={styles.headerTitle}>Pacientes</Text>
+    return (
+    <ScreenLayout title="Pacientes">
+      <View style={globalStyles.contentContainer}>
+        <FlatList
+          data={patients}
+          keyExtractor={(item: Patient) => item.id.toString()}
+          renderItem={({ item }: { item: Patient }) => (
+            <PatientCard 
+              patient={item}
+              onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
+            />
+          )}
+          contentContainerStyle={styles.listContent}
+          ListHeaderComponent={
+            <>
+              <View style={globalStyles.searchSection}>
+                <View style={globalStyles.searchContainer}>
+                  <Ionicons name="search" size={18} color={colors.textLight} style={globalStyles.searchIcon} />
+                  <TextInput
+                    style={[globalStyles.searchInput, { borderColor: colors.borderColor, color: colors.text, backgroundColor: colors.background }]}
+                    placeholder="Buscar por nombre o documento..."
+                    placeholderTextColor={colors.textLight}
+                    value={searchTerm}
+                    onChangeText={setSearchTerm}
+                  />
+                </View>
+              </View>
+              <Text style={[styles.resultsCount, { color: colors.textLight }]}>
+                {patients.length} pacientes encontrados
+              </Text>
+            </>
+          }
+        />
       </View>
-      
-      <View style={styles.searchSection}>
-        <View style={styles.searchContainer}>
-          <Ionicons name="search" size={18} color={colors.textLight} style={styles.searchIcon} />
-          <TextInput
-            style={[styles.searchInput, { borderColor: colors.borderColor, color: colors.text, backgroundColor: colors.background }]}
-            placeholder="Buscar por nombre o documento..."
-            placeholderTextColor={colors.textLight}
-            value={searchTerm}
-            onChangeText={setSearchTerm}
-          />
-        </View>
-      </View>
-      
-      <FlatList
-        data={patients}
-        keyExtractor={(item: Patient) => item.id.toString()}
-        renderItem={({ item }: { item: Patient }) => (
-          <PatientCard 
-            patient={item}
-            onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
-          />
-        )}
-        contentContainerStyle={styles.listContent}
-        ListHeaderComponent={<Text style={[styles.resultsCount, { color: colors.textLight }]}>{patients.length} pacientes encontrados</Text>}
-      />
 
       <Pressable 
-        style={styles.fab} 
+        style={globalStyles.fab} 
         onPress={() => navigation.navigate('AddPatient', { onPatientAdded: loadPatients })}
       >
         <Ionicons name="add" size={24} color={colors.white} />
       </Pressable>
-    </View>
+    </ScreenLayout>
   );
 }
 
+// Los estilos locales se han movido a globalStyles.ts
+// Solo mantenemos los que son verdaderamente específicos de esta pantalla.
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60, // Aumentar para SafeArea
-    paddingBottom: 40,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: 'white',
-  },
-  searchSection: {
-    padding: 20,
-    marginTop: -20, // Para que se solape con el gradiente
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    backgroundColor: 'white', // Se sobreescribe con el color del tema
-  },
-  searchContainer: {
-    justifyContent: 'center',
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: 18,
-    zIndex: 1,
-  },
-  searchInput: {
-    width: '100%',
-    paddingVertical: 16,
-    paddingHorizontal: 20,
-    paddingLeft: 50,
-    borderWidth: 2,
-    borderRadius: 16,
-    fontSize: 16,
-  },
   listContent: {
     paddingHorizontal: 20,
-    paddingBottom: 100, // Espacio para el FAB y la barra de navegación
+    paddingBottom: 150, // Aumentar espacio para el FAB flotante y la barra de navegación
   },
   resultsCount: {
     fontSize: 14,
-    marginBottom: 20,
-  },
-  fab: {
-    position: 'absolute',
-    bottom: 115, // Posición sobre la barra de navegación
-    right: 20,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#00AECB', // Usar color primario
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    marginBottom: 10, // Reducir un poco el margen
   },
 });

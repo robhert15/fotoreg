@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, Pressable } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
+import { BaseCard } from './cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { Patient } from '@/types';
@@ -10,16 +11,13 @@ interface PatientCardProps {
 }
 
 export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
-  const primaryColor = useThemeColor({}, 'primary');
   const textColor = useThemeColor({}, 'text');
   const textLightColor = useThemeColor({}, 'textLight');
-  const cardBackgroundColor = useThemeColor({}, 'white');
-  const borderColor = useThemeColor({}, 'borderColor');
   const successColor = useThemeColor({}, 'success');
+  const primaryColor = useThemeColor({}, 'primary');
 
   return (
-    <Pressable onPress={onPress} style={[styles.card, { backgroundColor: cardBackgroundColor, borderColor }]}>
-      <View style={[styles.cardIndicator, { backgroundColor: primaryColor }]} />
+    <BaseCard onPress={onPress}>
       <View style={styles.cardHeader}>
         <View style={styles.patientInfo}>
           <Text style={[styles.patientName, { color: textColor }]}>{patient.name}</Text>
@@ -35,30 +33,11 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
           <Text style={[styles.detailText, { color: textLightColor }]}>Última visita: 15 Sep</Text>
         </View>
       </View>
-    </Pressable>
+    </BaseCard>
   );
 };
 
 const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 12,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
-    position: 'relative',
-  },
-  cardIndicator: {
-    position: 'absolute',
-    left: 0, top: 0, bottom: 0,
-    width: 4,
-    borderTopLeftRadius: 16,
-    borderBottomLeftRadius: 16,
-  },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',

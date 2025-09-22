@@ -8,14 +8,13 @@ export const globalStyles = StyleSheet.create({
   // --- Contenedores y Layout ---
   container: {
     flex: 1,
-    backgroundColor: AppColors.background,
-    paddingBottom: 20, // Añade espacio en la parte inferior para los controles del sistema
+    backgroundColor: AppColors.white, // El nuevo diseño usa fondo blanco por defecto
   },
+  // Estilo para el nuevo encabezado con gradiente
   header: {
-    padding: 20,
-    backgroundColor: AppColors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: AppColors.tabIconDefault, // Un gris suave
+    paddingHorizontal: 20,
+    paddingTop: 60, // Aumentado para SafeArea
+    paddingBottom: 40,
   },
   formContainer: {
     padding: 20,
@@ -41,6 +40,13 @@ export const globalStyles = StyleSheet.create({
   },
 
   // --- Tipografía ---
+  // Título grande para los encabezados de pantalla
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: AppColors.white,
+  },
+  // Título estándar para secciones
   title: {
     fontSize: 24,
     fontWeight: 'bold',
@@ -115,16 +121,49 @@ export const globalStyles = StyleSheet.create({
   },
 
   // --- Formularios ---
+  // Input de formulario estándar
   input: {
-    height: 40,
-    borderColor: AppColors.tabIconDefault,
+    height: 50, // Altura aumentada para mejor toque
+    borderColor: AppColors.borderColor,
     borderWidth: 1,
     borderRadius: 8,
-    paddingHorizontal: 10,
-    backgroundColor: AppColors.white,
+    paddingHorizontal: 15,
+    backgroundColor: AppColors.background,
     marginBottom: 12,
     fontSize: 16,
     color: AppColors.text,
+  },
+  // Contenedor base para el contenido principal con efecto de solapamiento
+  contentContainer: {
+    flex: 1, // Asegura que ocupe el espacio disponible
+    marginTop: -20, // Aumentado el solapamiento en 10px
+    backgroundColor: AppColors.white,
+    borderTopLeftRadius: 24, // Radio estándar original
+    borderTopRightRadius: 24, // Radio estándar original
+  },
+    // Estilo específico para la sección de búsqueda (el padding horizontal lo controla la lista)
+  searchSection: {
+    paddingVertical: 20, // Mantiene el espaciado vertical interno
+    marginBottom: -10, // Reduce el espacio antes de la lista
+  },
+  // Contenedor del input de búsqueda
+  searchContainer: {
+    justifyContent: 'center',
+  },
+  // Icono dentro del input de búsqueda
+  searchIcon: {
+    position: 'absolute',
+    left: 18,
+    zIndex: 1,
+  },
+  // Input de búsqueda estilizado
+  searchInput: {
+    height: 55,
+    paddingLeft: 50, // Espacio para el icono
+    paddingRight: 20,
+    fontSize: 16,
+    borderWidth: 2,
+    borderRadius: 16,
   },
   conditionalContainer: { marginTop: 10, padding: 10, backgroundColor: '#f9f9f9', borderRadius: 8, borderWidth: 1, borderColor: '#e0e0e0' },
   inputDisabled: {
@@ -155,6 +194,24 @@ export const globalStyles = StyleSheet.create({
   cardSubtitle: {
     fontSize: 14,
     color: AppColors.icon,
+  },
+
+    // Botón de Acción Flotante (FAB)
+  fab: {
+    position: 'absolute',
+    bottom: 115, // Posición sobre la barra de navegación
+    right: 20,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: AppColors.primary,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
 
   // --- Imágenes ---

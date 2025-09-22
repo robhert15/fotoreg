@@ -1,5 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, FlatList } from 'react-native';
+import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
+import { ConsultationCard } from '@/components/cards/ConsultationCard';
+import { BaseCard } from '@/components/cards/BaseCard';
+import { Ionicons } from '@expo/vector-icons';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { getPatientById } from '@/db/api/patients';
 import { getConsultationsForPatient } from '@/db/api/consultations';
@@ -39,52 +43,52 @@ export default function PatientDetailScreen() {
     }, [patientId])
   );
 
-  if (!patient) {
-    return <View style={globalStyles.container}><Text style={globalStyles.emptyText}>Cargando...</Text></View>;
+    if (!patient) {
+    return (
+      <ScreenLayout title="Cargando...">
+        <Text style={globalStyles.emptyText}>Cargando datos del paciente...</Text>
+      </ScreenLayout>
+    );
   }
   
   const handleNewConsultation = () => {
     navigation.navigate('NewConsultation', { patientId: patient.id });
   };
   
-  const renderConsultationItem = ({ item }: { item: Consultation }) => (
-    <Pressable 
-      style={globalStyles.card}
-      onPress={() => navigation.navigate('ConsultationDetail', { consultationId: item.id })}
-    >
-      <Text style={globalStyles.cardSubtitle}>
-        {new Date(item.consultation_date).toLocaleDateString('es-ES', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })}
-      </Text>
-      <Text style={globalStyles.cardTitle}>{item.visit_reason || 'Consulta general'}</Text>
-    </Pressable>
-  );
-
-  return (
-    <View style={globalStyles.container}>
-      <FlatList
-        ListHeaderComponent={
-          <>
-            <View style={[globalStyles.sectionBox, { marginBottom: 20 }]}>
-              <Text style={globalStyles.title}>{patient.name}</Text>
+    return (
+    <ScreenLayout title={patient.name}>
+      <View style={globalStyles.contentContainer}>
+        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
+          {/* Tarjeta de Detalles del Paciente */}
+          <View style={{ marginBottom: 20 }}>
+            <BaseCard>
+              <Text style={globalStyles.title}>Detalles</Text>
               <Text style={globalStyles.bodyText}>Documento: {patient.documentNumber}</Text>
-            </View>
-            <Pressable style={[globalStyles.button, globalStyles.buttonPrimary, { flex: 0, marginBottom: 20 }]} onPress={handleNewConsultation}>
-              <Text style={globalStyles.buttonText}>+ Nueva Consulta</Text>
-            </Pressable>
-            <Text style={globalStyles.sectionTitle}>Historial de Consultas</Text>
-          </>
-        }
-        data={consultations}
-        renderItem={renderConsultationItem}
-        keyExtractor={(item: Consultation) => item.id.toString()}
-        ListEmptyComponent={<Text style={globalStyles.emptyText}>Este paciente aún no tiene consultas registradas.</Text>}
-        contentContainerStyle={{ padding: 20 }}
-      />
-    </View>
+              <Text style={globalStyles.bodyText}>Ocupación: {patient.occupation || 'No especificado'}</Text>
+              <Text style={globalStyles.bodyText}>Miembro desde: {new Date(patient.createdAt).toLocaleDateString('es-ES')}</Text>
+            </BaseCard>
+          </View>
+
+          {/* Historial de Consultas */}
+          <Text style={globalStyles.title}>Historial de Consultas</Text>
+          {consultations.length > 0 ? (
+            consultations.map((item) => (
+              <ConsultationCard
+                key={item.id}
+                consultation={item}
+                onPress={() => navigation.navigate('ConsultationDetail', { consultationId: item.id })}
+              />
+            ))
+          ) : (
+            <Text style={globalStyles.emptyText}>Este paciente aún no tiene consultas.</Text>
+          )}
+        </ScrollView>
+      </View>
+
+      <Pressable style={globalStyles.fab} onPress={handleNewConsultation}>
+        <Ionicons name="add" size={24} color="white" />
+      </Pressable>
+    </ScreenLayout>
   );
 }
 
