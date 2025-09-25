@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, SafeAreaView, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NewConsultation } from '@/types';
 import { 

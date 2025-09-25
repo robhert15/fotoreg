@@ -4,6 +4,10 @@ import { Consultation, ConsultationDraft, NewConsultation, Photo } from '@/types
 const db = openDatabaseAsync('fotoreg.db');
 
 // --- Funciones Auxiliares de Serialización ---
+// Control de logs para parseos inválidos (silenciado por defecto)
+const LOG_PARSE_WARNINGS = false;
+let WARNED_MC_ONCE = false;
+let WARNED_HB_ONCE = false;
 
 const deserializeConsultation = (dbResult: any): Consultation | null => {
   if (!dbResult) return null;
@@ -19,7 +23,10 @@ const deserializeConsultation = (dbResult: any): Consultation | null => {
     try {
       medicalConditions = JSON.parse(mc);
     } catch (e) {
-      console.warn('deserializeConsultation medical_conditions parse failed:', e);
+      if (__DEV__ && LOG_PARSE_WARNINGS && !WARNED_MC_ONCE) {
+        console.warn('deserializeConsultation medical_conditions parse failed:', e);
+        WARNED_MC_ONCE = true;
+      }
       medicalConditions = [];
     }
   }
@@ -35,7 +42,10 @@ const deserializeConsultation = (dbResult: any): Consultation | null => {
     try {
       habitsObj = JSON.parse(hb);
     } catch (e) {
-      console.warn('deserializeConsultation habits parse failed:', e);
+      if (__DEV__ && LOG_PARSE_WARNINGS && !WARNED_HB_ONCE) {
+        console.warn('deserializeConsultation habits parse failed:', e);
+        WARNED_HB_ONCE = true;
+      }
       habitsObj = {};
     }
   }
