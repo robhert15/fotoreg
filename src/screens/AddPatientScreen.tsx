@@ -12,24 +12,25 @@ import { RootStackParamList } from '@/navigation/AppNavigator';
 type AddPatientScreenRouteProp = RouteProp<RootStackParamList, 'AddPatient'>;
 
 export default function AddPatientScreen() {
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [documentNumber, setDocumentNumber] = useState('');
   const navigation = useNavigation();
   const route = useRoute<AddPatientScreenRouteProp>();
 
   const handleSavePatient = async () => {
-    const trimmedName = name.trim();
-    const trimmedDocumentNumber = documentNumber.trim();
+    const trimmedFirstName = firstName.trim();
+    const trimmedLastName = lastName.trim();
 
-    if (!trimmedName || !trimmedDocumentNumber) {
-      Alert.alert('Campos incompletos', 'Por favor, rellena todos los campos.');
+    if (!trimmedFirstName || !trimmedLastName) {
+      Alert.alert('Campos incompletos', 'Por favor, introduce al menos el nombre y el apellido.');
       return;
     }
 
     const newPatient: NewPatient = {
-      name: trimmedName,
-      documentNumber: trimmedDocumentNumber,
-      createdAt: new Date().toISOString(),
+      first_name: trimmedFirstName,
+      last_name: trimmedLastName,
+      document_number: documentNumber.trim(),
     };
 
     try {
@@ -56,12 +57,20 @@ export default function AddPatientScreen() {
       <View style={globalStyles.contentContainer}>
         <ScrollView contentContainerStyle={{ padding: 20 }}>
           <BaseCard>
-            <Text style={globalStyles.label}>Nombre Completo</Text>
+            <Text style={globalStyles.label}>Nombres</Text>
             <TextInput
               style={globalStyles.input}
-              placeholder="Nombre y Apellido del paciente"
-              value={name}
-              onChangeText={setName}
+              placeholder="Nombres del paciente"
+              value={firstName}
+              onChangeText={setFirstName}
+            />
+
+            <Text style={globalStyles.label}>Apellidos</Text>
+            <TextInput
+              style={globalStyles.input}
+              placeholder="Apellidos del paciente"
+              value={lastName}
+              onChangeText={setLastName}
             />
 
             <Text style={globalStyles.label}>Número de Documento</Text>

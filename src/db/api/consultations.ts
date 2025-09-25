@@ -7,11 +7,44 @@ const db = openDatabaseAsync('fotoreg.db');
 
 const deserializeConsultation = (dbResult: any): Consultation | null => {
   if (!dbResult) return null;
+
+  // medical_conditions: tolerate legacy/plain values and parsing errors
+  let medicalConditions: any = [];
+  const mc = dbResult.medical_conditions;
+  if (mc == null || mc === '') {
+    medicalConditions = [];
+  } else if (Array.isArray(mc) || typeof mc === 'object') {
+    medicalConditions = mc;
+  } else {
+    try {
+      medicalConditions = JSON.parse(mc);
+    } catch (e) {
+      console.warn('deserializeConsultation medical_conditions parse failed:', e);
+      medicalConditions = [];
+    }
+  }
+
+  // habits: tolerate legacy/plain values and parsing errors
+  let habitsObj: any = {};
+  const hb = dbResult.habits;
+  if (hb == null || hb === '') {
+    habitsObj = {};
+  } else if (typeof hb === 'object') {
+    habitsObj = hb;
+  } else {
+    try {
+      habitsObj = JSON.parse(hb);
+    } catch (e) {
+      console.warn('deserializeConsultation habits parse failed:', e);
+      habitsObj = {};
+    }
+  }
+
   return {
     ...dbResult,
-    medical_conditions: dbResult.medical_conditions ? JSON.parse(dbResult.medical_conditions) : [],
-    habits: dbResult.habits ? JSON.parse(dbResult.habits) : {},
-  };
+    medical_conditions: medicalConditions,
+    habits: habitsObj,
+  } as Consultation;
 };
 
 const serializeConsultation = (data: Partial<NewConsultation>): any => {
@@ -20,6 +53,13 @@ const serializeConsultation = (data: Partial<NewConsultation>): any => {
     medical_conditions: JSON.stringify(data.medical_conditions || []),
     habits: JSON.stringify(data.habits || {}),
   };
+};
+
+// --- Helper: detectar columnas de patients para compatibilidad V2/V3 ---
+const patientsHasColumn = async (columnName: string): Promise<boolean> => {
+  const dbInstance = await db;
+  const rows = await dbInstance.getAllAsync<any>(`PRAGMA table_info(patients)`);
+  return rows.some((r) => r.name === columnName);
 };
 
 // --- API de Consultas Refactorizada ---
@@ -32,7 +72,30 @@ export const getConsultationById = async (consultationId: number): Promise<Consu
 
 export const getConsultationsForPatient = async (patientId: number): Promise<Consultation[]> => {
   const dbInstance = await db;
-  const results = await dbInstance.getAllAsync<any>('SELECT * FROM consultations WHERE patient_id = ? ORDER BY consultation_date DESC', patientId);
+  try {
+    const patientRow = await dbInstance.getFirstAsync<any>('SELECT * FROM patients WHERE id = ?', patientId);
+    if (patientRow) {
+      const doc = patientRow.document_number ?? patientRow.documentNumber ?? null;
+      if (doc) {
+        const hasV3 = await patientsHasColumn('document_number');
+        const results = await dbInstance.getAllAsync<any>(
+          hasV3
+            ? `SELECT c.* FROM consultations c WHERE c.patient_id IN (SELECT id FROM patients WHERE document_number = ?) ORDER BY c.consultation_date DESC`
+            : `SELECT c.* FROM consultations c WHERE c.patient_id IN (SELECT id FROM patients WHERE documentNumber = ?) ORDER BY c.consultation_date DESC`,
+          doc
+        );
+        return results.map(deserializeConsultation).filter(c => c !== null) as Consultation[];
+      }
+    }
+  } catch (e) {
+    console.warn('getConsultationsForPatient document join failed, using direct id lookup', e);
+  }
+
+  // Fallback to direct lookup by id
+  const results = await dbInstance.getAllAsync<any>(
+    'SELECT * FROM consultations WHERE patient_id = ? ORDER BY consultation_date DESC',
+    patientId
+  );
   return results.map(deserializeConsultation).filter(c => c !== null) as Consultation[];
 };
 
@@ -111,6 +174,40 @@ export const updateDraft = async (draftId: number, data: Partial<NewConsultation
   const dataAsJson = JSON.stringify(data);
   const now = new Date().toISOString();
   await dbInstance.runAsync('UPDATE consultation_drafts SET consultation_data = ?, last_updated = ? WHERE id = ?', dataAsJson, now, draftId);
+};
+
+export const createDraftFromConsultation = async (patientId: number, consultationId: number): Promise<ConsultationDraft> => {
+  const dbInstance = await db;
+
+  // 1) Obtener consulta original (ya deserializada por getConsultationById)
+  const original = await getConsultationById(consultationId);
+  if (!original) {
+    throw new Error('La consulta original no fue encontrada.');
+  }
+
+  // 2) Limpiar borradores antiguos del paciente
+  await dbInstance.runAsync('DELETE FROM consultation_drafts WHERE patient_id = ?', patientId);
+
+  // 3) Construir payload serializable sin ids y con fallbacks seguros
+  const { id: _ignoredId, patient_id: _ignoredPid, ...rest } = original as any;
+  const mc = Array.isArray(rest.medical_conditions) ? rest.medical_conditions : [];
+  const hb = typeof rest.habits === 'object' && rest.habits !== null ? rest.habits : {};
+  const dataAsJson = JSON.stringify({ ...rest, medical_conditions: mc, habits: hb });
+  const now = new Date().toISOString();
+
+  const result = await dbInstance.runAsync(
+    'INSERT INTO consultation_drafts (patient_id, consultation_data, last_updated) VALUES (?, ?, ?)',
+    patientId,
+    dataAsJson,
+    now
+  );
+
+  return {
+    id: result.lastInsertRowId,
+    patient_id: patientId,
+    consultation_data: dataAsJson,
+    last_updated: now,
+  };
 };
 
 export const deleteDraft = async (draftId: number): Promise<void> => {

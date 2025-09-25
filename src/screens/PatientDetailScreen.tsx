@@ -30,13 +30,20 @@ export default function PatientDetailScreen() {
       const loadData = async () => {
         try {
           const patientData = await getPatientById(patientId);
+          if (!patientData) {
+            throw new Error('Paciente no encontrado');
+          }
           setPatient(patientData);
-          if (patientData) {
+          try {
             const consultationHistory = await getConsultationsForPatient(patientData.id);
             setConsultations(consultationHistory);
+          } catch (e) {
+            console.warn('No se pudo obtener el historial de consultas para el paciente', patientId, e);
+            setConsultations([]);
           }
         } catch (error) {
           Alert.alert('Error', 'No se pudo cargar la información del paciente.');
+          console.error('PatientDetailScreen loadData failed:', error);
         }
       };
       loadData();
@@ -55,17 +62,27 @@ export default function PatientDetailScreen() {
     navigation.navigate('NewConsultation', { patientId: patient.id });
   };
   
-    return (
-    <ScreenLayout title={patient.name}>
+    // Compatibilidad V2/V3: construir valores seguros para mostrar
+  const displayName = ((patient as any).name as string) ?? [
+    (patient as any).first_name,
+    (patient as any).last_name,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  const displayDocument = ((patient as any).documentNumber as string) ?? (patient as any).document_number ?? 'No especificado';
+  const displayCreatedAt = new Date(((patient as any).createdAt ?? (patient as any).created_at) ?? new Date().toISOString()).toLocaleDateString('es-ES');
+
+  return (
+    <ScreenLayout title={displayName || 'Paciente'}>
       <View style={globalStyles.contentContainer}>
         <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
           {/* Tarjeta de Detalles del Paciente */}
           <View style={{ marginBottom: 20 }}>
             <BaseCard>
               <Text style={globalStyles.title}>Detalles</Text>
-              <Text style={globalStyles.bodyText}>Documento: {patient.documentNumber}</Text>
-              <Text style={globalStyles.bodyText}>Ocupación: {patient.occupation || 'No especificado'}</Text>
-              <Text style={globalStyles.bodyText}>Miembro desde: {new Date(patient.createdAt).toLocaleDateString('es-ES')}</Text>
+              <Text style={globalStyles.bodyText}>Documento: {displayDocument}</Text>
+              <Text style={globalStyles.bodyText}>Ocupación: {(patient as any).occupation || 'No especificado'}</Text>
+              <Text style={globalStyles.bodyText}>Miembro desde: {displayCreatedAt}</Text>
             </BaseCard>
           </View>
 

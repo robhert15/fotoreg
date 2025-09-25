@@ -38,16 +38,27 @@ export default function PatientListScreen() {
       const basicPatients = await findPatients(searchTerm);
       const enrichedPatients = await Promise.all(
         basicPatients.map(async (patient) => {
-          const lastConsultation = await getLastConsultationForPatient(patient.id);
-          return {
-            ...patient,
-            last_visit: lastConsultation?.consultation_date,
-            last_diagnosis: lastConsultation?.diagnosis,
-          };
+          try {
+            const lastConsultation = await getLastConsultationForPatient(patient.id);
+            return {
+              ...patient,
+              last_visit: lastConsultation?.consultation_date,
+              last_diagnosis: lastConsultation?.diagnosis,
+            };
+          } catch (e) {
+            console.warn('getLastConsultationForPatient failed for patient', patient.id, e);
+            // Degradación elegante: devolvemos el paciente sin datos de última consulta
+            return {
+              ...patient,
+              last_visit: undefined,
+              last_diagnosis: undefined,
+            };
+          }
         })
       );
       setPatients(enrichedPatients);
     } catch (error) {
+      console.error('loadPatients failed:', error);
       Alert.alert('Error', 'No se pudieron buscar los pacientes.');
     }
   }, [searchTerm]);

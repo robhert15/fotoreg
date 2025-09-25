@@ -21,8 +21,8 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
     <BaseCard onPress={onPress}>
       <View style={styles.cardHeader}>
         <View style={styles.patientInfo}>
-          <Text style={[styles.patientName, { color: textColor }]}>{patient.name}</Text>
-          <Text style={[styles.patientId, { color: textLightColor }]}>Doc: {patient.documentNumber}</Text>
+          <Text style={[styles.patientName, { color: textColor }]}>{`${patient.first_name} ${patient.last_name}`}</Text>
+          <Text style={[styles.patientId, { color: textLightColor }]}>Doc: {patient.document_number}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
           <Text style={[styles.statusText, { color: successColor }]}>Activo</Text>

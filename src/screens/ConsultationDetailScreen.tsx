@@ -29,11 +29,19 @@ export default function ConsultationDetailScreen() {
         if (data) {
           const formData: Partial<Consultation> = {
             ...data,
-            medical_conditions: data.medical_conditions ? JSON.parse(data.medical_conditions) : [],
-            habits: data.habits ? JSON.parse(data.habits) : {},
+            // Ya llegan deserializados desde la capa de datos; usamos fallbacks seguros
+            medical_conditions: Array.isArray((data as any).medical_conditions)
+              ? (data as any).medical_conditions
+              : [],
+            habits:
+              typeof (data as any).habits === 'object' && (data as any).habits !== null
+                ? (data as any).habits
+                : {},
           };
           setConsultation(formData);
           setOriginalConsultation(formData);
+        } else {
+          throw new Error('Consulta no encontrada');
         }
       } catch (error) {
         Alert.alert('Error', 'No se pudo cargar la consulta.');
@@ -46,12 +54,8 @@ export default function ConsultationDetailScreen() {
 
   const handleSave = async () => {
     try {
-      const dataToSave: any = {
-        ...consultation,
-        medical_conditions: JSON.stringify(consultation.medical_conditions || []),
-        habits: JSON.stringify(consultation.habits || {}),
-      };
-      await updateConsultation(consultationId, dataToSave);
+      // La capa de datos serializa internamente; enviamos el objeto tal cual
+      await updateConsultation(consultationId, consultation as any);
       if (draftId) {
         await moveDraftPhotosToConsultation(draftId, consultationId);
         await deleteDraft(draftId);
