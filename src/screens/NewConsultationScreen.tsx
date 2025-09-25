@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { ScreenLayout } from '@/components/layout/ScreenLayout';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, Pressable, Alert, SafeAreaView, ScrollView } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NewConsultation } from '@/types';
 import { 
@@ -9,14 +7,11 @@ import {
   updateDraft, 
   finalizeConsultation,
   deletePhotosForConsultation,
-  deleteDraft,
+  deleteDraft
 } from '@/db/api/consultations';
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
-import { globalStyles } from '@/styles/globalStyles';
-
-// --- FIN componentes internos ---
-
-// --- COMPONENTE PRINCIPAL ---
+import { Colors } from '@/constants/theme';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function NewConsultationScreen() {
   const navigation = useNavigation();
@@ -25,33 +20,85 @@ export default function NewConsultationScreen() {
   
   const [draftId, setDraftId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<NewConsultation>>({});
+  const [isLoading, setIsLoading] = useState(true);
 
-  // useEffect de carga SIMPLIFICADO: solo para crear.
   useEffect(() => {
     const loadDraft = async () => {
       try {
         const draft = await findOrCreateDraft(patientId);
-        // Limpiar cualquier dato residual del borrador y sus fotos
-        await deletePhotosForConsultation(draft.id);
-        await updateDraft(draft.id, {});
-        setDraftId(draft.id);
-        setFormData({});
+        const parsedData = draft.consultation_data ? JSON.parse(draft.consultation_data) : {};
+
+        if (Object.keys(parsedData).length > 0) {
+          Alert.alert(
+            "Borrador Encontrado",
+            "Se encontró una consulta sin terminar. ¿Qué deseas hacer?",
+            [
+              {
+                text: "Continuar Borrador",
+                onPress: () => {
+                  setFormData(parsedData);
+                  setDraftId(draft.id);
+                  setIsLoading(false);
+                }
+              },
+              {
+                text: "Empezar Nuevo",
+                onPress: async () => {
+                  await deletePhotosForConsultation(draft.id);
+                  await updateDraft(draft.id, {});
+                  setFormData({});
+                  setDraftId(draft.id);
+                  setIsLoading(false);
+                }
+              },
+              { text: "Cancelar", style: "cancel", onPress: () => navigation.goBack() }
+            ]
+          );
+        } else {
+          setFormData({});
+          setDraftId(draft.id);
+          setIsLoading(false);
+        }
       } catch (error) {
-        Alert.alert('Error', 'No se pudo iniciar la nueva consulta.');
+        Alert.alert("Error", "No se pudo iniciar la nueva consulta.");
         console.error(error);
+        navigation.goBack();
       }
     };
-    loadDraft();
-  }, [patientId]);
 
-  const handleCancel = () => {
+    loadDraft();
+  }, [patientId, navigation]);
+
+  useEffect(() => {
+    if (!isLoading && draftId) {
+      const handler = setTimeout(() => {
+        updateDraft(draftId, formData);
+      }, 1000);
+      return () => clearTimeout(handler);
+    }
+  }, [formData, draftId, isLoading]);
+
+  const handleFinalSave = useCallback(async () => {
+    if (!draftId) return;
+    try {
+      await finalizeConsultation(draftId, patientId, formData);
+      Alert.alert('Éxito', 'La consulta ha sido guardada correctamente.', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error) {
+      Alert.alert('Error', 'Ocurrió un problema al guardar la consulta.');
+      console.error(error);
+    }
+  }, [draftId, patientId, formData, navigation]);
+
+  const handleCancel = useCallback(() => {
     if (!draftId) {
       navigation.goBack();
       return;
     }
     Alert.alert(
       'Cancelar',
-      'Se descartarán los cambios y las fotos tomadas en esta nueva consulta. ¿Deseas continuar?',
+      'Se descartarán los cambios y las fotos tomadas. ¿Deseas continuar?',
       [
         { text: 'No', style: 'cancel' },
         {
@@ -62,7 +109,7 @@ export default function NewConsultationScreen() {
               await deletePhotosForConsultation(draftId);
               await deleteDraft(draftId);
             } catch (err) {
-              console.error(err);
+              console.error('Error al descartar el borrador:', err);
             } finally {
               navigation.goBack();
             }
@@ -70,65 +117,81 @@ export default function NewConsultationScreen() {
         },
       ]
     );
-  };
-
-  // Autoguardado
-  useEffect(() => {
-    if (draftId) {
-      const handler = setTimeout(() => {
-        // Guardamos el borrador tal cual (objetos/arrays nativos). updateDraft serializa el objeto completo.
-        updateDraft(draftId, formData);
-      }, 1000);
-      return () => clearTimeout(handler);
-    }
-  }, [formData, draftId]);
-
-  // handleFinalSave SIMPLIFICADO: solo para crear.
-  const handleFinalSave = async () => {
-    if (!draftId) {
-      Alert.alert('Error', 'No hay un borrador activo para guardar.');
-      return;
-    }
-    try {
-      const finalData: NewConsultation = {
-        ...formData,
-        consultation_date: formData.consultation_date || new Date().toISOString(),
-        medical_conditions: JSON.stringify(formData.medical_conditions || []),
-        habits: JSON.stringify(formData.habits || {}),
-      } as any;
-
-      await finalizeConsultation(draftId, patientId, finalData);
-      Alert.alert('Éxito', 'La consulta ha sido guardada correctamente.', [
-        { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
-    } catch (error) {
-      Alert.alert('Error', 'Ocurrió un problema al guardar la consulta.');
-      console.error(error);
-    }
-  };
+  }, [draftId, navigation]);
+  
+  if (isLoading) {
+    return <SafeAreaView style={styles.container}><Text>Cargando...</Text></SafeAreaView>;
+  }
 
   return (
-    <ScreenLayout title="Nueva Consulta">
-      <View style={globalStyles.contentContainer}>
-        <ScrollView 
-          contentContainerStyle={{ padding: 20, paddingBottom: 120 }} 
-          keyboardShouldPersistTaps="handled"
-        >
-          <ConsultationForm
-            formData={formData}
-            setFormData={setFormData}
-            isReadOnly={false}
-            draftId={draftId}
-          />
-        </ScrollView>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Nueva Consulta</Text>
       </View>
-      {/* Botones de Acción Flotantes */}
-      <Pressable style={[globalStyles.fab, { right: 90, backgroundColor: '#6c757d' }]} onPress={handleCancel}>
-        <Ionicons name="close" size={24} color="white" />
-      </Pressable>
-      <Pressable style={globalStyles.fab} onPress={handleFinalSave}>
-        <Ionicons name="checkmark" size={24} color="white" />
-      </Pressable>
-    </ScreenLayout>
+      
+      <ScrollView keyboardShouldPersistTaps="handled">
+        <ConsultationForm
+          formData={formData}
+          setFormData={setFormData}
+          isReadOnly={false}
+          draftId={draftId}
+        />
+      </ScrollView>
+      
+      <View style={styles.footer}>
+        <Pressable style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
+          <Ionicons name="close" size={20} color="white" />
+          <Text style={styles.buttonText}>Cancelar</Text>
+        </Pressable>
+        <Pressable style={[styles.button, styles.saveButton]} onPress={handleFinalSave}>
+          <Ionicons name="checkmark" size={20} color="white" />
+          <Text style={styles.buttonText}>Guardar</Text>
+        </Pressable>
+      </View>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: Colors.light.background },
+  header: {
+    backgroundColor: Colors.light.white,
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.light.borderColor,
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: Colors.light.text,
+  },
+  footer: {
+    flexDirection: 'row',
+    padding: 10,
+    backgroundColor: Colors.light.white,
+    borderTopWidth: 1,
+    borderTopColor: Colors.light.borderColor,
+  },
+  button: {
+    flex: 1,
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  saveButton: {
+    backgroundColor: Colors.light.primary,
+    marginLeft: 5,
+  },
+  cancelButton: {
+    backgroundColor: Colors.light.tertiary,
+    marginRight: 5,
+  },
+  buttonText: {
+    color: Colors.light.white,
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 8,
+  },
+});

@@ -483,3 +483,14 @@
   - Nuevo esquema V3 en `src/db/database.ts`.
   - Nuevos tipos V3 en `src/types/index.ts`.
   - Patrón de refactorización para la API de datos en `src/db/api/consultations.ts`.
+
+
+  ---
+## Tarea (Master Refactor): Corrección del Flujo de Borradores
+
+- **ID:** `REFACTOR-DRAFT-FIX-001`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para corregir el error crítico de pérdida de datos en `NewConsultationScreen`. Se implementó un diálogo de confirmación para que el usuario decida si continuar con un borrador existente o empezar uno nuevo.
+- **Artefactos Generados:**
+  - Instrucción para IA Desarrolladora.
+  - Refactorización completa del `useEffect` de carga en `src/screens/NewConsultationScreen.tsx`.
