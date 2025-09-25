@@ -1,49 +1,41 @@
 // --- Pacientes ---
 export interface Patient {
   id: number;
-  name: string;
-  documentNumber: string;
-  dateOfBirth?: string;
+  first_name: string;
+  last_name: string;
+  document_number?: string;
+  date_of_birth?: string;
   occupation?: string;
-  createdAt: string;
+  created_at: string;
 }
-export type NewPatient = Omit<Patient, 'id'>;
+export type NewPatient = Omit<Patient, 'id' | 'created_at'>;
 
-// Tipo extendido para la lista de pacientes, incluye datos de la última consulta
-export type PatientWithLastDiagnosis = Patient & {
-  last_visit?: string | null;
-  last_diagnosis?: string | null;
-};
+// --- Responsables ---
+export interface Guardian {
+  id: number;
+  first_name: string;
+  last_name: string;
+  document_number?: string;
+  relationship?: string;
+  created_at: string;
+}
+export type NewGuardian = Omit<Guardian, 'id' | 'created_at'>;
 
-
-// --- Consultas (SIN PODOGRAMA) ---
+// --- Consultas (Ahora con objetos/arrays nativos) ---
 interface MedicalCondition {
   name: string;
-  status?: string | null;
+  status?: string;
 }
 
 interface Habits {
-  is_smoker?: boolean | null;
-  consumes_alcohol?: boolean | null;
+  is_smoker?: boolean;
+  consumes_alcohol?: boolean;
 }
 
 export interface Consultation {
   id: number;
   patient_id: number;
   consultation_date: string;
-  reason?: string; // 'reason' es el campo en la DB
-  diagnosis?: string;
-  treatment?: string;
-  notes?: string;
-  medical_conditions?: string; // JSON de MedicalCondition[]
-  habits?: string; // JSON de Habits
-  shoe_type?: string;
-}
-
-// Tipo para el estado del formulario, antes de ser serializado a JSON
-export interface NewConsultation {
-  patient_id?: number;
-  consultation_date?: string;
   reason?: string;
   diagnosis?: string;
   treatment?: string;
@@ -51,8 +43,17 @@ export interface NewConsultation {
   medical_conditions?: MedicalCondition[];
   habits?: Habits;
   shoe_type?: string;
+  is_draft?: boolean;
 }
+export type NewConsultation = Omit<Consultation, 'id' | 'is_draft'>;
 
+// --- Borradores ---
+export interface ConsultationDraft {
+  id: number;
+  patient_id: number;
+  consultation_data: string; // JSON de un objeto Partial<NewConsultation>
+  last_updated: string;
+}
 
 // --- Fotos ---
 export interface Photo {
@@ -64,10 +65,8 @@ export interface Photo {
 }
 export type NewPhoto = Omit<Photo, 'id'>;
 
-// --- Borradores ---
-export interface ConsultationDraft {
-  id: number;
-  patient_id: number;
-  consultation_data: string; // JSON de un objeto Partial<NewConsultation>
-  last_updated: string;
-}
+// --- Tipos compuestos ---
+export type PatientWithLastDiagnosis = Patient & {
+  last_visit?: string | null;
+  last_diagnosis?: string | null;
+};

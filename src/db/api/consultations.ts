@@ -3,6 +3,27 @@ import { openDatabaseAsync } from 'expo-sqlite';
 
 const db = openDatabaseAsync('fotoreg.db');
 
+// --- Funciones Auxiliares de Serialización ---
+
+const deserializeConsultation = (dbResult: any): Consultation | null => {
+  if (!dbResult) return null;
+  return {
+    ...dbResult,
+    medical_conditions: dbResult.medical_conditions ? JSON.parse(dbResult.medical_conditions) : [],
+    habits: dbResult.habits ? JSON.parse(dbResult.habits) : {},
+  };
+};
+
+const serializeConsultation = (data: Partial<NewConsultation>): any => {
+  return {
+    ...data,
+    medical_conditions: JSON.stringify(data.medical_conditions || []),
+    habits: JSON.stringify(data.habits || {}),
+  };
+};
+
+// --- API de Consultas Refactorizada ---
+
 export const findOrCreateDraft = async (patientId: number): Promise<ConsultationDraft> => {
   try {
     const dbInstance = await db;
@@ -113,34 +134,30 @@ export const moveDraftPhotosToConsultation = async (draftId: number, consultatio
   }
 };
 
-export const finalizeConsultation = async (draftId: number, patientId: number, consultationData: any): Promise<number> => {
-  try {
-    const dbInstance = await db;
-    const result = await dbInstance.runAsync(
-      `INSERT INTO consultations (patient_id, consultation_date, reason, diagnosis, treatment, notes, medical_conditions, habits, shoe_type) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      patientId,
-      consultationData.consultation_date ?? new Date().toISOString(),
-      consultationData.reason ?? null,
-      consultationData.diagnosis ?? null,
-      consultationData.treatment ?? null,
-      consultationData.notes ?? null,
-      consultationData.medical_conditions ?? null,
-      consultationData.habits ?? null,
-      consultationData.shoe_type ?? null
-    );
-    const newConsultationId = result.lastInsertRowId;
-    await dbInstance.runAsync(
-      'UPDATE photos SET consultation_id = ? WHERE consultation_id = ?',
-      newConsultationId,
-      draftId
-    );
-    await dbInstance.runAsync('DELETE FROM consultation_drafts WHERE id = ?', draftId);
-    return newConsultationId;
-  } catch (error) {
-    console.error('Error in finalizeConsultation:', error);
-    throw new Error('No se pudo guardar la consulta final.');
-  }
+export const finalizeConsultation = async (draftId: number, patientId: number, consultationData: Partial<NewConsultation>): Promise<number> => {
+  const dbInstance = await db;
+  const dataToStore = serializeConsultation(consultationData);
+
+  const result = await dbInstance.runAsync(
+    `INSERT INTO consultations (patient_id, consultation_date, reason, diagnosis, treatment, notes, medical_conditions, habits, shoe_type) 
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    patientId,
+    dataToStore.consultation_date ?? new Date().toISOString(),
+    dataToStore.reason ?? null,
+    dataToStore.diagnosis ?? null,
+    dataToStore.treatment ?? null,
+    dataToStore.notes ?? null,
+    dataToStore.medical_conditions,
+    dataToStore.habits,
+    dataToStore.shoe_type ?? null
+  );
+  const newConsultationId = result.lastInsertRowId;
+
+  // Mover fotos y limpiar borrador
+  await dbInstance.runAsync('UPDATE photos SET consultation_id = ? WHERE consultation_id = ?', newConsultationId, draftId);
+  await dbInstance.runAsync('DELETE FROM consultation_drafts WHERE id = ?', draftId);
+
+  return newConsultationId;
 };
 
 /**
@@ -149,17 +166,9 @@ export const finalizeConsultation = async (draftId: number, patientId: number, c
  * @returns Un array con las consultas del paciente.
  */
 export const getConsultationsForPatient = async (patientId: number): Promise<Consultation[]> => {
-  try {
-    const dbInstance = await db;
-    const consultations = await dbInstance.getAllAsync<Consultation>(
-      'SELECT * FROM consultations WHERE patient_id = ? ORDER BY consultation_date DESC',
-      patientId
-    );
-    return consultations;
-  } catch (error) {
-    console.error('Error in getConsultationsForPatient:', error);
-    throw new Error('No se pudo obtener el historial de consultas.');
-  }
+  const dbInstance = await db;
+  const results = await dbInstance.getAllAsync<any>('SELECT * FROM consultations WHERE patient_id = ? ORDER BY consultation_date DESC', patientId);
+  return results.map(deserializeConsultation).filter(c => c !== null) as Consultation[];
 };
 
 /**
@@ -168,17 +177,9 @@ export const getConsultationsForPatient = async (patientId: number): Promise<Con
  * @returns El objeto de la consulta o null si no se encuentra.
  */
 export const getConsultationById = async (consultationId: number): Promise<Consultation | null> => {
-  try {
-    const dbInstance = await db;
-    const consultation = await dbInstance.getFirstAsync<Consultation>(
-      'SELECT * FROM consultations WHERE id = ?',
-      consultationId
-    );
-    return consultation || null;
-  } catch (error) {
-    console.error('Error in getConsultationById:', error);
-    throw new Error('No se pudo obtener la consulta.');
-  }
+  const dbInstance = await db;
+  const result = await dbInstance.getFirstAsync<any>('SELECT * FROM consultations WHERE id = ?', consultationId);
+  return deserializeConsultation(result);
 };
 
 /**
@@ -262,43 +263,34 @@ export const getLastConsultationForPatient = async (patientId: number): Promise<
     LIMIT 1;
   `;
   const result = await dbInstance.getFirstAsync<Pick<Consultation, 'consultation_date' | 'diagnosis'>>(query, patientId);
-  return result ?? null;
+  return result ? deserializeConsultation(result) : null;
 };
 
-export const updateConsultation = async (consultationId: number, data: any): Promise<void> => {
-  try {
-    const dbInstance = await db;
-    await dbInstance.runAsync(
-      `UPDATE consultations SET
-        consultation_date = ?,
-        reason = ?,
-        diagnosis = ?,
-        treatment = ?,
-        notes = ?,
-        medical_conditions = ?,
-        habits = ?,
-        shoe_type = ?
-      WHERE id = ?`,
-      data.consultation_date ?? new Date().toISOString(),
-      data.reason ?? null,
-      data.diagnosis ?? null,
-      data.treatment ?? null,
-      data.notes ?? null,
-      data.medical_conditions ?? null,
-      data.habits ?? null,
-      data.shoe_type ?? null,
-      consultationId
-    );
-  } catch (error) {
-    console.error('Error in updateConsultation:', error);
-    throw new Error('No se pudo actualizar la consulta.');
-  }
-};
+export const updateConsultation = async (consultationId: number, data: Partial<NewConsultation>): Promise<void> => {
+  const dbInstance = await db;
+  const dataToStore = serializeConsultation(data);
 
-/**
- * Elimina un borrador de consulta por su ID.
- * @param draftId El ID del borrador a eliminar.
- */
+  await dbInstance.runAsync(
+    `UPDATE consultations SET
+      consultation_date = ?,
+      reason = ?,
+      diagnosis = ?,
+      treatment = ?,
+      notes = ?,
+      medical_conditions = ?,
+      habits = ?,
+      shoe_type = ?
+    WHERE id = ?`,
+    dataToStore.consultation_date ?? new Date().toISOString(),
+    dataToStore.reason ?? null,
+    dataToStore.diagnosis ?? null,
+    dataToStore.treatment ?? null,
+    dataToStore.notes ?? null,
+    dataToStore.medical_conditions,
+    dataToStore.habits,
+    dataToStore.shoe_type ?? null,
+    consultationId
+  );
 export const deleteDraft = async (draftId: number): Promise<void> => {
   try {
     const dbInstance = await db;

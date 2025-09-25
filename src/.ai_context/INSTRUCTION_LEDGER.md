@@ -397,3 +397,89 @@
   - Instrucción para IA Desarrolladora (incluye instalación de dependencias).
   - Creación de 3 pantallas placeholder.
   - Refactorización completa de `src/navigation/AppNavigator.tsx`.
+
+  ---
+# FASE II: BACKEND API
+
+## Tarea 1 (API V2): Setup del Proyecto y Migraciones
+
+- **ID:** `API-SETUP-002-MIGRATIONS`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para la configuración inicial del proyecto de backend, incluyendo la instalación y configuración de la herramienta de migraciones de base de datos `node-pg-migrate`.
+- **Artefactos Generados:**
+  - Comandos de instalación de dependencias, incluyendo `node-pg-migrate`.
+  - Configuración de scripts de migración en `package.json`.
+  - Creación del archivo `.env` con la `DATABASE_URL`.
+  - Comando para generar el primer archivo de migración.
+
+  ---
+## Tarea (API): Creación del Esquema de Base de Datos
+
+- **ID:** `API-MIGRATE-001-SCHEMA`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para llenar el primer archivo de migración con el código SQL para crear el esquema multi-empresa completo (`companies`, `locations`, `users`, `patients`, `consultations`) en PostgreSQL.
+- **Artefactos Generados:**
+  - Código completo para el archivo de migración.
+  - Comando `npm run migrate up` para ejecutar la migración.
+
+  ---
+## Tarea (API): Conexión a la Base de Datos Dedicada
+
+- **ID:** `API-DB-CONNECT-002`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para configurar la conexión entre la API local y la base de datos `fotoreg-db` en el VPS, usando un archivo .env y un módulo de configuración con prueba de conexión.
+- **Artefactos Generados:**
+  - Creación de `.env` y `src/config/db.ts`.
+  - Modificación de `src/index.ts` para verificar la conexión.
+
+  ---
+## Tarea (API): Creación del Primer Endpoint (Companies)
+
+- **ID:** `API-ENDPOINT-001-COMPANY`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para crear el primer endpoint de la API (`POST /api/companies`) para registrar nuevas empresas, siguiendo el patrón arquitectónico Ruta-Controlador-Servicio.
+- **Artefactos Generados:**
+  - Archivos `companyService.ts`, `companyController.ts`, y `companyRoutes.ts`.
+  - Modificación de `index.ts` para registrar la nueva ruta.
+
+
+  ---
+## Tarea (API): Endpoints para Locations (Sedes)
+
+- **ID:** `API-ENDPOINT-002-LOCATIONS`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para crear los endpoints de `locations` (`POST` y `GET`). Se implementó la arquitectura de rutas anidadas para que las sedes dependan de las compañías (`/companies/:companyId/locations`).
+- **Artefactos Generados:**
+  - Archivos `locationService.ts`, `locationController.ts`, y `locationRoutes.ts`.
+  - Modificación de `companyRoutes.ts` para anidar las nuevas rutas.
+
+  ---
+### Artefacto 2: Bloque de Registro
+*Copia y pega este bloque de código al final de tu archivo `src/.ai_context/INSTRUCTION_LEDGER.md`.*
+```markdown
+---
+## Tarea (API): Autenticación de Admin con Google
+
+- **ID:** `API-AUTH-001-GOOGLE`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para crear el endpoint de autenticación con Google. La lógica incluye la verificación de tokens de Google, el proceso de "encontrar o crear" (upsert) para usuarios y compañías, y la generación de un token de sesión JWT propio.
+- **Artefactos Generados:**
+  - Nuevos archivos `authService.ts`, `authController.ts`, y `authRoutes.ts`.
+  - Actualización de `index.ts` para registrar las rutas de autenticación.
+
+
+  ---
+### Artefacto 2: Bloque de Registro
+*Copia y pega este bloque de código al final de tu archivo `src/.ai_context/INSTRUCTION_LEDGER.md`.*
+```markdown
+---
+## Tarea (Master Refactor): Implementación del Modelo de Datos V3
+
+- **ID:** `DATA-MODEL-V3-FINAL`
+- **Estado:** `COMPLETADO`
+- **Descripción:** Se generaron las instrucciones para la refactorización completa de la capa de datos. Esto aborda las observaciones de Codex y añade la nueva funcionalidad de "Acompañante/Responsable". Incluye la actualización del esquema de la base de datos, los tipos de TypeScript y la encapsulación de la lógica JSON en la capa de API de datos.
+- **Artefactos Generados:**
+  - Instrucción para IA Desarrolladora.
+  - Nuevo esquema V3 en `src/db/database.ts`.
+  - Nuevos tipos V3 en `src/types/index.ts`.
+  - Patrón de refactorización para la API de datos en `src/db/api/consultations.ts`.

@@ -4,17 +4,36 @@ const db = SQLite.openDatabaseAsync('fotoreg.db');
 
 export const initializeDatabase = async () => {
   try {
+    const dbInstance = await db;
+    // Sentencia para habilitar llaves foráneas en SQLite
+    await dbInstance.execAsync('PRAGMA foreign_keys = ON;');
+
     const queries = [
-      // Tabla de Pacientes (Datos estables)
+      // --- Schema V3: Pacientes y Responsables ---
       `CREATE TABLE IF NOT EXISTS patients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        documentNumber TEXT NOT NULL UNIQUE,
-        dateOfBirth TEXT,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        document_number TEXT UNIQUE,
+        date_of_birth TEXT,
         occupation TEXT,
-        createdAt TEXT NOT NULL
+        created_at TEXT NOT NULL
       );`,
-      // Tabla de Consultas (Historial clínico)
+      `CREATE TABLE IF NOT EXISTS guardians (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        first_name TEXT NOT NULL,
+        last_name TEXT NOT NULL,
+        document_number TEXT UNIQUE,
+        relationship TEXT,
+        created_at TEXT NOT NULL
+      );`,
+      `CREATE TABLE IF NOT EXISTS patient_guardians (
+        patient_id INTEGER NOT NULL REFERENCES patients(id) ON DELETE CASCADE,
+        guardian_id INTEGER NOT NULL REFERENCES guardians(id) ON DELETE CASCADE,
+        PRIMARY KEY (patient_id, guardian_id)
+      );`,
+
+      // --- Tablas existentes (mantenidas) ---
       `CREATE TABLE IF NOT EXISTS consultations (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         patient_id INTEGER NOT NULL,
@@ -26,42 +45,33 @@ export const initializeDatabase = async () => {
         medical_conditions TEXT,
         habits TEXT,
         shoe_type TEXT,
-        FOREIGN KEY (patient_id) REFERENCES patients (id)
+        is_draft INTEGER NOT NULL DEFAULT 0, -- Columna de migración anterior
+        FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
       );`,
-      // Tabla de Borradores de Consulta
       `CREATE TABLE IF NOT EXISTS consultation_drafts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         patient_id INTEGER NOT NULL,
         consultation_data TEXT, -- Almacenará un JSON con todos los datos del formulario
         last_updated TEXT NOT NULL,
-        FOREIGN KEY (patient_id) REFERENCES patients (id)
+        FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
       );`,
-      // Tabla de Fotos
-      `DROP TABLE IF EXISTS photos;`,
-      `CREATE TABLE photos (
+      // SOLUCIÓN: Se elimina DROP TABLE y se usa CREATE TABLE IF NOT EXISTS para no perder datos.
+      `CREATE TABLE IF NOT EXISTS photos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        consultation_id INTEGER NOT NULL,
+        consultation_id INTEGER NOT NULL, -- Puede referirse a 'consultations' o 'consultation_drafts'
         local_uri TEXT NOT NULL,
         stage TEXT NOT NULL CHECK(stage IN ('antes', 'despues', 'voucher')),
         taken_at TEXT NOT NULL
       );`,
     ];
 
-    const dbInstance = await db;
     for (const query of queries) {
       await dbInstance.runAsync(query);
     }
 
-    // Migración segura: agregar columna 'is_draft' si no existe
-    try {
-      await dbInstance.runAsync(`ALTER TABLE consultations ADD COLUMN is_draft INTEGER NOT NULL DEFAULT 0;`);
-    } catch (e) {
-      // Si la columna ya existe, ignorar el error
-    }
-
-    console.log('Base de datos simplificada inicializada correctamente.');
+    console.log('Base de datos V3 inicializada correctamente.');
   } catch (error) {
-    console.error('Error inicializando la base de datos:', error);
+    console.error('Error inicializando la base de datos V3:', error);
     throw error;
   }
 };
