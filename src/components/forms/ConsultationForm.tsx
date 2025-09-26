@@ -7,7 +7,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { DatePickerInput } from './DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
 import { RadioGroup } from './RadioGroup';
-import ImageViewing from 'react-native-image-viewing';
+import { ImageLightbox } from '@/components/viewers/ImageLightbox';
 import { NewConsultation, Photo } from '@/types/index';
 import { addPhoto, getPhotosForConsultation } from '@/db/api/consultations';
 
@@ -127,17 +127,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       Alert.alert('Error', 'No se puede añadir una foto sin un borrador activo.');
       return;
     }
-    navigation.navigate('Camera', {
-      onPictureTaken: async (uri: string) => {
-        try {
-          await addPhoto(draftId as number, uri, stage);
-          await loadPhotos();
-        } catch (err) {
-          console.error('Error al guardar la foto:', err);
-          Alert.alert('Error', 'No se pudo guardar la foto. Intenta nuevamente.');
-        }
-      },
-    });
+    navigation.navigate('Camera', { draftId: draftId as number, stage });
   };
 
   const beforePhotos = photos.filter((p) => p.stage === 'antes');
@@ -247,7 +237,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             title="¿Fuma?"
             options={["Sí", "No"]}
             selectedValue={habits.is_smoker === true ? 'Sí' : habits.is_smoker === false ? 'No' : null}
-            onSelectionChange={(selection: string) =>
+            onSelectionChange={(selection: string | null) =>
               handleHabitChange('is_smoker', selection === 'Sí' ? true : selection === 'No' ? false : null)
             }
             disabled={isReadOnly}
@@ -256,7 +246,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             title="¿Consume alcohol?"
             options={["Sí", "No"]}
             selectedValue={habits.consumes_alcohol === true ? 'Sí' : habits.consumes_alcohol === false ? 'No' : null}
-            onSelectionChange={(selection: string) =>
+            onSelectionChange={(selection: string | null) =>
               handleHabitChange('consumes_alcohol', selection === 'Sí' ? true : selection === 'No' ? false : null)
             }
             disabled={isReadOnly}
@@ -354,7 +344,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
         </BaseCard>
       </View>
 
-      <ImageViewing
+      <ImageLightbox
         images={viewerImages}
         imageIndex={viewerIndex}
         visible={viewerVisible}

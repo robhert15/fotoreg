@@ -1,13 +1,15 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, ImageBackground } from 'react-native';
+import { View, Text, StyleSheet, Pressable, ImageBackground, Alert } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { addPhoto } from '@/db/api/consultations';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 
 export default function CameraScreen() {
   const navigation = useNavigation();
-  const route = useRoute();
-  const { onPictureTaken } = route.params as { onPictureTaken: (uri: string) => void };
+  const route = useRoute<RouteProp<RootStackParamList, 'Camera'>>();
+  const { draftId, stage } = route.params;
 
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<any>(null);
@@ -37,10 +39,14 @@ export default function CameraScreen() {
     }
   };
 
-  const handleAccept = () => {
-    if (photo) {
-      onPictureTaken(photo.uri);
+  const handleAccept = async () => {
+    if (!photo) return;
+    try {
+      await addPhoto(draftId, photo.uri, stage);
       navigation.goBack();
+    } catch (e) {
+      console.error('Error al guardar la foto:', e);
+      Alert.alert('Error', 'No se pudo guardar la foto. Intenta nuevamente.');
     }
   };
 
@@ -65,11 +71,12 @@ export default function CameraScreen() {
   // Camera view
   return (
     <View style={styles.container}>
-      <CameraView style={styles.camera} facing="back" ref={cameraRef}>
-        <View style={styles.cameraButtonContainer}>
+      <View style={styles.cameraContainer}>
+        <CameraView style={styles.camera} facing="back" ref={cameraRef} />
+        <View style={styles.cameraOverlay}>
           <Pressable style={styles.captureButton} onPress={takePicture} />
         </View>
-      </CameraView>
+      </View>
     </View>
   );
 }
@@ -99,13 +106,19 @@ const styles = StyleSheet.create({
   camera: {
     flex: 1,
   },
-  cameraButtonContainer: {
+  cameraContainer: {
     flex: 1,
+  },
+  cameraOverlay: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
     backgroundColor: 'transparent',
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'flex-end',
-    marginBottom: 30,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 30,
   },
   captureButton: {
     borderWidth: 2,

@@ -23,7 +23,7 @@ export type RootStackParamList = {
   NewConsultation: { patientId: number; consultationId?: number };
   ConsultationDetail: { consultationId: number };
   AddPatient: undefined;
-  Camera: { onPictureTaken: (uri: string) => void };
+  Camera: { draftId: number; stage: 'antes' | 'despues' | 'voucher' };
 };
 
 export type BottomTabParamList = {
