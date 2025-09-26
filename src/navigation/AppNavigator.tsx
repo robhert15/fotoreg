@@ -22,7 +22,7 @@ export type RootStackParamList = {
   PatientDetail: { patientId: number };
   NewConsultation: { patientId: number; consultationId?: number };
   ConsultationDetail: { consultationId: number };
-  AddPatient: { onPatientAdded: () => void };
+  AddPatient: undefined;
   Camera: { onPictureTaken: (uri: string) => void };
 };
 
@@ -35,14 +35,17 @@ export type BottomTabParamList = {
 
 const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<BottomTabParamList>();
+// Stack dedicado para el flujo de Pacientes (pantalla 'PatientList')
+type PatientsStackParamList = { PatientList: undefined };
+const PatientsStack = createStackNavigator<PatientsStackParamList>();
 
 // Creamos un Stack anidado solo para el flujo de Pacientes
 function PatientsStackNavigator() {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="PatientList" component={PatientListScreen} />
+    <PatientsStack.Navigator screenOptions={{ headerShown: false }}>
+      <PatientsStack.Screen name="PatientList" component={PatientListScreen} />
       {/* Las pantallas a las que se navega desde la lista van aquí */}
-    </Stack.Navigator>
+    </PatientsStack.Navigator>
   );
 }
 
@@ -72,17 +75,13 @@ function MainTabNavigator() {
           shadowRadius: 3.84,
         },
         tabBarIcon: ({ color, size }: { color: string; size: number }) => {
-          let iconName;
-          if (route.name === 'PatientsStack') {
-            iconName = 'people';
-          } else if (route.name === 'Appointments') {
-            iconName = 'calendar';
-          } else if (route.name === 'Reports') {
-            iconName = 'stats-chart';
-          } else if (route.name === 'Settings') {
-            iconName = 'settings-sharp';
-          }
-          return <Ionicons name={iconName} size={size} color={color} />;
+          const iconsMap: Record<keyof BottomTabParamList, keyof typeof Ionicons.glyphMap> = {
+            PatientsStack: 'people',
+            Appointments: 'calendar',
+            Reports: 'stats-chart',
+            Settings: 'settings-sharp',
+          };
+          return <Ionicons name={iconsMap[route.name]} size={size} color={color} />;
         },
       })}
     >

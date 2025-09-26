@@ -3,20 +3,17 @@ import { View, Text, TextInput, Pressable, ScrollView, Alert } from 'react-nativ
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
 import { NewPatient } from '@/types';
-import { RootStackParamList } from '@/navigation/AppNavigator';
-
-type AddPatientScreenRouteProp = RouteProp<RootStackParamList, 'AddPatient'>;
+ 
 
 export default function AddPatientScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [documentNumber, setDocumentNumber] = useState('');
   const navigation = useNavigation();
-  const route = useRoute<AddPatientScreenRouteProp>();
 
   const handleSavePatient = async () => {
     const trimmedFirstName = firstName.trim();
@@ -36,11 +33,7 @@ export default function AddPatientScreen() {
     try {
       await addPatient(newPatient);
       Alert.alert('Éxito', 'Paciente registrado correctamente.', [
-        { text: 'OK', onPress: () => {
-            route.params.onPatientAdded(); // Refresca la lista
-            navigation.goBack();
-          } 
-        },
+        { text: 'OK', onPress: () => navigation.goBack() },
       ]);
     } catch (error: any) {
       if (error.message.includes('UNIQUE constraint failed')) {

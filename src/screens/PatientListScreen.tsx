@@ -106,7 +106,7 @@ export default function PatientListScreen() {
 
       <Pressable 
         style={globalStyles.fab} 
-        onPress={() => navigation.navigate('AddPatient', { onPatientAdded: loadPatients })}
+        onPress={() => navigation.navigate('AddPatient')}
       >
         <Ionicons name="add" size={24} color={colors.white} />
       </Pressable>

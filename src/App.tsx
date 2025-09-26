@@ -3,9 +3,16 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { LogBox } from 'react-native';
 
 import { initializeDatabase } from './db/database';
 import AppNavigator from './navigation/AppNavigator';
+
+// Silenciar aviso deprecado de SafeAreaView proveniente de dependencias externas (lo antes posible)
+LogBox.ignoreLogs([
+  "SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context",
+  'SafeAreaView has been deprecated',
+]);
 
 export default function App() {
   const [isDbInitialized, setIsDbInitialized] = useState(false);
