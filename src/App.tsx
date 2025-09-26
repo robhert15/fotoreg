@@ -21,7 +21,9 @@ export default function App() {
     const setupDatabase = async () => {
       try {
         await initializeDatabase();
-        console.log('Base de datos inicializada correctamente.');
+        if (__DEV__) {
+          console.log('Base de datos inicializada correctamente.');
+        }
         setIsDbInitialized(true); // Marcar la BD como lista
       } catch (error) {
         console.error('Error fatal inicializando la base de datos:', error);

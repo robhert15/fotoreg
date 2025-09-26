@@ -63,13 +63,20 @@ export const initializeDatabase = async () => {
         stage TEXT NOT NULL CHECK(stage IN ('antes', 'despues', 'voucher')),
         taken_at TEXT NOT NULL
       );`,
+      `CREATE TABLE IF NOT EXISTS photo_annotations (
+        photo_id INTEGER PRIMARY KEY REFERENCES photos(id) ON DELETE CASCADE,
+        data TEXT, -- JSON con trazos/colores/etc.
+        updated_at TEXT NOT NULL
+      );`,
     ];
 
     for (const query of queries) {
       await dbInstance.runAsync(query);
     }
 
-    console.log('Base de datos V3 inicializada correctamente.');
+    if (__DEV__) {
+      console.log('Base de datos V3 inicializada correctamente.');
+    }
   } catch (error) {
     console.error('Error inicializando la base de datos V3:', error);
     throw error;

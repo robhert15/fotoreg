@@ -7,9 +7,9 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { DatePickerInput } from './DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
 import { RadioGroup } from './RadioGroup';
-import { ImageLightbox } from '@/components/viewers/ImageLightbox';
+import { ImageLightbox, type ViewerImage } from '@/components/viewers/ImageLightbox';
 import { NewConsultation, Photo } from '@/types/index';
-import { addPhoto, getPhotosForConsultation } from '@/db/api/consultations';
+import { getPhotosForConsultation } from '@/db/api/consultations';
 
 export interface ConsultationFormProps {
   formData: Partial<NewConsultation>;
@@ -100,7 +100,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const [viewerImages, setViewerImages] = useState<{ uri: string }[]>([]);
+  const [viewerImages, setViewerImages] = useState<ViewerImage[]>([]);
 
   const loadPhotos = async () => {
     const combined: Photo[] = [];
@@ -135,16 +135,16 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const voucherPhotos = photos.filter((p) => p.stage === 'voucher');
 
   const openViewer = (group: 'antes' | 'despues' | 'voucher', startIndex: number) => {
-    let groupList: { uri: string }[] = [];
+    let groupList: ViewerImage[] = [];
     switch (group) {
       case 'antes':
-        groupList = beforePhotos.map((p) => ({ uri: p.local_uri }));
+        groupList = beforePhotos.map((p) => ({ uri: p.local_uri, id: p.id }));
         break;
       case 'despues':
-        groupList = afterPhotos.map((p) => ({ uri: p.local_uri }));
+        groupList = afterPhotos.map((p) => ({ uri: p.local_uri, id: p.id }));
         break;
       case 'voucher':
-        groupList = voucherPhotos.map((p) => ({ uri: p.local_uri }));
+        groupList = voucherPhotos.map((p) => ({ uri: p.local_uri, id: p.id }));
         break;
       default:
         groupList = [];

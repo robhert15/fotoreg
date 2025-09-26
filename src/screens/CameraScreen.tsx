@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { View, Text, StyleSheet, Pressable, ImageBackground, Alert } from 'react-native';
+import { View, Text, StyleSheet, Pressable, Alert, ImageBackground } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { addPhoto } from '@/db/api/consultations';
 import { RootStackParamList } from '@/navigation/AppNavigator';
+import { Image } from 'expo-image';
 
 export default function CameraScreen() {
   const navigation = useNavigation();
@@ -13,6 +14,7 @@ export default function CameraScreen() {
 
   const [permission, requestPermission] = useCameraPermissions();
   const [photo, setPhoto] = useState<any>(null);
+  const [previewError, setPreviewError] = useState<boolean>(false);
   const cameraRef = useRef<CameraView>(null);
 
   if (!permission) {
@@ -33,9 +35,17 @@ export default function CameraScreen() {
   }
   
   const takePicture = async () => {
-    if (cameraRef.current) {
-      const pic = await cameraRef.current.takePictureAsync({ quality: 0.7 });
+    if (!cameraRef.current) return;
+    try {
+      const pic = await cameraRef.current.takePictureAsync({ quality: 1, exif: true, skipProcessing: false });
+      if (__DEV__) {
+        console.log('Foto capturada:', pic?.uri, pic?.width, pic?.height);
+      }
+      setPreviewError(false);
       setPhoto(pic);
+    } catch (e) {
+      console.error('Error capturando foto:', e);
+      Alert.alert('Error', 'No se pudo capturar la foto. Intenta nuevamente.');
     }
   };
 
@@ -53,18 +63,32 @@ export default function CameraScreen() {
   if (photo) {
     // Preview screen after taking a picture
     return (
-      <ImageBackground source={{ uri: photo.uri }} style={styles.previewContainer}>
+      <View style={styles.previewContainer}>
+        {!previewError ? (
+          <Image
+            source={{ uri: photo.uri }}
+            style={StyleSheet.absoluteFill}
+            contentFit="contain"
+            onError={(e) => { console.error('Error mostrando preview (expo-image):', e); setPreviewError(true); }}
+          />
+        ) : (
+          <ImageBackground
+            source={{ uri: photo.uri }}
+            style={StyleSheet.absoluteFill}
+            resizeMode="contain"
+          />
+        )}
         <View style={styles.previewButtonContainer}>
           <Pressable style={styles.previewButton} onPress={() => setPhoto(null)}>
             <Ionicons name="repeat" size={32} color="white" />
             <Text style={styles.previewButtonText}>Reintentar</Text>
           </Pressable>
           <Pressable style={styles.previewButton} onPress={handleAccept}>
-             <Ionicons name="checkmark-circle" size={32} color="white" />
+            <Ionicons name="checkmark-circle" size={32} color="white" />
             <Text style={styles.previewButtonText}>Aceptar</Text>
           </Pressable>
         </View>
-      </ImageBackground>
+      </View>
     );
   }
 
@@ -133,6 +157,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
+    backgroundColor: 'black',
   },
   previewButtonContainer: {
     flexDirection: 'row',
