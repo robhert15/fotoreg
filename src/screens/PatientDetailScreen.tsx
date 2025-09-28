@@ -28,6 +28,7 @@ export default function PatientDetailScreen() {
   const [consultations, setConsultations] = useState<Consultation[]>([]);
 
   const headerBackgroundColor = useThemeColor({}, 'primary');
+  const contentBackgroundColor = useThemeColor({}, 'background');
 
   useFocusEffect(
     useCallback(() => {
@@ -85,7 +86,7 @@ export default function PatientDetailScreen() {
             <Text style={styles.headerTitle}>{displayName || 'Paciente'}</Text>
           </View>
         }>
-        <View style={styles.contentContainer}>
+        <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
             {/* Tarjeta de Detalles del Paciente */}
             <View style={{ marginBottom: 20 }}>
               <BaseCard>
@@ -130,7 +131,9 @@ const styles = StyleSheet.create({
   contentContainer: {
     padding: 20,
     paddingBottom: 150,
-    backgroundColor: 'transparent',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden', // Forzar al contenido a respetar los bordes redondeados
   },
   headerContainer: {
     flex: 1,

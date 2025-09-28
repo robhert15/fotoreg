@@ -83,7 +83,5 @@ const styles = StyleSheet.create({
     width: '100%', // Forzar el ancho completo
     zIndex: 1,
     overflow: 'hidden',
-    borderBottomLeftRadius: 24, // Forma de cápsula
-    borderBottomRightRadius: 24, // Forma de cápsula
   },
 });
