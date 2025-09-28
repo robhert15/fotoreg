@@ -102,7 +102,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const [viewerIndex, setViewerIndex] = useState(0);
   const [viewerImages, setViewerImages] = useState<{ uri: string; id?: number }[]>([]);
 
-  const loadPhotos = async () => {
+  const loadPhotos = useCallback(async () => {
     const combined: Photo[] = [];
     if (consultationId) {
       const existing = await getPhotosForConsultation(consultationId);
@@ -113,12 +113,12 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       combined.push(...draftPhotos);
     }
     setPhotos(combined);
-  };
+  }, [consultationId, draftId]);
 
   useFocusEffect(
     useCallback(() => {
       loadPhotos();
-    }, [draftId, consultationId])
+    }, [loadPhotos])
   );
 
   const handleTakePhoto = (stage: 'antes' | 'despues' | 'voucher') => {
