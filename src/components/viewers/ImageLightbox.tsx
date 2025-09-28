@@ -1,11 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, View, Pressable, FlatList, Dimensions, StyleSheet, Text } from 'react-native';
+import { Modal, View, Pressable, Dimensions, StyleSheet, Text, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import Svg, { Path } from 'react-native-svg';
-import Animated, { useAnimatedStyle, useSharedValue, withTiming, runOnJS } from 'react-native-reanimated';
-import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import PagerView from 'react-native-pager-view';
+import { ReactNativeZoomableView } from '@openspacelabs/react-native-zoomable-view';
 import { getAnnotationForPhoto, saveAnnotationForPhoto } from '@/db/api/photos';
 
 export interface ViewerImage {
@@ -25,27 +25,21 @@ const { width, height } = Dimensions.get('window');
 type Stroke = { color: string; width: number; points: { x: number; y: number }[] };
 
 export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, imageIndex, visible, onRequestClose }) => {
-  const listRef = useRef<FlatList<ViewerImage>>(null);
+  const pagerRef = useRef<PagerView>(null);
   const [currentIndex, setCurrentIndex] = useState(imageIndex);
   const [annotateMode, setAnnotateMode] = useState(false);
   const [color, setColor] = useState<string>('#ff4757');
   const [strokeWidth, setStrokeWidth] = useState<number>(4);
   const [strokes, setStrokes] = useState<Stroke[]>([]);
   const [activeStroke, setActiveStroke] = useState<Stroke | null>(null);
-
-  const scale = useSharedValue(1);
-  const translateX = useSharedValue(0);
-  const translateY = useSharedValue(0);
+  const [isZoomed, setIsZoomed] = useState(false);
 
   // Sincroniza el índice al abrir
   useEffect(() => {
     if (visible) {
       setCurrentIndex(imageIndex);
-      scale.value = 1;
-      translateX.value = 0;
-      translateY.value = 0;
       requestAnimationFrame(() => {
-        try { listRef.current?.scrollToIndex({ index: imageIndex, animated: false }); } catch {}
+        try { pagerRef.current?.setPageWithoutAnimation?.(imageIndex); } catch {}
       });
     }
   }, [visible, imageIndex]);
@@ -71,88 +65,46 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, imageIndex
     }
   }, [visible, currentIndex, loadAnnotations]);
 
-  const onScrollEnd = useCallback((e: any) => {
-    const idx = Math.round(e.nativeEvent.contentOffset.x / width);
+  const handlePageSelected = useCallback((e: any) => {
+    const idx = e?.nativeEvent?.position ?? 0;
     setCurrentIndex(idx);
-    // Reset transform al cambiar de imagen
-    scale.value = withTiming(1, { duration: 150 });
-    translateX.value = withTiming(0, { duration: 150 });
-    translateY.value = withTiming(0, { duration: 150 });
-  }, [scale, translateX, translateY]);
+    setIsZoomed(false);
+    // Cargar anotaciones para la nueva imagen
+    loadAnnotations(idx);
+  }, [loadAnnotations]);
 
-  // Gestos de zoom/pan
-  const pinch = useMemo(() => Gesture.Pinch()
-    .enabled(!annotateMode)
-    .onUpdate((e) => {
-      scale.value = Math.max(1, Math.min(4, e.scale));
+  // Dibujo (anotación) usando PanResponder para capturar toques en overlay
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => annotateMode,
+      onMoveShouldSetPanResponder: () => annotateMode,
+      onPanResponderGrant: (e: GestureResponderEvent) => {
+        const { locationX: x, locationY: y } = e.nativeEvent as any;
+        setActiveStroke({ color, width: strokeWidth, points: [{ x, y }] });
+      },
+      onPanResponderMove: (e: GestureResponderEvent, _gs: PanResponderGestureState) => {
+        const { locationX: x, locationY: y } = e.nativeEvent as any;
+        setActiveStroke((prev) => {
+          if (!prev) return null;
+          return { ...prev, points: prev.points.concat({ x, y }) };
+        });
+      },
+      onPanResponderRelease: () => {
+        setStrokes((prev) => (activeStroke ? prev.concat(activeStroke) : prev));
+        setActiveStroke(null);
+      },
+      onPanResponderTerminate: () => {
+        setStrokes((prev) => (activeStroke ? prev.concat(activeStroke) : prev));
+        setActiveStroke(null);
+      },
     })
-    .onEnd(() => {
-      if (scale.value < 1) scale.value = 1;
-    })
-  , [annotateMode]);
+  ).current;
 
-  const pan = useMemo(() => Gesture.Pan()
-    .enabled(!annotateMode)
-    .onUpdate((e) => {
-      if (scale.value > 1) {
-        // Usar translationX/translationY para mantener compatibilidad tipada
-        translateX.value = e.translationX;
-        translateY.value = e.translationY;
-      }
-    })
-  , [annotateMode]);
-
-  const doubleTap = useMemo(() => Gesture.Tap()
-    .numberOfTaps(2)
-    .enabled(!annotateMode)
-    .onEnd(() => {
-      const next = scale.value > 1 ? 1 : 2.5;
-      scale.value = withTiming(next, { duration: 150 });
-      if (next === 1) {
-        translateX.value = withTiming(0, { duration: 150 });
-        translateY.value = withTiming(0, { duration: 150 });
-      }
-    })
-  , [annotateMode]);
-
-  const composedGestures = Gesture.Simultaneous(pinch, pan, doubleTap);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: translateX.value },
-      { translateY: translateY.value },
-      { scale: scale.value },
-    ],
-  }));
-
-  const getItemLayout = (_: any, index: number) => ({
-    length: width,
-    offset: width * index,
-    index,
-  });
-
-  // Dibujo (anotación) usando Gesture Pan específico
-  const drawGesture = useMemo(() => Gesture.Pan()
-    .enabled(annotateMode)
-    .onBegin((e) => {
-      runOnJS(setActiveStroke)({ color, width: strokeWidth, points: [{ x: e.x, y: e.y }] });
-    })
-    .onUpdate((e) => {
-      runOnJS(setActiveStroke)((prev) => {
-        if (!prev) return null;
-        const pts = prev.points.concat({ x: e.x, y: e.y });
-        return { ...prev, points: pts };
-      });
-    })
-    .onEnd(() => {
-      runOnJS(setStrokes)((prev) => (activeStroke ? prev.concat(activeStroke) : prev));
-      runOnJS(setActiveStroke)(null);
-    })
-  , [annotateMode, color, strokeWidth, activeStroke]);
-
+  // Renderizado del trazo (SVG), las líneas escalan junto con la imagen
+  
   const handleUndo = useCallback(() => {
     setStrokes((prev) => prev.slice(0, -1));
-  }, []);
+  }, [setStrokes]);
 
   const handleSave = useCallback(async () => {
     const img = images[currentIndex];
@@ -166,27 +118,41 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, imageIndex
     return <Path key={`stroke-${idx}`} d={d} stroke={s.color} strokeWidth={s.width} fill="none" strokeLinecap="round" strokeLinejoin="round" />
   };
 
-  const renderItem = ({ item }: { item: ViewerImage }) => (
-    <View style={{ width, height, justifyContent: 'center', alignItems: 'center' }}>
-      <GestureDetector gesture={composedGestures}>
-        <Animated.View style={[{ width, height, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' }, animatedStyle]}>
+  const renderPage = (item: ViewerImage, index: number) => (
+    <View key={`page-${index}`} style={{ width, height, justifyContent: 'center', alignItems: 'center' }}>
+      <ReactNativeZoomableView
+        maxZoom={4}
+        minZoom={1}
+        initialZoom={1}
+        zoomStep={0.5}
+        bindToBorders
+        zoomEnabled={!annotateMode}
+        onZoomAfter={(event: GestureResponderEvent | null, gestureState: PanResponderGestureState | null, zoomableViewEventObject: any) => {
+          const level = (zoomableViewEventObject?.zoomLevel ?? 1) as number;
+          setIsZoomed(level > 1);
+        }}
+        style={{ width, height }}
+      >
+        <View style={{ width, height, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' }}>
           <Image
             source={{ uri: item.uri }}
             style={{ width, height }}
             contentFit="contain"
             transition={100}
           />
-          {/* Capa de dibujo (SVG) */}
-          <GestureDetector gesture={drawGesture}>
-            <View pointerEvents={annotateMode ? 'auto' : 'none'} style={StyleSheet.absoluteFill}>
-              <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
-                {strokes.map(renderPath)}
-                {activeStroke && renderPath(activeStroke, -1)}
-              </Svg>
-            </View>
-          </GestureDetector>
-        </Animated.View>
-      </GestureDetector>
+          {/* Overlay de dibujo escalable */}
+          <View
+            style={StyleSheet.absoluteFill}
+            pointerEvents={annotateMode ? 'auto' : 'none'}
+            {...(annotateMode ? panResponder.panHandlers : {})}
+          >
+            <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
+              {strokes.map(renderPath)}
+              {activeStroke && renderPath(activeStroke, -1)}
+            </Svg>
+          </View>
+        </View>
+      </ReactNativeZoomableView>
     </View>
   );
 
@@ -227,19 +193,15 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, imageIndex
             ))}
           </View>
         )}
-        <FlatList
-          ref={listRef}
-          data={images}
-          keyExtractor={(_, idx) => `img-${idx}`}
-          renderItem={renderItem}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          getItemLayout={getItemLayout}
-          initialNumToRender={1}
-          windowSize={3}
-          onMomentumScrollEnd={onScrollEnd}
-        />
+        <PagerView
+          ref={pagerRef}
+          style={styles.pager}
+          initialPage={imageIndex}
+          onPageSelected={handlePageSelected}
+          scrollEnabled={!isZoomed && !annotateMode}
+        >
+          {images.map((img, idx) => renderPage(img, idx))}
+        </PagerView>
         <View style={styles.footer}>
           <Text style={styles.counter}>{images.length > 0 ? `${currentIndex + 1} / ${images.length}` : ''}</Text>
         </View>
@@ -253,6 +215,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: 'black',
   },
+  pager: { flex: 1 },
   header: {
     height: 56,
     flexDirection: 'row',
