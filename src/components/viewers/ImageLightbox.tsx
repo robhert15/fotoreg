@@ -151,6 +151,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const [color, setColor] = useState<string>('#ff4757');
   const [allStrokes, setAllStrokes] = useState<Record<number, Stroke[]>>({});
   const [activeStroke, setActiveStroke] = useState<Stroke | null>(null);
+  const [showSaveMessage, setShowSaveMessage] = useState(false);
 
   const currentStrokes = allStrokes[currentIndex] || [];
 
@@ -203,7 +204,12 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
     const img = images[currentIndex];
     if (!img?.id) return;
     await saveAnnotationForPhoto(img.id, { strokes: currentStrokes });
-    // Opcional: mostrar un feedback de guardado
+    
+    // Mostrar mensaje de guardado y ocultarlo después de 2 segundos
+    setShowSaveMessage(true);
+    setTimeout(() => {
+      setShowSaveMessage(false);
+    }, 2000);
   };
 
   const palette = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ffffff'];
@@ -246,9 +252,13 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
             ))}
           </PagerView>
 
-          {/* Contador de imágenes */}
+          {/* Contador de imágenes y Mensaje de Guardado */}
           <View style={[styles.footer, { bottom: insets.bottom + 20 }]}>
-            <Text style={styles.counter}>{`${currentIndex + 1} / ${images.length}`}</Text>
+            {showSaveMessage ? (
+              <Text style={styles.saveMessage}>¡Guardado!</Text>
+            ) : (
+              <Text style={styles.counter}>{`${currentIndex + 1} / ${images.length}`}</Text>
+            )}
           </View>
         </View>
       </GestureHandlerRootView>
@@ -271,4 +281,5 @@ const styles = StyleSheet.create({
   colorDotActive: { borderColor: 'white' },
   footer: { position: 'absolute', width: '100%', alignItems: 'center', zIndex: 10 },
   counter: { color: 'white', fontSize: 16, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15 },
+  saveMessage: { color: '#2ed573', fontSize: 16, fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, overflow: 'hidden' },
 });
