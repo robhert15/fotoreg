@@ -83,7 +83,12 @@ export default function PatientDetailScreen() {
         headerHeight={138}
         header={
           <View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]}>
+            <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </Pressable>
             <Text style={styles.headerTitle}>{displayName || 'Paciente'}</Text>
+            {/* Spacer to keep title centered */}
+            <View style={{ width: 44 }} />
           </View>
         }>
         <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
@@ -113,13 +118,6 @@ export default function PatientDetailScreen() {
         </View>
       </ParallaxScrollView>
 
-      {/* Botones de navegación flotantes */}
-      <SafeAreaView style={styles.headerOverlay}>
-        <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
-            <Ionicons name="arrow-back" size={24} color="white" />
-        </Pressable>
-      </SafeAreaView>
-
       <Pressable style={globalStyles.fab} onPress={handleNewConsultation}>
         <Ionicons name="add" size={24} color="white" />
       </Pressable>
@@ -137,27 +135,19 @@ const styles = StyleSheet.create({
   },
   headerContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    paddingBottom: 5,
+    paddingHorizontal: 15,
+    paddingBottom: 20,
+    paddingTop: 60,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
+    flex: 1,
     textAlign: 'center',
-    marginBottom: 20,
-    marginTop: 10,
-  },
-  headerOverlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 15,
   },
   headerButton: {
     padding: 10,
