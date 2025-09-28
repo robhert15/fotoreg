@@ -150,10 +150,12 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const [annotateMode, setAnnotateMode] = useState(false);
   const [color, setColor] = useState<string>('#ff4757');
   const [allStrokes, setAllStrokes] = useState<Record<number, Stroke[]>>({});
+  const [redoStack, setRedoStack] = useState<Record<number, Stroke[]>>({});
   const [activeStroke, setActiveStroke] = useState<Stroke | null>(null);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
 
   const currentStrokes = allStrokes[currentIndex] || [];
+  const currentRedoStack = redoStack[currentIndex] || [];
 
   // Cargar anotaciones de la DB al abrir el visor
   useEffect(() => {
@@ -176,9 +178,12 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   }, [visible, images]);
 
   const handleStrokeStart = useCallback((point: { x: number; y: number }) => {
+    // Al iniciar un nuevo trazo, se limpia el historial de "rehacer" para la imagen actual.
+    setRedoStack(prev => ({ ...prev, [currentIndex]: [] }));
+
     const newStroke: Stroke = { color, width: 4, points: [point] };
     setActiveStroke(newStroke);
-  }, [color]);
+  }, [color, currentIndex]);
 
   const handleStrokeUpdate = useCallback((point: { x: number; y: number }) => {
     setActiveStroke(prev => prev ? { ...prev, points: [...prev.points, point] } : null);
@@ -194,10 +199,41 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   }, [activeStroke, currentIndex]);
 
   const handleUndo = () => {
-    setAllStrokes(prev => {
-      const current = prev[currentIndex] || [];
-      return { ...prev, [currentIndex]: current.slice(0, -1) };
-    });
+    const strokesForImage = allStrokes[currentIndex] || [];
+    if (strokesForImage.length === 0) return;
+
+    const lastStroke = strokesForImage[strokesForImage.length - 1];
+    
+    // Mover el último trazo a la pila de rehacer
+    setRedoStack(prev => ({
+      ...prev,
+      [currentIndex]: [...(prev[currentIndex] || []), lastStroke]
+    }));
+
+    // Eliminar el último trazo de la pila principal
+    setAllStrokes(prev => ({
+      ...prev,
+      [currentIndex]: strokesForImage.slice(0, -1)
+    }));
+  };
+
+  const handleRedo = () => {
+    const redoStrokesForImage = redoStack[currentIndex] || [];
+    if (redoStrokesForImage.length === 0) return;
+
+    const strokeToRedo = redoStrokesForImage[redoStrokesForImage.length - 1];
+
+    // Mover el trazo de vuelta a la pila principal
+    setAllStrokes(prev => ({
+      ...prev,
+      [currentIndex]: [...(prev[currentIndex] || []), strokeToRedo]
+    }));
+
+    // Eliminar el trazo de la pila de rehacer
+    setRedoStack(prev => ({
+      ...prev,
+      [currentIndex]: redoStrokesForImage.slice(0, -1)
+    }));
   };
 
   const handleSave = async () => {
@@ -223,7 +259,8 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
             <Pressable style={styles.headerBtn} onPress={onClose}><Ionicons name="close" size={24} color="white" /></Pressable>
             <View style={{ flex: 1 }} />
             <Pressable style={[styles.headerBtn, annotateMode && styles.headerBtnActive]} onPress={() => setAnnotateMode(v => !v)}><Ionicons name="pencil" size={20} color="white" /></Pressable>
-            <Pressable style={styles.headerBtn} onPress={handleUndo}><Ionicons name="arrow-undo-outline" size={22} color="white" /></Pressable>
+            <Pressable style={[styles.headerBtn, (currentStrokes.length === 0) && styles.headerBtnDisabled]} onPress={handleUndo} disabled={currentStrokes.length === 0}><Ionicons name="arrow-undo-outline" size={22} color="white" /></Pressable>
+            <Pressable style={[styles.headerBtn, (currentRedoStack.length === 0) && styles.headerBtnDisabled]} onPress={handleRedo} disabled={currentRedoStack.length === 0}><Ionicons name="arrow-redo-outline" size={22} color="white" /></Pressable>
             <Pressable style={styles.headerBtn} onPress={handleSave}><Ionicons name="save-outline" size={22} color="white" /></Pressable>
           </View>
 
@@ -276,6 +313,7 @@ const styles = StyleSheet.create({
   header: { position: 'absolute', width: '100%', flexDirection: 'row', paddingHorizontal: 20, zIndex: 10, alignItems: 'center' },
   headerBtn: { padding: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 30, marginLeft: 10 },
   headerBtnActive: { backgroundColor: '#007AFF' },
+  headerBtnDisabled: { opacity: 0.4 },
   paletteRow: { position: 'absolute', width: '100%', flexDirection: 'row', justifyContent: 'center', zIndex: 10, paddingTop: 10 },
   colorDot: { width: 30, height: 30, borderRadius: 15, marginHorizontal: 10, borderWidth: 2, borderColor: 'transparent' },
   colorDotActive: { borderColor: 'white' },
