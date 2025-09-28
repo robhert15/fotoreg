@@ -417,8 +417,8 @@ const styles = StyleSheet.create({
   saveMessage: { color: '#2ed573', fontSize: 16, fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, overflow: 'hidden' },
   trashZone: {
     position: 'absolute',
-    bottom: 40,
-    alignSelf: 'center',
+    bottom: 100,
+    right: 30,
     padding: 20,
     backgroundColor: 'rgba(255, 0, 0, 0.5)',
     borderRadius: 50,

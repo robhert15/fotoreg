@@ -97,20 +97,20 @@ export const TextNoteView = ({ note, scale, onUpdate, onDelete, setIsDragging, t
     <GestureDetector gesture={composedGesture}>
       <Animated.View style={[containerStyle, animatedStyle]}>
         {isEditing ? (
-          <View>
-            <TextInput
-              style={styles.textInput}
-              value={text}
-              onChangeText={setText}
-              autoFocus
-              multiline
-            />
-            <Pressable style={styles.confirmButton} onPress={handleConfirm}>
-              <Ionicons name="checkmark-circle" size={28} color="#2ed573" />
-            </Pressable>
-          </View>
+          <TextInput
+            style={styles.textInput}
+            value={text}
+            onChangeText={setText}
+            autoFocus
+            multiline
+          />
         ) : (
           <Text style={styles.noteText}>{note.text}</Text>
+        )}
+        {isEditing && (
+          <Pressable style={styles.confirmButton} onPress={handleConfirm}>
+            <Ionicons name="checkmark-circle" size={28} color="#2ed573" />
+          </Pressable>
         )}
       </Animated.View>
     </GestureDetector>
