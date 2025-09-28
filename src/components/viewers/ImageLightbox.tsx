@@ -26,11 +26,22 @@ interface ZoomableImageProps {
   annotateMode: boolean;
   strokes: Stroke[];
   activeStroke: Stroke | null;
-  drawingGesture: any; // PanGesture para dibujar
+  onStrokeStart: (point: { x: number; y: number }) => void;
+  onStrokeUpdate: (point: { x: number; y: number }) => void;
+  onStrokeEnd: () => void;
 }
 
 // --- COMPONENTE DE IMAGEN CON ZOOM Y DIBUJO ---
-const ZoomableImage = ({ imageUri, setPagerEnabled, annotateMode, strokes, activeStroke, drawingGesture }: ZoomableImageProps) => {
+const ZoomableImage = ({ 
+  imageUri, 
+  setPagerEnabled, 
+  annotateMode, 
+  strokes, 
+  activeStroke, 
+  onStrokeStart, 
+  onStrokeUpdate, 
+  onStrokeEnd 
+}: ZoomableImageProps) => {
   const scale = useSharedValue(1);
   const focalX = useSharedValue(0);
   const focalY = useSharedValue(0);
@@ -72,8 +83,26 @@ const ZoomableImage = ({ imageUri, setPagerEnabled, annotateMode, strokes, activ
     transform: [{ translateX: translateX.value }, { translateY: translateY.value }, { scale: scale.value }],
   }));
 
+  const drawingGesture = Gesture.Pan()
+    .enabled(annotateMode)
+    .onStart(e => {
+      'worklet';
+      const point = { x: (e.x - translateX.value) / scale.value, y: (e.y - translateY.value) / scale.value };
+      runOnJS(onStrokeStart)(point);
+    })
+    .onUpdate(e => {
+      'worklet';
+      const point = { x: (e.x - translateX.value) / scale.value, y: (e.y - translateY.value) / scale.value };
+      runOnJS(onStrokeUpdate)(point);
+    })
+    .onEnd(() => {
+      'worklet';
+      runOnJS(onStrokeEnd)();
+    });
+
   const composedZoomPan = Gesture.Simultaneous(pinchGesture, panGesture);
-  const mainGesture = Gesture.Exclusive(doubleTapGesture, composedZoomPan);
+  // El gesto de dibujo tiene prioridad sobre el de zoom/pan
+  const mainGesture = Gesture.Exclusive(drawingGesture, doubleTapGesture, composedZoomPan);
 
   const renderPath = (s: Stroke, idx: number) => {
     if (!s.points.length) return null;
@@ -99,14 +128,12 @@ const ZoomableImage = ({ imageUri, setPagerEnabled, annotateMode, strokes, activ
           {hasError && <View style={[StyleSheet.absoluteFill, styles.center]}><Ionicons name="alert-circle-outline" size={60} color="#888" /></View>}
           
           {/* Overlay de Dibujo */}
-          <GestureDetector gesture={drawingGesture}>
-            <View style={StyleSheet.absoluteFill}>
-              <Svg width={width} height={height}>
-                {strokes.map(renderPath)}
-                {activeStroke && renderPath(activeStroke, -1)}
-              </Svg>
-            </View>
-          </GestureDetector>
+          <View style={StyleSheet.absoluteFill} pointerEvents={annotateMode ? 'auto' : 'none'}>
+            <Svg width={width} height={height}>
+              {strokes.map(renderPath)}
+              {activeStroke && renderPath(activeStroke, -1)}
+            </Svg>
+          </View>
         </Animated.View>
       </View>
     </GestureDetector>
@@ -147,23 +174,23 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
     }
   }, [visible, images]);
 
-  // Gesto para dibujar
-  const drawingGesture = Gesture.Pan()
-    .enabled(annotateMode)
-    .onStart(e => {
-      const newStroke: Stroke = { color, width: 4, points: [{ x: e.x, y: e.y }] };
-      runOnJS(setActiveStroke)(newStroke);
-    })
-    .onUpdate((e) => {
-      runOnJS(setActiveStroke)(prev => prev ? { ...prev, points: [...prev.points, { x: e.x, y: e.y }] } : null);
-    })
-    .onEnd(() => {
-      runOnJS(setAllStrokes)(prev => {
-        const updatedStrokes = activeStroke ? [...(prev[currentIndex] || []), activeStroke] : (prev[currentIndex] || []);
-        return { ...prev, [currentIndex]: updatedStrokes };
-      });
-      runOnJS(setActiveStroke)(null);
+  const handleStrokeStart = useCallback((point: { x: number; y: number }) => {
+    const newStroke: Stroke = { color, width: 4, points: [point] };
+    setActiveStroke(newStroke);
+  }, [color]);
+
+  const handleStrokeUpdate = useCallback((point: { x: number; y: number }) => {
+    setActiveStroke(prev => prev ? { ...prev, points: [...prev.points, point] } : null);
+  }, []);
+
+  const handleStrokeEnd = useCallback(() => {
+    setAllStrokes(prev => {
+      if (!activeStroke) return prev;
+      const updatedStrokes = [...(prev[currentIndex] || []), activeStroke];
+      return { ...prev, [currentIndex]: updatedStrokes };
     });
+    setActiveStroke(null);
+  }, [activeStroke, currentIndex]);
 
   const handleUndo = () => {
     setAllStrokes(prev => {
@@ -212,7 +239,9 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
                 annotateMode={annotateMode}
                 strokes={allStrokes[index] || []}
                 activeStroke={index === currentIndex ? activeStroke : null}
-                drawingGesture={drawingGesture}
+                onStrokeStart={handleStrokeStart}
+                onStrokeUpdate={handleStrokeUpdate}
+                onStrokeEnd={handleStrokeEnd}
               />
             ))}
           </PagerView>
