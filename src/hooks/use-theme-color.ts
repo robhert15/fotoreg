@@ -1,13 +1,13 @@
 import { Colors } from '@/constants/theme';
 
-// Este es un hook simplificado. En el futuro, podría leer el tema actual (claro/oscuro).
-// Por ahora, siempre devuelve los colores del tema 'light'.
+import { useColorScheme } from 'react-native';
 
+// Este hook detecta el tema de color actual (claro/oscuro) y devuelve el color apropiado.
 export function useThemeColor(
   props: { light?: string; dark?: string },
   colorName: keyof typeof Colors.light & keyof typeof Colors.dark
 ) {
-  const theme = 'light'; // Hardcodeado por ahora
+  const theme = useColorScheme() ?? 'light';
   const colorFromProps = props[theme];
 
   if (colorFromProps) {

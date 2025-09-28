@@ -8,6 +8,7 @@ import { DatePickerInput } from './DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
 import { RadioGroup } from './RadioGroup';
 import { ImageLightbox } from '@/components/viewers/ImageLightbox';
+import { Collapsible } from '../Collapsible';
 import { NewConsultation, Photo } from '@/types/index';
 import { getPhotosForConsultation } from '@/db/api/consultations';
 
@@ -161,10 +162,10 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   );
 
     return (
-    <View>
+    <View style={{ paddingBottom: 40 }}>
       {/* --- Sección Consulta --- */}
-      <Text style={globalStyles.sectionTitle}>Consulta</Text>
-      <View style={{ marginBottom: 20 }}>
+      <View style={{ marginHorizontal: 15, marginBottom: 20 }}>
+        <Text style={globalStyles.sectionTitle}>Consulta</Text>
         <BaseCard>
           <DatePickerInput
             title="Fecha de la Consulta"
@@ -204,9 +205,8 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
         </BaseCard>
       </View>
 
-      {/* --- Sección Historial --- */}
-      <Text style={globalStyles.sectionTitle}>Historial</Text>
-      <View style={{ marginBottom: 20 }}>
+      {/* --- Secciones Colapsables --- */}
+      <Collapsible title="Historial">
         <BaseCard>
           <CheckboxGroup
             title="¿Padece alguna de las siguientes condiciones?"
@@ -227,11 +227,9 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             </View>
           )}
         </BaseCard>
-      </View>
+      </Collapsible>
 
-      {/* --- Sección Hábitos --- */}
-      <Text style={globalStyles.sectionTitle}>Hábitos</Text>
-      <View style={{ marginBottom: 20 }}>
+      <Collapsible title="Hábitos">
         <BaseCard>
           <RadioGroup
             title="¿Fuma?"
@@ -259,11 +257,9 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             editable={!isReadOnly}
           />
         </BaseCard>
-      </View>
+      </Collapsible>
 
-      {/* --- Sección Fotos --- */}
-      <Text style={globalStyles.sectionTitle}>Fotos</Text>
-      <View style={{ marginBottom: 20 }}>
+      <Collapsible title="Fotos" isInitiallyExpanded={true}>
         <BaseCard>
           {!isReadOnly && (
             <>
@@ -312,11 +308,9 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             contentContainerStyle={{ paddingVertical: 10 }}
           />
         </BaseCard>
-      </View>
+      </Collapsible>
 
-      {/* --- Sección Voucher --- */}
-      <Text style={globalStyles.sectionTitle}>Voucher de Pago</Text>
-      <View style={{ marginBottom: 20 }}>
+      <Collapsible title="Voucher de Pago">
         <BaseCard>
           {!isReadOnly && (
             <>
@@ -342,7 +336,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             contentContainerStyle={{ paddingVertical: 10 }}
           />
         </BaseCard>
-      </View>
+      </Collapsible>
 
       <ImageLightbox
         images={viewerImages}

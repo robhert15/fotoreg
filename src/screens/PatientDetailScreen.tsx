@@ -1,9 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
+import { View, Text, Pressable, Alert, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConsultationCard } from '@/components/cards/ConsultationCard';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
-import { ScreenLayout } from '@/components/layout/ScreenLayout';
+import { ParallaxScrollView } from '@/components/layout/ParallaxScrollView';
+import { useThemeColor } from '@/hooks/use-theme-color';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { getPatientById } from '@/db/api/patients';
 import { getConsultationsForPatient } from '@/db/api/consultations';
@@ -24,6 +26,8 @@ export default function PatientDetailScreen() {
   
   const [patient, setPatient] = useState<Patient | null>(null);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
+
+  const headerBackgroundColor = useThemeColor({}, 'primary');
 
   useFocusEffect(
     useCallback(() => {
@@ -50,11 +54,11 @@ export default function PatientDetailScreen() {
     }, [patientId])
   );
 
-    if (!patient) {
+  if (!patient) {
     return (
-      <ScreenLayout title="Cargando...">
+      <View style={[globalStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
         <Text style={globalStyles.emptyText}>Cargando datos del paciente...</Text>
-      </ScreenLayout>
+      </View>
     );
   }
   
@@ -73,39 +77,88 @@ export default function PatientDetailScreen() {
   const displayCreatedAt = new Date(((patient as any).createdAt ?? (patient as any).created_at) ?? new Date().toISOString()).toLocaleDateString('es-ES');
 
   return (
-    <ScreenLayout title={displayName || 'Paciente'}>
-      <View style={globalStyles.contentContainer}>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
-          {/* Tarjeta de Detalles del Paciente */}
-          <View style={{ marginBottom: 20 }}>
-            <BaseCard>
-              <Text style={globalStyles.title}>Detalles</Text>
-              <Text style={globalStyles.bodyText}>Documento: {displayDocument}</Text>
-              <Text style={globalStyles.bodyText}>Ocupación: {(patient as any).occupation || 'No especificado'}</Text>
-              <Text style={globalStyles.bodyText}>Miembro desde: {displayCreatedAt}</Text>
-            </BaseCard>
+    <View style={globalStyles.container}>
+      <ParallaxScrollView
+        headerHeight={120}
+        header={
+          <View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]}>
+            <Text style={styles.headerTitle}>{displayName || 'Paciente'}</Text>
           </View>
+        }>
+        <View style={styles.contentContainer}>
+            {/* Tarjeta de Detalles del Paciente */}
+            <View style={{ marginBottom: 20 }}>
+              <BaseCard>
+                <Text style={globalStyles.title}>Detalles</Text>
+                <Text style={globalStyles.bodyText}>Documento: {displayDocument}</Text>
+                <Text style={globalStyles.bodyText}>Ocupación: {(patient as any).occupation || 'No especificado'}</Text>
+                <Text style={globalStyles.bodyText}>Miembro desde: {displayCreatedAt}</Text>
+              </BaseCard>
+            </View>
 
-          {/* Historial de Consultas */}
-          <Text style={globalStyles.title}>Historial de Consultas</Text>
-          {consultations.length > 0 ? (
-            consultations.map((item) => (
-              <ConsultationCard
-                key={item.id}
-                consultation={item}
-                onPress={() => navigation.navigate('ConsultationDetail', { consultationId: item.id })}
-              />
-            ))
-          ) : (
-            <Text style={globalStyles.emptyText}>Este paciente aún no tiene consultas.</Text>
-          )}
-        </ScrollView>
-      </View>
+            {/* Historial de Consultas */}
+            <Text style={globalStyles.title}>Historial de Consultas</Text>
+            {consultations.length > 0 ? (
+              consultations.map((item) => (
+                <ConsultationCard
+                  key={item.id}
+                  consultation={item}
+                  onPress={() => navigation.navigate('ConsultationDetail', { consultationId: item.id })}
+                />
+              ))
+            ) : (
+              <Text style={globalStyles.emptyText}>Este paciente aún no tiene consultas.</Text>
+            )}
+        </View>
+      </ParallaxScrollView>
+
+      {/* Botones de navegación flotantes */}
+      <SafeAreaView style={styles.headerOverlay}>
+        <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
+            <Ionicons name="arrow-back" size={24} color="white" />
+        </Pressable>
+      </SafeAreaView>
 
       <Pressable style={globalStyles.fab} onPress={handleNewConsultation}>
         <Ionicons name="add" size={24} color="white" />
       </Pressable>
-    </ScreenLayout>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  contentContainer: {
+    padding: 20,
+    paddingBottom: 150,
+    backgroundColor: 'transparent',
+  },
+  headerContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 20,
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    textAlign: 'center',
+  },
+  headerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+  },
+  headerButton: {
+    padding: 10,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    borderRadius: 50,
+  },
+});
+
 
