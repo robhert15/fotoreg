@@ -14,6 +14,11 @@ const { width, height } = Dimensions.get('window');
 type Stroke = { color: string; width: number; points: { x: number; y: number }[] };
 export type TextNote = { id: string; text: string; x: number; y: number; status: 'pending' | 'saved' };
 
+// --- ACCIONES PARA UNDO/REDO ---
+type Action = 
+  | { type: 'ADD_STROKE'; stroke: Stroke }
+  | { type: 'REMOVE_STROKE'; stroke: Stroke; index: number };
+
 // --- PROPS INTERFACES ---
 interface ImageLightboxProps {
   images: { uri: string; id?: number }[];
@@ -35,8 +40,10 @@ interface ZoomableImageProps {
   textNotes: TextNote[];
   onNoteUpdate: (note: TextNote) => void;
   onNoteDelete: (noteId: string) => void;
+  onStrokeDelete: (stroke: Stroke) => void;
   setIsDraggingNote: (isDragging: boolean) => void;
   trashZoneLayout: { x: number; y: number; width: number; height: number } | null;
+  eraserMode: boolean;
 }
 
 // --- COMPONENTE DE IMAGEN CON ZOOM Y DIBUJO ---
@@ -54,7 +61,9 @@ const ZoomableImage = ({
   onNoteUpdate, 
   onNoteDelete,
   setIsDraggingNote,
-  trashZoneLayout
+  trashZoneLayout,
+  eraserMode,
+  onStrokeDelete
 }: ZoomableImageProps) => {
   const scale = useSharedValue(1);
   const focalX = useSharedValue(0);
@@ -66,7 +75,7 @@ const ZoomableImage = ({
 
   // Gestos de Zoom y Pan
   const pinchGesture = Gesture.Pinch()
-    .enabled(!annotateMode)
+    .enabled(!annotateMode && !eraserMode)
     .onStart(() => runOnJS(setPagerEnabled)(false))
     .onUpdate(event => { scale.value = event.scale; focalX.value = event.focalX; focalY.value = event.focalY; })
     .onEnd(() => {
@@ -75,7 +84,7 @@ const ZoomableImage = ({
     });
 
   const panGesture = Gesture.Pan()
-    .enabled(!annotateMode)
+    .enabled(!annotateMode && !eraserMode)
     .onStart(() => { if (scale.value > 1) runOnJS(setPagerEnabled)(false); })
     .onChange(event => { if (scale.value > 1) { translateX.value = event.translationX; translateY.value = event.translationY; } })
     .onEnd(() => { if (scale.value === 1) runOnJS(setPagerEnabled)(true); });
@@ -121,7 +130,22 @@ const ZoomableImage = ({
   const renderPath = (s: Stroke, idx: number) => {
     if (!s.points.length) return null;
     const d = `M ${s.points[0].x} ${s.points[0].y}` + s.points.slice(1).map(p => ` L ${p.x} ${p.y}`).join('');
-    return <Path key={`stroke-${idx}`} d={d} stroke={s.color} strokeWidth={s.width} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+    return (
+      <Path 
+        key={`stroke-${idx}`} 
+        d={d} 
+        stroke={s.color} 
+        strokeWidth={s.width} 
+        fill="none" 
+        strokeLinecap="round" 
+        strokeLinejoin="round" 
+        onPress={() => {
+          if (eraserMode) {
+            onStrokeDelete(s);
+          }
+        }}
+      />
+    );
   };
 
   return (
@@ -144,7 +168,7 @@ const ZoomableImage = ({
           {/* Overlay de Dibujo */}
           {/* Overlay de Dibujo */}
           {showStrokes && (
-            <View style={StyleSheet.absoluteFill} pointerEvents={annotateMode ? 'auto' : 'none'}>
+            <View style={StyleSheet.absoluteFill} pointerEvents={annotateMode || eraserMode ? 'auto' : 'none'}>
               <Svg width={width} height={height}>
                 {strokes.map(renderPath)}
                 {activeStroke && renderPath(activeStroke, -1)}
@@ -178,9 +202,11 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
 
   // Estado de anotación
   const [annotateMode, setAnnotateMode] = useState(false);
+  const [eraserMode, setEraserMode] = useState(false);
   const [color, setColor] = useState<string>('#ff4757');
   const [allStrokes, setAllStrokes] = useState<Record<number, Stroke[]>>({});
-  const [redoStack, setRedoStack] = useState<Record<number, Stroke[]>>({});
+  const [undoStack, setUndoStack] = useState<Record<number, Action[]>>({});
+  const [redoStack, setRedoStack] = useState<Record<number, Action[]>>({});
   const [activeStroke, setActiveStroke] = useState<Stroke | null>(null);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
   const [showStrokes, setShowStrokes] = useState(true);
@@ -191,6 +217,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const [trashZoneLayout, setTrashZoneLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
   const currentStrokes = allStrokes[currentIndex] || [];
+  const currentUndoStack = undoStack[currentIndex] || [];
   const currentRedoStack = redoStack[currentIndex] || [];
   const currentTextNotes = allTextNotes[currentIndex] || [];
 
@@ -233,50 +260,80 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   }, []);
 
   const handleStrokeEnd = useCallback(() => {
-    setAllStrokes(prev => {
-      if (!activeStroke) return prev;
-      const updatedStrokes = [...(prev[currentIndex] || []), activeStroke];
-      return { ...prev, [currentIndex]: updatedStrokes };
-    });
+    if (!activeStroke) return;
+
+    const action: Action = { type: 'ADD_STROKE', stroke: activeStroke };
+
+    // Añadir acción a la pila de deshacer
+    setUndoStack(prev => ({
+      ...prev,
+      [currentIndex]: [...(prev[currentIndex] || []), action]
+    }));
+    // Limpiar la pila de rehacer
+    setRedoStack(prev => ({ ...prev, [currentIndex]: [] }));
+
+    // Aplicar el cambio al estado principal
+    setAllStrokes(prev => ({
+      ...prev,
+      [currentIndex]: [...(prev[currentIndex] || []), activeStroke]
+    }));
+
     setActiveStroke(null);
   }, [activeStroke, currentIndex]);
 
   const handleUndo = () => {
-    const strokesForImage = allStrokes[currentIndex] || [];
-    if (strokesForImage.length === 0) return;
+    const stack = undoStack[currentIndex] || [];
+    if (stack.length === 0) return;
 
-    const lastStroke = strokesForImage[strokesForImage.length - 1];
+    const lastAction = stack[stack.length - 1];
     
-    // Mover el último trazo a la pila de rehacer
-    setRedoStack(prev => ({
-      ...prev,
-      [currentIndex]: [...(prev[currentIndex] || []), lastStroke]
-    }));
+    // Mover la acción a la pila de rehacer
+    setRedoStack(prev => ({ ...prev, [currentIndex]: [...(prev[currentIndex] || []), lastAction] }));
+    setUndoStack(prev => ({ ...prev, [currentIndex]: stack.slice(0, -1) }));
 
-    // Eliminar el último trazo de la pila principal
-    setAllStrokes(prev => ({
-      ...prev,
-      [currentIndex]: strokesForImage.slice(0, -1)
-    }));
+    // Revertir la acción
+    switch (lastAction.type) {
+      case 'ADD_STROKE':
+        setAllStrokes(prev => ({
+          ...prev,
+          [currentIndex]: (prev[currentIndex] || []).filter(s => s !== lastAction.stroke),
+        }));
+        break;
+      case 'REMOVE_STROKE':
+        setAllStrokes(prev => {
+          const strokes = [...(prev[currentIndex] || [])];
+          strokes.splice(lastAction.index, 0, lastAction.stroke);
+          return { ...prev, [currentIndex]: strokes };
+        });
+        break;
+    }
   };
 
   const handleRedo = () => {
-    const redoStrokesForImage = redoStack[currentIndex] || [];
-    if (redoStrokesForImage.length === 0) return;
+    const stack = redoStack[currentIndex] || [];
+    if (stack.length === 0) return;
 
-    const strokeToRedo = redoStrokesForImage[redoStrokesForImage.length - 1];
+    const lastAction = stack[stack.length - 1];
 
-    // Mover el trazo de vuelta a la pila principal
-    setAllStrokes(prev => ({
-      ...prev,
-      [currentIndex]: [...(prev[currentIndex] || []), strokeToRedo]
-    }));
+    // Mover la acción de vuelta a la pila de deshacer
+    setUndoStack(prev => ({ ...prev, [currentIndex]: [...(prev[currentIndex] || []), lastAction] }));
+    setRedoStack(prev => ({ ...prev, [currentIndex]: stack.slice(0, -1) }));
 
-    // Eliminar el trazo de la pila de rehacer
-    setRedoStack(prev => ({
-      ...prev,
-      [currentIndex]: redoStrokesForImage.slice(0, -1)
-    }));
+    // Re-aplicar la acción
+    switch (lastAction.type) {
+      case 'ADD_STROKE':
+        setAllStrokes(prev => ({
+          ...prev,
+          [currentIndex]: [...(prev[currentIndex] || []), lastAction.stroke],
+        }));
+        break;
+      case 'REMOVE_STROKE':
+        setAllStrokes(prev => ({
+          ...prev,
+          [currentIndex]: (prev[currentIndex] || []).filter(s => s !== lastAction.stroke),
+        }));
+        break;
+    }
   };
 
   const handleSave = async () => {
@@ -297,7 +354,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const handleCreateTextNote = () => {
     const newNote: TextNote = {
       id: `note_${Date.now()}`,
-      text: 'Toca para editar',
+      text: '',
       x: width / 2,
       y: height / 2,
       status: 'pending',
@@ -326,6 +383,21 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
     });
   };
 
+  const handleStrokeDelete = (strokeToDelete: Stroke) => {
+    const index = (allStrokes[currentIndex] || []).findIndex(s => s === strokeToDelete);
+    if (index === -1) return;
+
+    const action: Action = { type: 'REMOVE_STROKE', stroke: strokeToDelete, index };
+
+    setUndoStack(prev => ({ ...prev, [currentIndex]: [...(prev[currentIndex] || []), action] }));
+    setRedoStack(prev => ({ ...prev, [currentIndex]: [] }));
+
+    setAllStrokes(prev => ({
+      ...prev,
+      [currentIndex]: (prev[currentIndex] || []).filter(s => s !== strokeToDelete),
+    }));
+  };
+
   const palette = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ffffff'];
 
   return (
@@ -336,12 +408,23 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
           <View style={[styles.header, { top: insets.top }]}>
             <Pressable style={styles.headerBtn} onPress={onClose}><Ionicons name="close" size={24} color="white" /></Pressable>
             <View style={{ flex: 1 }} />
-            <Pressable style={styles.headerBtn} onPress={() => setShowStrokes(v => !v)}><Ionicons name={showStrokes ? 'eye-outline' : 'eye-off-outline'} size={24} color="white" /></Pressable>
-            <Pressable style={[styles.headerBtn, annotateMode && styles.headerBtnActive]} onPress={() => setAnnotateMode(v => !v)}><Ionicons name="pencil" size={20} color="white" /></Pressable>
-            <Pressable style={styles.headerBtn} onPress={handleCreateTextNote}><Ionicons name="text-outline" size={24} color="white" /></Pressable>
-            <Pressable style={[styles.headerBtn, (currentStrokes.length === 0) && styles.headerBtnDisabled]} onPress={handleUndo} disabled={currentStrokes.length === 0}><Ionicons name="arrow-undo-outline" size={22} color="white" /></Pressable>
-            <Pressable style={[styles.headerBtn, (currentRedoStack.length === 0) && styles.headerBtnDisabled]} onPress={handleRedo} disabled={currentRedoStack.length === 0}><Ionicons name="arrow-redo-outline" size={22} color="white" /></Pressable>
             <Pressable style={styles.headerBtn} onPress={handleSave}><Ionicons name="save-outline" size={22} color="white" /></Pressable>
+            <Pressable style={styles.headerBtn} onPress={() => setShowStrokes(v => !v)}><Ionicons name={showStrokes ? 'eye-outline' : 'eye-off-outline'} size={24} color="white" /></Pressable>
+            <Pressable 
+              style={[styles.headerBtn, eraserMode && styles.headerBtnActive]} 
+              onPress={() => { setEraserMode(v => !v); setAnnotateMode(false); }}
+            >
+              <Ionicons name="brush-outline" size={22} color="white" />
+            </Pressable>
+            <Pressable 
+              style={[styles.headerBtn, annotateMode && styles.headerBtnActive]} 
+              onPress={() => { setAnnotateMode(v => !v); setEraserMode(false); }}
+            >
+              <Ionicons name="pencil" size={20} color="white" />
+            </Pressable>
+            <Pressable style={styles.headerBtn} onPress={handleCreateTextNote}><Ionicons name="text-outline" size={24} color="white" /></Pressable>
+            <Pressable style={[styles.headerBtn, (currentUndoStack.length === 0) && styles.headerBtnDisabled]} onPress={handleUndo} disabled={currentUndoStack.length === 0}><Ionicons name="arrow-undo-outline" size={22} color="white" /></Pressable>
+            <Pressable style={[styles.headerBtn, (currentRedoStack.length === 0) && styles.headerBtnDisabled]} onPress={handleRedo} disabled={currentRedoStack.length === 0}><Ionicons name="arrow-redo-outline" size={22} color="white" /></Pressable>
           </View>
 
           {/* Paleta de colores */}
@@ -371,6 +454,8 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
                 onNoteDelete={handleNoteDelete}
                 setIsDraggingNote={setIsDraggingNote}
                 trashZoneLayout={trashZoneLayout}
+                eraserMode={eraserMode}
+                onStrokeDelete={handleStrokeDelete}
               />
             ))}
           </PagerView>
