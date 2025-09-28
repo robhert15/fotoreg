@@ -80,7 +80,7 @@ export default function PatientDetailScreen() {
   return (
     <View style={globalStyles.container}>
       <ParallaxScrollView
-        headerHeight={120}
+        headerHeight={138}
         header={
           <View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]}>
             <Text style={styles.headerTitle}>{displayName || 'Paciente'}</Text>
@@ -139,13 +139,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
     alignItems: 'center',
-    paddingBottom: 20,
+    paddingBottom: 10,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
     color: 'white',
     textAlign: 'center',
+    marginBottom: 20,
+    marginTop: 10,
   },
   headerOverlay: {
     position: 'absolute',

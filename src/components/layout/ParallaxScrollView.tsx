@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Text } from 'react-native';
+import { Svg, Path } from 'react-native-svg';
 import Animated, {
   interpolate,
   Extrapolate,
@@ -11,6 +12,7 @@ import Animated, {
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 const DEFAULT_HEADER_HEIGHT = 250;
+const MIN_HEADER_HEIGHT = 100; // Altura final de la cabecera
 
 interface ParallaxScrollViewProps {
   children: React.ReactNode;
@@ -31,10 +33,10 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
   });
 
   const headerAnimatedStyle = useAnimatedStyle(() => {
-    const translateY = interpolate(
+        const translateY = interpolate(
       scrollY.value,
-      [0, headerHeight],
-      [0, -headerHeight / 2], // La cabecera se mueve a la mitad de la velocidad del scroll
+      [0, headerHeight - MIN_HEADER_HEIGHT],
+      [0, -(headerHeight - MIN_HEADER_HEIGHT)], // Se desplaza solo la diferencia de altura
       Extrapolate.CLAMP
     );
 
@@ -50,6 +52,8 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
     };
   });
 
+  const ARC_HEIGHT = 20; // Altura de la base de la cápsula
+
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <Animated.View
@@ -59,6 +63,17 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
           headerAnimatedStyle,
         ]}>
         {header}
+        {/* Arco blanco en la base de la cabecera */}
+        <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>
+          <View 
+            style={{
+              flex: 1,
+              backgroundColor: backgroundColor,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+            }}
+          />
+        </View>
       </Animated.View>
 
       <Animated.ScrollView
@@ -84,4 +99,10 @@ const styles = StyleSheet.create({
     zIndex: 1,
     overflow: 'hidden',
   },
+  headerArc: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -1,
+  }
 });
