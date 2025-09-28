@@ -1,116 +1,79 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Modal, View, Pressable, Dimensions, StyleSheet, Text, PanResponder, GestureResponderEvent, PanResponderGestureState } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Image } from 'expo-image';
-import { Ionicons } from '@expo/vector-icons';
-import Svg, { Path } from 'react-native-svg';
+import React, { useState, useCallback, useEffect } from 'react';
+import { View, StyleSheet, Dimensions, Pressable, Modal, Text, ActivityIndicator } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
+import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import PagerView from 'react-native-pager-view';
-import { ReactNativeZoomableView } from '@openspacelabs/react-native-zoomable-view';
-import { getAnnotationForPhoto, saveAnnotationForPhoto } from '@/db/api/photos';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
+import { getAnnotationForPhoto, saveAnnotationForPhoto } from '@/db/api/photos'; // Importar funciones de DB
 
-export interface ViewerImage {
-  uri: string;
-  id?: number;
-}
-
-export interface ImageLightboxProps {
-  images: ViewerImage[];
-  imageIndex: number;
-  visible: boolean;
-  onRequestClose: () => void;
-}
-
+// --- TIPOS Y CONSTANTES ---
 const { width, height } = Dimensions.get('window');
-
 type Stroke = { color: string; width: number; points: { x: number; y: number }[] };
 
-export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, imageIndex, visible, onRequestClose }) => {
-  const pagerRef = useRef<PagerView>(null);
-  const [currentIndex, setCurrentIndex] = useState(imageIndex);
-  const [annotateMode, setAnnotateMode] = useState(false);
-  const [color, setColor] = useState<string>('#ff4757');
-  const [strokeWidth, setStrokeWidth] = useState<number>(4);
-  const [strokes, setStrokes] = useState<Stroke[]>([]);
-  const [activeStroke, setActiveStroke] = useState<Stroke | null>(null);
-  const [isZoomed, setIsZoomed] = useState(false);
+// --- PROPS INTERFACES ---
+interface ImageLightboxProps {
+  images: { uri: string; id?: number }[];
+  initialIndex?: number;
+  visible: boolean;
+  onClose: () => void;
+}
 
-  // Sincroniza el índice al abrir
-  useEffect(() => {
-    if (visible) {
-      setCurrentIndex(imageIndex);
-      requestAnimationFrame(() => {
-        try { pagerRef.current?.setPageWithoutAnimation?.(imageIndex); } catch {}
-      });
-    }
-  }, [visible, imageIndex]);
+interface ZoomableImageProps {
+  imageUri: string;
+  setPagerEnabled: (enabled: boolean) => void;
+  annotateMode: boolean;
+  strokes: Stroke[];
+  activeStroke: Stroke | null;
+  drawingGesture: any; // PanGesture para dibujar
+}
 
-  // Cargar anotaciones cuando cambia la imagen visible
-  const loadAnnotations = useCallback(async (idx: number) => {
-    const img = images[idx];
-    if (img?.id) {
-      const ann = await getAnnotationForPhoto(img.id);
-      if (ann?.data?.strokes) {
-        setStrokes(ann.data.strokes);
+// --- COMPONENTE DE IMAGEN CON ZOOM Y DIBUJO ---
+const ZoomableImage = ({ imageUri, setPagerEnabled, annotateMode, strokes, activeStroke, drawingGesture }: ZoomableImageProps) => {
+  const scale = useSharedValue(1);
+  const focalX = useSharedValue(0);
+  const focalY = useSharedValue(0);
+  const translateX = useSharedValue(0);
+  const translateY = useSharedValue(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+
+  // Gestos de Zoom y Pan
+  const pinchGesture = Gesture.Pinch()
+    .enabled(!annotateMode)
+    .onStart(() => runOnJS(setPagerEnabled)(false))
+    .onUpdate(event => { scale.value = event.scale; focalX.value = event.focalX; focalY.value = event.focalY; })
+    .onEnd(() => {
+      if (scale.value < 1) scale.value = withTiming(1);
+      if (scale.value === 1) runOnJS(setPagerEnabled)(true);
+    });
+
+  const panGesture = Gesture.Pan()
+    .enabled(!annotateMode)
+    .onStart(() => { if (scale.value > 1) runOnJS(setPagerEnabled)(false); })
+    .onChange(event => { if (scale.value > 1) { translateX.value = event.translationX; translateY.value = event.translationY; } })
+    .onEnd(() => { if (scale.value === 1) runOnJS(setPagerEnabled)(true); });
+
+  const doubleTapGesture = Gesture.Tap()
+    .numberOfTaps(2)
+    .enabled(!annotateMode)
+    .onStart(() => {
+      if (scale.value > 1) {
+        scale.value = withTiming(1); translateX.value = withTiming(0); translateY.value = withTiming(0);
+        runOnJS(setPagerEnabled)(true);
       } else {
-        setStrokes([]);
+        scale.value = withTiming(2);
+        runOnJS(setPagerEnabled)(false);
       }
-    } else {
-      setStrokes([]);
-    }
-  }, [images]);
+    });
 
-  useEffect(() => {
-    if (visible) {
-      loadAnnotations(currentIndex);
-    }
-  }, [visible, currentIndex, loadAnnotations]);
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translateX.value }, { translateY: translateY.value }, { scale: scale.value }],
+  }));
 
-  const handlePageSelected = useCallback((e: any) => {
-    const idx = e?.nativeEvent?.position ?? 0;
-    setCurrentIndex(idx);
-    setIsZoomed(false);
-    // Cargar anotaciones para la nueva imagen
-    loadAnnotations(idx);
-  }, [loadAnnotations]);
-
-  // Dibujo (anotación) usando PanResponder para capturar toques en overlay
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => annotateMode,
-      onMoveShouldSetPanResponder: () => annotateMode,
-      onPanResponderGrant: (e: GestureResponderEvent) => {
-        const { locationX: x, locationY: y } = e.nativeEvent as any;
-        setActiveStroke({ color, width: strokeWidth, points: [{ x, y }] });
-      },
-      onPanResponderMove: (e: GestureResponderEvent, _gs: PanResponderGestureState) => {
-        const { locationX: x, locationY: y } = e.nativeEvent as any;
-        setActiveStroke((prev) => {
-          if (!prev) return null;
-          return { ...prev, points: prev.points.concat({ x, y }) };
-        });
-      },
-      onPanResponderRelease: () => {
-        setStrokes((prev) => (activeStroke ? prev.concat(activeStroke) : prev));
-        setActiveStroke(null);
-      },
-      onPanResponderTerminate: () => {
-        setStrokes((prev) => (activeStroke ? prev.concat(activeStroke) : prev));
-        setActiveStroke(null);
-      },
-    })
-  ).current;
-
-  // Renderizado del trazo (SVG), las líneas escalan junto con la imagen
-  
-  const handleUndo = useCallback(() => {
-    setStrokes((prev) => prev.slice(0, -1));
-  }, [setStrokes]);
-
-  const handleSave = useCallback(async () => {
-    const img = images[currentIndex];
-    if (!img?.id) return;
-    await saveAnnotationForPhoto(img.id, { strokes });
-  }, [images, currentIndex, strokes]);
+  const composedZoomPan = Gesture.Simultaneous(pinchGesture, panGesture);
+  const mainGesture = Gesture.Exclusive(doubleTapGesture, composedZoomPan);
 
   const renderPath = (s: Stroke, idx: number) => {
     if (!s.points.length) return null;
@@ -118,154 +81,165 @@ export const ImageLightbox: React.FC<ImageLightboxProps> = ({ images, imageIndex
     return <Path key={`stroke-${idx}`} d={d} stroke={s.color} strokeWidth={s.width} fill="none" strokeLinecap="round" strokeLinejoin="round" />
   };
 
-  const renderPage = (item: ViewerImage, index: number) => (
-    <View key={`page-${index}`} style={{ width, height, justifyContent: 'center', alignItems: 'center' }}>
-      <ReactNativeZoomableView
-        maxZoom={4}
-        minZoom={1}
-        initialZoom={1}
-        zoomStep={0.5}
-        bindToBorders
-        zoomEnabled={!annotateMode}
-        onZoomAfter={(event: GestureResponderEvent | null, gestureState: PanResponderGestureState | null, zoomableViewEventObject: any) => {
-          const level = (zoomableViewEventObject?.zoomLevel ?? 1) as number;
-          setIsZoomed(level > 1);
-        }}
-        style={{ width, height }}
-      >
-        <View style={{ width, height, backgroundColor: 'black', justifyContent: 'center', alignItems: 'center' }}>
-          <Image
-            source={{ uri: item.uri }}
-            style={{ width, height }}
-            contentFit="contain"
-            transition={100}
-          />
-          {/* Overlay de dibujo escalable */}
-          <View
-            style={StyleSheet.absoluteFill}
-            pointerEvents={annotateMode ? 'auto' : 'none'}
-            {...(annotateMode ? panResponder.panHandlers : {})}
-          >
-            <Svg width={width} height={height} style={StyleSheet.absoluteFill}>
-              {strokes.map(renderPath)}
-              {activeStroke && renderPath(activeStroke, -1)}
-            </Svg>
-          </View>
-        </View>
-      </ReactNativeZoomableView>
-    </View>
+  return (
+    <GestureDetector gesture={mainGesture}>
+      <View style={styles.page}>
+        <Animated.View style={[styles.image, animatedStyle]}>
+          {/* Imagen */}
+          {!hasError && (
+            <Animated.Image 
+              style={styles.image} 
+              source={{ uri: imageUri }} 
+              resizeMode="contain" 
+              onLoadEnd={() => setIsLoading(false)}
+              onError={() => { setIsLoading(false); setHasError(true); }}
+            />
+          )}
+          {isLoading && <ActivityIndicator style={StyleSheet.absoluteFill} size="large" color="#FFF" />}
+          {hasError && <View style={[StyleSheet.absoluteFill, styles.center]}><Ionicons name="alert-circle-outline" size={60} color="#888" /></View>}
+          
+          {/* Overlay de Dibujo */}
+          <GestureDetector gesture={drawingGesture}>
+            <View style={StyleSheet.absoluteFill}>
+              <Svg width={width} height={height}>
+                {strokes.map(renderPath)}
+                {activeStroke && renderPath(activeStroke, -1)}
+              </Svg>
+            </View>
+          </GestureDetector>
+        </Animated.View>
+      </View>
+    </GestureDetector>
   );
+};
 
-  // Paleta de colores simple
+// --- COMPONENTE PRINCIPAL ---
+export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: ImageLightboxProps) => {
+  const insets = useSafeAreaInsets();
+  const [pagerEnabled, setPagerEnabled] = useState(true);
+  const [currentIndex, setCurrentIndex] = useState(initialIndex);
+
+  // Estado de anotación
+  const [annotateMode, setAnnotateMode] = useState(false);
+  const [color, setColor] = useState<string>('#ff4757');
+  const [allStrokes, setAllStrokes] = useState<Record<number, Stroke[]>>({});
+  const [activeStroke, setActiveStroke] = useState<Stroke | null>(null);
+
+  const currentStrokes = allStrokes[currentIndex] || [];
+
+  // Cargar anotaciones de la DB al abrir el visor
+  useEffect(() => {
+    if (visible) {
+      const loadAllAnnotations = async () => {
+        const annotations: Record<number, Stroke[]> = {};
+        for (let i = 0; i < images.length; i++) {
+          const img = images[i];
+          if (img.id) {
+            const ann = await getAnnotationForPhoto(img.id);
+            if (ann?.data?.strokes) {
+              annotations[i] = ann.data.strokes;
+            }
+          }
+        }
+        setAllStrokes(annotations);
+      };
+      loadAllAnnotations();
+    }
+  }, [visible, images]);
+
+  // Gesto para dibujar
+  const drawingGesture = Gesture.Pan()
+    .enabled(annotateMode)
+    .onStart(e => {
+      const newStroke: Stroke = { color, width: 4, points: [{ x: e.x, y: e.y }] };
+      runOnJS(setActiveStroke)(newStroke);
+    })
+    .onUpdate((e) => {
+      runOnJS(setActiveStroke)(prev => prev ? { ...prev, points: [...prev.points, { x: e.x, y: e.y }] } : null);
+    })
+    .onEnd(() => {
+      runOnJS(setAllStrokes)(prev => {
+        const updatedStrokes = activeStroke ? [...(prev[currentIndex] || []), activeStroke] : (prev[currentIndex] || []);
+        return { ...prev, [currentIndex]: updatedStrokes };
+      });
+      runOnJS(setActiveStroke)(null);
+    });
+
+  const handleUndo = () => {
+    setAllStrokes(prev => {
+      const current = prev[currentIndex] || [];
+      return { ...prev, [currentIndex]: current.slice(0, -1) };
+    });
+  };
+
+  const handleSave = async () => {
+    const img = images[currentIndex];
+    if (!img?.id) return;
+    await saveAnnotationForPhoto(img.id, { strokes: currentStrokes });
+    // Opcional: mostrar un feedback de guardado
+  };
+
   const palette = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ffffff'];
 
   return (
-    <Modal
-      visible={visible}
-      onRequestClose={onRequestClose}
-      animationType="fade"
-      transparent={false}
-      presentationStyle="fullScreen"
-    >
-      <SafeAreaView style={styles.container}>
-        <View style={styles.header}>
-          <Pressable onPress={onRequestClose} style={styles.headerBtn}>
-            <Ionicons name="close" size={22} color="#fff" />
-          </Pressable>
-          <View style={{ flex: 1 }} />
-          <Pressable onPress={() => setAnnotateMode((v) => !v)} style={[styles.headerBtn, annotateMode && styles.headerBtnActive]}>
-            <Ionicons name="pencil" size={20} color="#fff" />
-          </Pressable>
-          <Pressable onPress={handleUndo} style={styles.headerBtn}>
-            <Ionicons name="arrow-undo-outline" size={20} color="#fff" />
-          </Pressable>
-          <Pressable onPress={handleSave} style={styles.headerBtn}>
-            <Ionicons name="save-outline" size={20} color="#fff" />
-          </Pressable>
-        </View>
-        {/* Paleta de color */}
-        {annotateMode && (
-          <View style={styles.paletteRow}>
-            {palette.map((c) => (
-              <Pressable key={c} onPress={() => setColor(c)} style={styles.colorDotWrapper}>
-                <View style={[styles.colorDot, { backgroundColor: c }, color === c && styles.colorDotActive]} />
-              </Pressable>
-            ))}
+    <Modal visible={visible} transparent={true} onRequestClose={onClose} animationType="fade">
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <View style={styles.container}>
+          {/* Cabecera con botones */}
+          <View style={[styles.header, { top: insets.top }]}>
+            <Pressable style={styles.headerBtn} onPress={onClose}><Ionicons name="close" size={24} color="white" /></Pressable>
+            <View style={{ flex: 1 }} />
+            <Pressable style={[styles.headerBtn, annotateMode && styles.headerBtnActive]} onPress={() => setAnnotateMode(v => !v)}><Ionicons name="pencil" size={20} color="white" /></Pressable>
+            <Pressable style={styles.headerBtn} onPress={handleUndo}><Ionicons name="arrow-undo-outline" size={22} color="white" /></Pressable>
+            <Pressable style={styles.headerBtn} onPress={handleSave}><Ionicons name="save-outline" size={22} color="white" /></Pressable>
           </View>
-        )}
-        <PagerView
-          ref={pagerRef}
-          style={styles.pager}
-          initialPage={imageIndex}
-          onPageSelected={handlePageSelected}
-          scrollEnabled={!isZoomed && !annotateMode}
-        >
-          {images.map((img, idx) => renderPage(img, idx))}
-        </PagerView>
-        <View style={styles.footer}>
-          <Text style={styles.counter}>{images.length > 0 ? `${currentIndex + 1} / ${images.length}` : ''}</Text>
+
+          {/* Paleta de colores */}
+          {annotateMode && (
+            <View style={[styles.paletteRow, { top: insets.top + 50 }]}>
+              {palette.map(c => (
+                <Pressable key={c} onPress={() => setColor(c)} style={[styles.colorDot, { backgroundColor: c }, color === c && styles.colorDotActive]} />
+              ))}
+            </View>
+          )}
+
+          <PagerView style={styles.pagerView} initialPage={initialIndex} scrollEnabled={pagerEnabled} onPageSelected={e => setCurrentIndex(e.nativeEvent.position)}>
+            {images.map((image, index) => (
+              <ZoomableImage
+                key={image.id || index}
+                imageUri={image.uri}
+                setPagerEnabled={setPagerEnabled}
+                annotateMode={annotateMode}
+                strokes={allStrokes[index] || []}
+                activeStroke={index === currentIndex ? activeStroke : null}
+                drawingGesture={drawingGesture}
+              />
+            ))}
+          </PagerView>
+
+          {/* Contador de imágenes */}
+          <View style={[styles.footer, { bottom: insets.bottom + 20 }]}>
+            <Text style={styles.counter}>{`${currentIndex + 1} / ${images.length}`}</Text>
+          </View>
         </View>
-      </SafeAreaView>
+      </GestureHandlerRootView>
     </Modal>
   );
 };
 
+// --- ESTILOS ---
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-  },
-  pager: { flex: 1 },
-  header: {
-    height: 56,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-  },
-  headerBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    marginLeft: 8,
-  },
-  headerBtnActive: {
-    backgroundColor: 'rgba(255,255,255,0.35)',
-  },
-  paletteRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingBottom: 8,
-  },
-  colorDotWrapper: { marginRight: 8 },
-  colorDot: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.6)',
-  },
-  colorDotActive: {
-    borderColor: '#fff',
-    borderWidth: 3,
-  },
-  footer: {
-    position: 'absolute',
-    bottom: 20,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  counter: {
-    color: '#fff',
-    fontSize: 14,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 12,
-    overflow: 'hidden',
-  },
+  container: { flex: 1, backgroundColor: 'black' },
+  pagerView: { flex: 1 },
+  page: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  image: { width: width, height: height },
+  center: { justifyContent: 'center', alignItems: 'center' },
+  header: { position: 'absolute', width: '100%', flexDirection: 'row', paddingHorizontal: 20, zIndex: 10, alignItems: 'center' },
+  headerBtn: { padding: 10, backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: 30, marginLeft: 10 },
+  headerBtnActive: { backgroundColor: '#007AFF' },
+  paletteRow: { position: 'absolute', width: '100%', flexDirection: 'row', justifyContent: 'center', zIndex: 10, paddingTop: 10 },
+  colorDot: { width: 30, height: 30, borderRadius: 15, marginHorizontal: 10, borderWidth: 2, borderColor: 'transparent' },
+  colorDotActive: { borderColor: 'white' },
+  footer: { position: 'absolute', width: '100%', alignItems: 'center', zIndex: 10 },
+  counter: { color: 'white', fontSize: 16, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15 },
 });

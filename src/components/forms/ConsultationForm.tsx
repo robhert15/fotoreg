@@ -7,7 +7,7 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { DatePickerInput } from './DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
 import { RadioGroup } from './RadioGroup';
-import { ImageLightbox, type ViewerImage } from '@/components/viewers/ImageLightbox';
+import { ImageLightbox } from '@/components/viewers/ImageLightbox';
 import { NewConsultation, Photo } from '@/types/index';
 import { getPhotosForConsultation } from '@/db/api/consultations';
 
@@ -100,7 +100,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const [photos, setPhotos] = useState<Photo[]>([]);
   const [viewerVisible, setViewerVisible] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
-  const [viewerImages, setViewerImages] = useState<ViewerImage[]>([]);
+  const [viewerImages, setViewerImages] = useState<{ uri: string; id?: number }[]>([]);
 
   const loadPhotos = async () => {
     const combined: Photo[] = [];
@@ -135,7 +135,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const voucherPhotos = photos.filter((p) => p.stage === 'voucher');
 
   const openViewer = (group: 'antes' | 'despues' | 'voucher', startIndex: number) => {
-    let groupList: ViewerImage[] = [];
+    let groupList: { uri: string; id?: number }[] = [];
     switch (group) {
       case 'antes':
         groupList = beforePhotos.map((p) => ({ uri: p.local_uri, id: p.id }));
@@ -346,9 +346,9 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
       <ImageLightbox
         images={viewerImages}
-        imageIndex={viewerIndex}
+        initialIndex={viewerIndex}
         visible={viewerVisible}
-        onRequestClose={() => setViewerVisible(false)}
+        onClose={() => setViewerVisible(false)}
       />
     </View>
   );
