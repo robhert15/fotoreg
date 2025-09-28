@@ -29,6 +29,7 @@ interface ZoomableImageProps {
   onStrokeStart: (point: { x: number; y: number }) => void;
   onStrokeUpdate: (point: { x: number; y: number }) => void;
   onStrokeEnd: () => void;
+  showStrokes: boolean;
 }
 
 // --- COMPONENTE DE IMAGEN CON ZOOM Y DIBUJO ---
@@ -40,7 +41,8 @@ const ZoomableImage = ({
   activeStroke, 
   onStrokeStart, 
   onStrokeUpdate, 
-  onStrokeEnd 
+  onStrokeEnd, 
+  showStrokes 
 }: ZoomableImageProps) => {
   const scale = useSharedValue(1);
   const focalX = useSharedValue(0);
@@ -128,12 +130,14 @@ const ZoomableImage = ({
           {hasError && <View style={[StyleSheet.absoluteFill, styles.center]}><Ionicons name="alert-circle-outline" size={60} color="#888" /></View>}
           
           {/* Overlay de Dibujo */}
-          <View style={StyleSheet.absoluteFill} pointerEvents={annotateMode ? 'auto' : 'none'}>
-            <Svg width={width} height={height}>
-              {strokes.map(renderPath)}
-              {activeStroke && renderPath(activeStroke, -1)}
-            </Svg>
-          </View>
+          {showStrokes && (
+            <View style={StyleSheet.absoluteFill} pointerEvents={annotateMode ? 'auto' : 'none'}>
+              <Svg width={width} height={height}>
+                {strokes.map(renderPath)}
+                {activeStroke && renderPath(activeStroke, -1)}
+              </Svg>
+            </View>
+          )}
         </Animated.View>
       </View>
     </GestureDetector>
@@ -153,6 +157,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const [redoStack, setRedoStack] = useState<Record<number, Stroke[]>>({});
   const [activeStroke, setActiveStroke] = useState<Stroke | null>(null);
   const [showSaveMessage, setShowSaveMessage] = useState(false);
+  const [showStrokes, setShowStrokes] = useState(true);
 
   const currentStrokes = allStrokes[currentIndex] || [];
   const currentRedoStack = redoStack[currentIndex] || [];
@@ -258,6 +263,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
           <View style={[styles.header, { top: insets.top }]}>
             <Pressable style={styles.headerBtn} onPress={onClose}><Ionicons name="close" size={24} color="white" /></Pressable>
             <View style={{ flex: 1 }} />
+            <Pressable style={styles.headerBtn} onPress={() => setShowStrokes(v => !v)}><Ionicons name={showStrokes ? 'eye-outline' : 'eye-off-outline'} size={24} color="white" /></Pressable>
             <Pressable style={[styles.headerBtn, annotateMode && styles.headerBtnActive]} onPress={() => setAnnotateMode(v => !v)}><Ionicons name="pencil" size={20} color="white" /></Pressable>
             <Pressable style={[styles.headerBtn, (currentStrokes.length === 0) && styles.headerBtnDisabled]} onPress={handleUndo} disabled={currentStrokes.length === 0}><Ionicons name="arrow-undo-outline" size={22} color="white" /></Pressable>
             <Pressable style={[styles.headerBtn, (currentRedoStack.length === 0) && styles.headerBtnDisabled]} onPress={handleRedo} disabled={currentRedoStack.length === 0}><Ionicons name="arrow-redo-outline" size={22} color="white" /></Pressable>
@@ -285,6 +291,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
                 onStrokeStart={handleStrokeStart}
                 onStrokeUpdate={handleStrokeUpdate}
                 onStrokeEnd={handleStrokeEnd}
+                showStrokes={showStrokes}
               />
             ))}
           </PagerView>
