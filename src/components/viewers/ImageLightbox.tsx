@@ -1,16 +1,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, Dimensions, Pressable, Modal, Text, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, Dimensions, Pressable, Modal, Text, ActivityIndicator, TextInput } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import PagerView from 'react-native-pager-view';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import { TextNoteView } from './TextNoteView';
 import { getAnnotationForPhoto, saveAnnotationForPhoto } from '@/db/api/photos'; // Importar funciones de DB
 
 // --- TIPOS Y CONSTANTES ---
 const { width, height } = Dimensions.get('window');
 type Stroke = { color: string; width: number; points: { x: number; y: number }[] };
+export type TextNote = { id: string; text: string; x: number; y: number; status: 'pending' | 'saved' };
 
 // --- PROPS INTERFACES ---
 interface ImageLightboxProps {
@@ -30,6 +32,11 @@ interface ZoomableImageProps {
   onStrokeUpdate: (point: { x: number; y: number }) => void;
   onStrokeEnd: () => void;
   showStrokes: boolean;
+  textNotes: TextNote[];
+  onNoteUpdate: (note: TextNote) => void;
+  onNoteDelete: (noteId: string) => void;
+  setIsDraggingNote: (isDragging: boolean) => void;
+  trashZoneLayout: { x: number; y: number; width: number; height: number } | null;
 }
 
 // --- COMPONENTE DE IMAGEN CON ZOOM Y DIBUJO ---
@@ -42,7 +49,12 @@ const ZoomableImage = ({
   onStrokeStart, 
   onStrokeUpdate, 
   onStrokeEnd, 
-  showStrokes 
+  showStrokes, 
+  textNotes, 
+  onNoteUpdate, 
+  onNoteDelete,
+  setIsDraggingNote,
+  trashZoneLayout
 }: ZoomableImageProps) => {
   const scale = useSharedValue(1);
   const focalX = useSharedValue(0);
@@ -130,6 +142,7 @@ const ZoomableImage = ({
           {hasError && <View style={[StyleSheet.absoluteFill, styles.center]}><Ionicons name="alert-circle-outline" size={60} color="#888" /></View>}
           
           {/* Overlay de Dibujo */}
+          {/* Overlay de Dibujo */}
           {showStrokes && (
             <View style={StyleSheet.absoluteFill} pointerEvents={annotateMode ? 'auto' : 'none'}>
               <Svg width={width} height={height}>
@@ -138,6 +151,19 @@ const ZoomableImage = ({
               </Svg>
             </View>
           )}
+
+          {/* Notas de Texto */}
+          {textNotes.map(note => (
+            <TextNoteView 
+              key={note.id} 
+              note={note} 
+              scale={scale} 
+              onUpdate={onNoteUpdate} 
+              onDelete={onNoteDelete}
+              setIsDragging={setIsDraggingNote}
+              trashZoneLayout={trashZoneLayout}
+            />
+          ))}
         </Animated.View>
       </View>
     </GestureDetector>
@@ -159,14 +185,22 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const [showSaveMessage, setShowSaveMessage] = useState(false);
   const [showStrokes, setShowStrokes] = useState(true);
 
+  // Estado para notas de texto
+  const [allTextNotes, setAllTextNotes] = useState<Record<number, TextNote[]>>({});
+  const [isDraggingNote, setIsDraggingNote] = useState(false);
+  const [trashZoneLayout, setTrashZoneLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+
   const currentStrokes = allStrokes[currentIndex] || [];
   const currentRedoStack = redoStack[currentIndex] || [];
+  const currentTextNotes = allTextNotes[currentIndex] || [];
 
   // Cargar anotaciones de la DB al abrir el visor
   useEffect(() => {
     if (visible) {
       const loadAllAnnotations = async () => {
         const annotations: Record<number, Stroke[]> = {};
+        const notes: Record<number, TextNote[]> = {};
+
         for (let i = 0; i < images.length; i++) {
           const img = images[i];
           if (img.id) {
@@ -174,9 +208,13 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
             if (ann?.data?.strokes) {
               annotations[i] = ann.data.strokes;
             }
+            if (ann?.data?.textNotes) {
+              notes[i] = ann.data.textNotes;
+            }
           }
         }
         setAllStrokes(annotations);
+        setAllTextNotes(notes);
       };
       loadAllAnnotations();
     }
@@ -244,13 +282,48 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const handleSave = async () => {
     const img = images[currentIndex];
     if (!img?.id) return;
-    await saveAnnotationForPhoto(img.id, { strokes: currentStrokes });
+    await saveAnnotationForPhoto(img.id, { 
+      strokes: currentStrokes, 
+      textNotes: currentTextNotes 
+    });
     
     // Mostrar mensaje de guardado y ocultarlo después de 2 segundos
     setShowSaveMessage(true);
     setTimeout(() => {
       setShowSaveMessage(false);
     }, 2000);
+  };
+
+  const handleCreateTextNote = () => {
+    const newNote: TextNote = {
+      id: `note_${Date.now()}`,
+      text: 'Toca para editar',
+      x: width / 2,
+      y: height / 2,
+      status: 'pending',
+    };
+    setAllTextNotes(prev => ({
+      ...prev,
+      [currentIndex]: [...(prev[currentIndex] || []), newNote]
+    }));
+  };
+
+  const handleNoteUpdate = (updatedNote: TextNote) => {
+    setAllTextNotes(prev => {
+      const notesForImage = prev[currentIndex] || [];
+      const updatedNotes = notesForImage.map(note => 
+        note.id === updatedNote.id ? updatedNote : note
+      );
+      return { ...prev, [currentIndex]: updatedNotes };
+    });
+  };
+
+  const handleNoteDelete = (noteId: string) => {
+    setAllTextNotes(prev => {
+      const notesForImage = prev[currentIndex] || [];
+      const updatedNotes = notesForImage.filter(note => note.id !== noteId);
+      return { ...prev, [currentIndex]: updatedNotes };
+    });
   };
 
   const palette = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ffffff'];
@@ -265,6 +338,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
             <View style={{ flex: 1 }} />
             <Pressable style={styles.headerBtn} onPress={() => setShowStrokes(v => !v)}><Ionicons name={showStrokes ? 'eye-outline' : 'eye-off-outline'} size={24} color="white" /></Pressable>
             <Pressable style={[styles.headerBtn, annotateMode && styles.headerBtnActive]} onPress={() => setAnnotateMode(v => !v)}><Ionicons name="pencil" size={20} color="white" /></Pressable>
+            <Pressable style={styles.headerBtn} onPress={handleCreateTextNote}><Ionicons name="text-outline" size={24} color="white" /></Pressable>
             <Pressable style={[styles.headerBtn, (currentStrokes.length === 0) && styles.headerBtnDisabled]} onPress={handleUndo} disabled={currentStrokes.length === 0}><Ionicons name="arrow-undo-outline" size={22} color="white" /></Pressable>
             <Pressable style={[styles.headerBtn, (currentRedoStack.length === 0) && styles.headerBtnDisabled]} onPress={handleRedo} disabled={currentRedoStack.length === 0}><Ionicons name="arrow-redo-outline" size={22} color="white" /></Pressable>
             <Pressable style={styles.headerBtn} onPress={handleSave}><Ionicons name="save-outline" size={22} color="white" /></Pressable>
@@ -292,9 +366,23 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
                 onStrokeUpdate={handleStrokeUpdate}
                 onStrokeEnd={handleStrokeEnd}
                 showStrokes={showStrokes}
+                textNotes={allTextNotes[index] || []}
+                onNoteUpdate={handleNoteUpdate}
+                onNoteDelete={handleNoteDelete}
+                setIsDraggingNote={setIsDraggingNote}
+                trashZoneLayout={trashZoneLayout}
               />
             ))}
           </PagerView>
+
+          {isDraggingNote && (
+            <View 
+              style={styles.trashZone}
+              onLayout={event => setTrashZoneLayout(event.nativeEvent.layout)}
+            >
+              <Ionicons name="trash-outline" size={32} color="white" />
+            </View>
+          )}
 
           {/* Contador de imágenes y Mensaje de Guardado */}
           <View style={[styles.footer, { bottom: insets.bottom + 20 }]}>
@@ -327,4 +415,13 @@ const styles = StyleSheet.create({
   footer: { position: 'absolute', width: '100%', alignItems: 'center', zIndex: 10 },
   counter: { color: 'white', fontSize: 16, backgroundColor: 'rgba(0,0,0,0.5)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15 },
   saveMessage: { color: '#2ed573', fontSize: 16, fontWeight: 'bold', backgroundColor: 'rgba(0,0,0,0.7)', paddingHorizontal: 20, paddingVertical: 10, borderRadius: 20, overflow: 'hidden' },
+  trashZone: {
+    position: 'absolute',
+    bottom: 40,
+    alignSelf: 'center',
+    padding: 20,
+    backgroundColor: 'rgba(255, 0, 0, 0.5)',
+    borderRadius: 50,
+  },
+  // Estilos para notas de texto y modal
 });
