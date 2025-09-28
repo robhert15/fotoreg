@@ -1,13 +1,16 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, StyleSheet, Dimensions, Pressable, Modal, Text, ActivityIndicator, TextInput } from 'react-native';
+import { View, StyleSheet, Dimensions, Pressable, Modal, Text, ActivityIndicator } from 'react-native';
+
+import { Ionicons } from '@expo/vector-icons';
+import PagerView from 'react-native-pager-view';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
-import PagerView from 'react-native-pager-view';
-import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { TextNoteView } from './TextNoteView';
+
 import { getAnnotationForPhoto, saveAnnotationForPhoto } from '@/db/api/photos'; // Importar funciones de DB
+
+import { TextNoteView } from './TextNoteView';
 
 // --- TIPOS Y CONSTANTES ---
 const { width, height } = Dimensions.get('window');
@@ -216,10 +219,8 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
   const [isDraggingNote, setIsDraggingNote] = useState(false);
   const [trashZoneLayout, setTrashZoneLayout] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
 
-  const currentStrokes = allStrokes[currentIndex] || [];
   const currentUndoStack = undoStack[currentIndex] || [];
   const currentRedoStack = redoStack[currentIndex] || [];
-  const currentTextNotes = allTextNotes[currentIndex] || [];
 
   // Cargar anotaciones de la DB al abrir el visor
   useEffect(() => {
@@ -281,7 +282,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
     setActiveStroke(null);
   }, [activeStroke, currentIndex]);
 
-  const handleUndo = () => {
+  const handleUndo = useCallback(() => {
     const stack = undoStack[currentIndex] || [];
     if (stack.length === 0) return;
 
@@ -307,9 +308,9 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
         });
         break;
     }
-  };
+  }, [currentIndex, undoStack]);
 
-  const handleRedo = () => {
+  const handleRedo = useCallback(() => {
     const stack = redoStack[currentIndex] || [];
     if (stack.length === 0) return;
 
@@ -334,9 +335,12 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
         }));
         break;
     }
-  };
+  }, [currentIndex, redoStack]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
+    const currentStrokes = allStrokes[currentIndex] || [];
+    const currentTextNotes = allTextNotes[currentIndex] || [];
+
     const img = images[currentIndex];
     if (!img?.id) return;
     await saveAnnotationForPhoto(img.id, { 
@@ -349,9 +353,9 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
     setTimeout(() => {
       setShowSaveMessage(false);
     }, 2000);
-  };
+  }, [currentIndex, images, allStrokes, allTextNotes]);
 
-  const handleCreateTextNote = () => {
+  const handleCreateTextNote = useCallback(() => {
     const newNote: TextNote = {
       id: `note_${Date.now()}`,
       text: '',
@@ -363,9 +367,9 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
       ...prev,
       [currentIndex]: [...(prev[currentIndex] || []), newNote]
     }));
-  };
+  }, [currentIndex]);
 
-  const handleNoteUpdate = (updatedNote: TextNote) => {
+  const handleNoteUpdate = useCallback((updatedNote: TextNote) => {
     setAllTextNotes(prev => {
       const notesForImage = prev[currentIndex] || [];
       const updatedNotes = notesForImage.map(note => 
@@ -373,17 +377,17 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
       );
       return { ...prev, [currentIndex]: updatedNotes };
     });
-  };
+  }, [currentIndex]);
 
-  const handleNoteDelete = (noteId: string) => {
+  const handleNoteDelete = useCallback((noteId: string) => {
     setAllTextNotes(prev => {
       const notesForImage = prev[currentIndex] || [];
       const updatedNotes = notesForImage.filter(note => note.id !== noteId);
       return { ...prev, [currentIndex]: updatedNotes };
     });
-  };
+  }, [currentIndex]);
 
-  const handleStrokeDelete = (strokeToDelete: Stroke) => {
+  const handleStrokeDelete = useCallback((strokeToDelete: Stroke) => {
     const index = (allStrokes[currentIndex] || []).findIndex(s => s === strokeToDelete);
     if (index === -1) return;
 
@@ -396,7 +400,7 @@ export const ImageLightbox = ({ images, initialIndex = 0, visible, onClose }: Im
       ...prev,
       [currentIndex]: (prev[currentIndex] || []).filter(s => s !== strokeToDelete),
     }));
-  };
+  }, [allStrokes, currentIndex]);
 
   const palette = ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ffffff'];
 
