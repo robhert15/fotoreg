@@ -1,6 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, Pressable, Alert, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { ConsultationCard } from '@/components/cards/ConsultationCard';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,26 +31,42 @@ export default function PatientDetailScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      let isMounted = true; // Flag to check if component is still mounted
+
       const loadData = async () => {
         try {
           const patientData = await getPatientById(patientId);
+          if (!isMounted) return; // Exit if component was unmounted
+
           if (!patientData) {
             throw new Error('Paciente no encontrado');
           }
           setPatient(patientData);
+
           try {
             const consultationHistory = await getConsultationsForPatient(patientData.id);
-            setConsultations(consultationHistory);
+            if (isMounted) { // Check again before setting state
+              setConsultations(consultationHistory);
+            }
           } catch (e) {
             console.warn('No se pudo obtener el historial de consultas para el paciente', patientId, e);
-            setConsultations([]);
+            if (isMounted) {
+              setConsultations([]);
+            }
           }
         } catch (error) {
-          Alert.alert('Error', 'No se pudo cargar la información del paciente.');
+          if (isMounted) { // Only show alert if component is mounted
+            Alert.alert('Error', 'No se pudo cargar la información del paciente.');
+          }
           console.error('PatientDetailScreen loadData failed:', error);
         }
       };
+
       loadData();
+
+      return () => {
+        isMounted = false; // Cleanup function sets flag to false
+      };
     }, [patientId])
   );
 
@@ -67,15 +82,9 @@ export default function PatientDetailScreen() {
     navigation.navigate('NewConsultation', { patientId: patient.id });
   };
   
-    // Compatibilidad V2/V3: construir valores seguros para mostrar
-  const displayName = ((patient as any).name as string) ?? [
-    (patient as any).first_name,
-    (patient as any).last_name,
-  ]
-    .filter(Boolean)
-    .join(' ');
-  const displayDocument = ((patient as any).documentNumber as string) ?? (patient as any).document_number ?? 'No especificado';
-  const displayCreatedAt = new Date(((patient as any).createdAt ?? (patient as any).created_at) ?? new Date().toISOString()).toLocaleDateString('es-ES');
+  const displayName = [patient.first_name, patient.last_name].filter(Boolean).join(' ');
+  const displayDocument = patient.document_number ?? 'No especificado';
+  const displayCreatedAt = new Date(patient.created_at).toLocaleDateString('es-ES');
 
   return (
     <View style={globalStyles.container}>
@@ -97,7 +106,7 @@ export default function PatientDetailScreen() {
               <BaseCard>
                 <Text style={globalStyles.title}>Detalles</Text>
                 <Text style={globalStyles.bodyText}>Documento: {displayDocument}</Text>
-                <Text style={globalStyles.bodyText}>Ocupación: {(patient as any).occupation || 'No especificado'}</Text>
+                <Text style={globalStyles.bodyText}>Ocupación: {patient.occupation || 'No especificado'}</Text>
                 <Text style={globalStyles.bodyText}>Miembro desde: {displayCreatedAt}</Text>
               </BaseCard>
             </View>
