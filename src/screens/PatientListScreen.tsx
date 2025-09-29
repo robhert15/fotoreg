@@ -118,7 +118,7 @@ export default function PatientListScreen() {
 // Solo mantenemos los que son verdaderamente específicos de esta pantalla.
 const styles = StyleSheet.create({
   listContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     paddingBottom: 150, // Aumentar espacio para el FAB flotante y la barra de navegación
   },
   resultsCount: {

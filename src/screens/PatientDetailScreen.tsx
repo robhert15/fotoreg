@@ -109,9 +109,8 @@ export default function PatientDetailScreen() {
             <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
               <Ionicons name="arrow-back" size={24} color="white" />
             </Pressable>
-            <Text style={styles.headerTitle}>{displayName || 'Paciente'}</Text>
-            {/* Spacer to keep title centered */}
-            <View style={{ width: 44 }} />
+            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{displayName || 'Paciente'}</Text>
+            <View style={{ width: 22 }} />
           </View>
         }>
         <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
@@ -167,9 +166,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 15,
+    paddingHorizontal: 10,
     paddingBottom: 20,
     paddingTop: 60,
+    gap: 10,
   },
   headerTitle: {
     fontSize: 28,

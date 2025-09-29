@@ -23,7 +23,7 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
     <BaseCard onPress={onPress}>
       <View style={styles.cardHeader}>
         <View style={styles.patientInfo}>
-          <Text style={[styles.patientName, { color: textColor }]}>{displayName}</Text>
+          <Text style={[styles.patientName, { color: textColor }]} numberOfLines={1} ellipsizeMode="tail">{displayName}</Text>
           <Text style={[styles.patientId, { color: textLightColor }]}>Doc: {patient.document_number}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
@@ -65,7 +65,10 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: 12,
   },
-  patientInfo: {},
+  patientInfo: {
+    flex: 1, // Ocupa el espacio disponible, permitiendo que el texto se trunque
+    marginRight: 8, // Añade un pequeño espacio antes de la insignia
+  },
   patientName: {
     fontSize: 18,
     fontWeight: '600',
