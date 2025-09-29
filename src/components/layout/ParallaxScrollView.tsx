@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   interpolate,
   Extrapolate,
@@ -7,11 +7,13 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
+import { Svg, Rect, Circle } from 'react-native-svg';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 const DEFAULT_HEADER_HEIGHT = 250;
 const MIN_HEADER_HEIGHT = 100; // Altura final de la cabecera
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ParallaxScrollViewProps {
   children: React.ReactNode;
@@ -62,16 +64,15 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
           headerAnimatedStyle,
         ]}>
         {header}
-        {/* Arco blanco en la base de la cabecera */}
+        {/* Arco en 3 partes con SVG */}
         <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>
-          <View 
-            style={{
-              flex: 1,
-              backgroundColor: backgroundColor,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-            }}
-          />
+          <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
+            {/* Rectángulo central blanco (color de fondo del contenido) */}
+            <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT} fill={backgroundColor} />
+            {/* Semicírculos laterales blancos */}
+            <Circle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} fill={backgroundColor} />
+            <Circle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} fill={backgroundColor} />
+          </Svg>
         </View>
       </Animated.View>
 
