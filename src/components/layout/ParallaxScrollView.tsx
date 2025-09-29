@@ -19,15 +19,19 @@ interface ParallaxScrollViewProps {
   children: React.ReactNode;
   header: React.ReactNode;
   headerHeight?: number;
+  headerColor?: string; // Color de la cabecera para el fondo turquesa del arco
 }
 
 export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
   children,
   header,
   headerHeight = DEFAULT_HEADER_HEIGHT,
+  headerColor,
 }) => {
   const scrollY = useSharedValue(0);
-  const backgroundColor = useThemeColor({}, 'background');
+  const backgroundColor = useThemeColor({}, 'background'); // Blanco (contenido)
+  const defaultHeaderColor = useThemeColor({}, 'primary'); // Turquesa por defecto
+  const headerFill = headerColor ?? defaultHeaderColor;
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -64,12 +68,13 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
           headerAnimatedStyle,
         ]}>
         {header}
-        {/* Arco en 3 partes con SVG */}
+        {/* Arco en 3 partes con SVG: base turquesa + píldora blanca encima */}
         <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>
           <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
-            {/* Rectángulo central blanco (color de fondo del contenido) */}
+            {/* Base turquesa detrás (mismo color que la cabecera) */}
+            <Rect x={0} y={0} width={SCREEN_WIDTH} height={ARC_HEIGHT} fill={headerFill} />
+            {/* Píldora blanca encima (rectángulo central + semicírculos) */}
             <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT} fill={backgroundColor} />
-            {/* Semicírculos laterales blancos */}
             <Circle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} fill={backgroundColor} />
             <Circle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} fill={backgroundColor} />
           </Svg>
