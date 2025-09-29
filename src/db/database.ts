@@ -13,10 +13,16 @@ export const initializeDatabase = async () => {
       `CREATE TABLE IF NOT EXISTS patients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         first_name TEXT NOT NULL,
-        last_name TEXT NOT NULL,
+        paternal_last_name TEXT NOT NULL,
+        maternal_last_name TEXT,
         document_number TEXT UNIQUE,
         date_of_birth TEXT,
+        gender TEXT,
+        address TEXT,
         occupation TEXT,
+        whatsapp TEXT,
+        contact_phone TEXT,
+        physical_activity TEXT,
         created_at TEXT NOT NULL
       );`,
       `CREATE TABLE IF NOT EXISTS guardians (

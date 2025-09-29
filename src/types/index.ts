@@ -2,10 +2,16 @@
 export interface Patient {
   id: number;
   first_name: string;
-  last_name: string;
+  paternal_last_name: string;
+  maternal_last_name?: string;
   document_number?: string;
   date_of_birth?: string;
+  gender?: 'masculino' | 'femenino' | 'otro' | 'no especificado';
+  address?: string;
   occupation?: string;
+  whatsapp?: string;
+  contact_phone?: string;
+  physical_activity?: string; // Ej: "Correr, 3 veces por semana"
   created_at: string;
 }
 export type NewPatient = Omit<Patient, 'id' | 'created_at'>;

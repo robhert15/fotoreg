@@ -17,11 +17,13 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
   const successColor = useThemeColor({}, 'success');
   const primaryColor = useThemeColor({}, 'primary');
 
+  const displayName = [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
+
   return (
     <BaseCard onPress={onPress}>
       <View style={styles.cardHeader}>
         <View style={styles.patientInfo}>
-          <Text style={[styles.patientName, { color: textColor }]}>{`${patient.first_name} ${patient.last_name}`}</Text>
+          <Text style={[styles.patientName, { color: textColor }]}>{displayName}</Text>
           <Text style={[styles.patientId, { color: textLightColor }]}>Doc: {patient.document_number}</Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: 'rgba(16, 185, 129, 0.1)' }]}>
