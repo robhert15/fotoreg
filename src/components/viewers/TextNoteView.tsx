@@ -1,5 +1,7 @@
 import React from 'react';
 import { Text, StyleSheet, TextInput, View, Pressable } from 'react-native';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { addOpacity } from '@/utils/colorUtils';
 import Animated, { useAnimatedStyle, useSharedValue, runOnJS, SharedValue } from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -19,6 +21,9 @@ export const TextNoteView = ({ note, scale, onUpdate, onDelete, setIsDragging, t
   const [text, setText] = React.useState(note.text);
   const translateX = useSharedValue(note.x);
   const translateY = useSharedValue(note.y);
+  const outline = useThemeColor({}, 'outline');
+  const borderColorSaved = addOpacity('#FFFFFF', 0.35);
+  const borderColorPending = addOpacity('#000000', 0.25);
 
   const dragGesture = Gesture.Pan()
     .onStart(() => {
@@ -90,6 +95,7 @@ export const TextNoteView = ({ note, scale, onUpdate, onDelete, setIsDragging, t
 
   const containerStyle = [
     styles.noteContainer,
+    { borderColor: note.status === 'pending' ? borderColorPending : borderColorSaved },
     note.status === 'pending' ? styles.pending : styles.saved,
   ];
 
@@ -125,11 +131,8 @@ const styles = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 5, // Sombra para Android
-    shadowColor: '#000', // Sombra para iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    // Flat: sin sombras, con borde sutil
+    borderWidth: 1,
   },
   pending: {
     backgroundColor: 'rgba(255, 140, 0, 0.85)', // Naranja más oscuro

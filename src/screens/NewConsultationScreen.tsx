@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Pressable, Alert, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NewConsultation } from '@/types';
@@ -13,6 +13,7 @@ import {
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
 import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
+import { BaseButton } from '@/components/buttons/BaseButton';
 
 export default function NewConsultationScreen() {
   const navigation = useNavigation();
@@ -140,14 +141,8 @@ export default function NewConsultationScreen() {
       </ScrollView>
       
       <View style={styles.footer}>
-        <Pressable style={[styles.button, styles.cancelButton]} onPress={handleCancel}>
-          <Ionicons name="close" size={20} color="white" />
-          <Text style={styles.buttonText}>Cancelar</Text>
-        </Pressable>
-        <Pressable style={[styles.button, styles.saveButton]} onPress={handleFinalSave}>
-          <Ionicons name="checkmark" size={20} color="white" />
-          <Text style={styles.buttonText}>Guardar</Text>
-        </Pressable>
+        <BaseButton title="Cancelar" variant="outline" onPress={handleCancel} style={{ flex: 1, marginRight: 5 }} />
+        <BaseButton title="Guardar" variant="primary" onPress={handleFinalSave} style={{ flex: 1, marginLeft: 5 }} />
       </View>
     </SafeAreaView>
   );
@@ -173,26 +168,5 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.light.borderColor,
   },
-  button: {
-    flex: 1,
-    flexDirection: 'row',
-    paddingVertical: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  saveButton: {
-    backgroundColor: Colors.light.primary,
-    marginLeft: 5,
-  },
-  cancelButton: {
-    backgroundColor: Colors.light.tertiary,
-    marginRight: 5,
-  },
-  buttonText: {
-    color: Colors.light.white,
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
-  },
+  // Botones migrados a BaseButton
 });
