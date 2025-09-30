@@ -7,7 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Svg, Rect, Circle } from 'react-native-svg';
+import { Svg, Rect, Path } from 'react-native-svg';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
 
@@ -57,6 +57,52 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
     };
   });
 
+  const pillAnimatedStyle = useAnimatedStyle(() => {
+    const opacity = interpolate(
+      scrollY.value,
+      [0, (headerHeight - MIN_HEADER_HEIGHT) / 2],
+      [1, 0],
+      Extrapolate.CLAMP
+    );
+    return { opacity };
+  });
+
+  // Componente auxiliar: cuarto de círculo relleno
+  const QuarterCircle = ({
+    cx,
+    cy,
+    r,
+    quadrant,
+    fill,
+  }: {
+    cx: number;
+    cy: number;
+    r: number;
+    quadrant: 'tl' | 'tr' | 'bl' | 'br';
+    fill: string;
+  }) => {
+    let d = '';
+    switch (quadrant) {
+      case 'tl':
+        // Top-Left: del centro hacia arriba y luego arco hacia la izquierda
+        d = `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 0 0 ${cx - r} ${cy} Z`;
+        break;
+      case 'bl':
+        // Bottom-Left: del centro hacia la izquierda y arco hacia abajo
+        d = `M ${cx} ${cy} L ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${cx} ${cy + r} Z`;
+        break;
+      case 'tr':
+        // Top-Right: del centro hacia arriba y arco hacia la derecha
+        d = `M ${cx} ${cy} L ${cx} ${cy - r} A ${r} ${r} 0 0 1 ${cx + r} ${cy} Z`;
+        break;
+      case 'br':
+        // Bottom-Right: del centro hacia la derecha y arco hacia abajo
+        d = `M ${cx} ${cy} L ${cx + r} ${cy} A ${r} ${r} 0 0 1 ${cx} ${cy + r} Z`;
+        break;
+    }
+    return <Path d={d} fill={fill} />;
+  };
+
   const ARC_HEIGHT = 20; // Altura de la base de la cápsula
 
   return (
@@ -68,15 +114,25 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
           headerAnimatedStyle,
         ]}>
         {header}
-        {/* Arco en 3 partes con SVG: base turquesa + píldora blanca encima */}
-        <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>
-          <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
-            {/* Base turquesa detrás (mismo color que la cabecera) */}
-            <Rect x={0} y={0} width={SCREEN_WIDTH} height={ARC_HEIGHT} fill={headerFill} />
-            {/* Píldora blanca encima (rectángulo central + semicírculos) */}
-            <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT} fill={backgroundColor} />
-            <Circle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} fill={backgroundColor} />
-            <Circle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} fill={backgroundColor} />
+        {/* Arco en 3 partes con SVG: solo la píldora encima (animada) y los laterales fijos
+            DEBUG: Colores visibles para verificar las piezas */}
+        <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>          
+          {/* Píldora blanca animada: SOLO el rectángulo central se desvanece */}
+          <Animated.View style={[StyleSheet.absoluteFill, pillAnimatedStyle]}>
+            <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
+              {/* DEBUG: rectángulo central en amarillo */}
+              <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT} fill="#FFD54F" />
+            </Svg>
+          </Animated.View>
+
+          {/* Semicírculos laterales fijos (no se desvanecen) */}
+          <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
+            {/* DEBUG: semicírculo izquierdo compuesto por dos cuartos */}
+            <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tl" fill="#E53935" />
+            <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="bl" fill="#1E88E5" />
+            {/* DEBUG: semicírculo derecho compuesto por dos cuartos */}
+            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tr" fill="#43A047" />
+            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="br" fill="#8E24AA" />
           </Svg>
         </View>
       </Animated.View>
