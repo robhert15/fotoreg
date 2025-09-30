@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, FlatList, TextInput, Alert } from 'react-native';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -6,9 +6,8 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 
-import { Patient, PatientWithLastDiagnosis } from '@/types';
-import { findPatients } from '@/db/api/patients';
-import { getLastConsultationForPatient } from '@/db/api/consultations';
+import { PatientWithLastDiagnosis } from '@/types';
+import { findPatientsWithLastConsultation } from '@/db/api/patients';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { PatientCard } from '@/components/PatientCard';
@@ -36,38 +35,35 @@ export default function PatientListScreen() {
 
   const loadPatients = useCallback(async () => {
     try {
-      const basicPatients = await findPatients(searchTerm);
-      const enrichedPatients = await Promise.all(
-        basicPatients.map(async (patient) => {
-          try {
-            const lastConsultation = await getLastConsultationForPatient(patient.id);
-            return {
-              ...patient,
-              last_visit: lastConsultation?.consultation_date,
-              last_diagnosis: lastConsultation?.diagnosis,
-            };
-          } catch (e) {
-            console.warn('getLastConsultationForPatient failed for patient', patient.id, e);
-            // Degradación elegante: devolvemos el paciente sin datos de última consulta
-            return {
-              ...patient,
-              last_visit: undefined,
-              last_diagnosis: undefined,
-            };
-          }
-        })
-      );
-      setPatients(enrichedPatients);
+      const patientsData = await findPatientsWithLastConsultation(searchTerm);
+      setPatients(patientsData);
     } catch (error) {
       console.error('loadPatients failed:', error);
       Alert.alert('Error', 'No se pudieron buscar los pacientes.');
     }
   }, [searchTerm]);
 
-    useFocusEffect(
-    useCallback(() => {
+    // Efecto para la búsqueda en tiempo real con debounce
+  useEffect(() => {
+    const handler = setTimeout(() => {
       loadPatients();
-    }, [loadPatients])
+    }, 300); // 300ms de debounce
+
+    // Limpieza: cancela el timeout si el usuario sigue escribiendo
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [searchTerm, loadPatients]);
+
+  // Efecto para recargar al volver a la pantalla (sin el término de búsqueda)
+  useFocusEffect(
+    useCallback(() => {
+      // Solo recarga si el campo de búsqueda está vacío, 
+      // para no interferir con una búsqueda activa.
+      if (searchTerm === '') {
+        loadPatients();
+      }
+    }, [searchTerm, loadPatients]) // se mantiene la dependencia por si acaso
   );
 
     return (
