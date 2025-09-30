@@ -1,49 +1,162 @@
-import React from 'react';
-import { View, StyleSheet, Pressable, type PressableProps } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  StyleSheet,
+  Pressable,
+  Platform,
+  type PressableProps,
+  type PressableStateCallbackType,
+} from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { addOpacity } from '@/utils/colorUtils';
+
+type IndicatorVariant = 'default' | 'danger' | 'warning' | 'info' | 'success';
 
 interface BaseCardProps extends PressableProps {
   children: React.ReactNode;
+  onPress?: () => void;
+  disabled?: boolean;
+  selected?: boolean;
   indicatorColor?: string; // Color para la barra lateral
+  indicatorVariant?: IndicatorVariant;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  accessibilityRole?: 'button' | 'none';
+  testID?: string;
 }
 
-export const BaseCard = ({ children, indicatorColor, ...props }: BaseCardProps) => {
-  const cardBackgroundColor = useThemeColor({}, 'white');
-  const borderColor = useThemeColor({}, 'borderColor');
-  const primaryColor = useThemeColor({}, 'primary');
+export const BaseCard = ({
+  children,
+  onPress,
+  disabled = false,
+  selected = false,
+  indicatorColor,
+  indicatorVariant = 'default',
+  accessibilityLabel,
+  accessibilityHint,
+  accessibilityRole = 'button',
+  testID,
+  style,
+  ...props
+}: BaseCardProps) => {
+  // Colores del tema
+  const surface = useThemeColor({}, 'surface');
+  const outline = useThemeColor({}, 'outline');
+  const primary = useThemeColor({}, 'primary');
 
-  const finalIndicatorColor = indicatorColor || primaryColor;
+  // BorderColor con opacity por plataforma (iOS 0.8, Android 0.6)
+  const baseBorder = Platform.select({ ios: addOpacity(outline, 0.8), android: addOpacity(outline, 0.6), default: addOpacity(outline, 0.8) });
+
+  // Ripple Android (12%) y overlay iOS (negro 0.04 en claro, blanco 0.08 en oscuro)
+  const rippleColor = addOpacity(primary, 0.12);
+  const overlayLight = 'rgba(0,0,0,0.04)';
+  const overlayDark = 'rgba(255,255,255,0.08)';
+
+  const [focused, setFocused] = useState(false);
+
+  const variantColors: Record<IndicatorVariant, string> = {
+    default: primary,
+    danger: '#DC2626',
+    warning: '#F59E0B',
+    info: '#3B82F6',
+    success: '#10B981',
+  };
+  const finalIndicatorColor = indicatorColor || variantColors[indicatorVariant];
+
+  const dynamicStyle = ({ pressed }: PressableStateCallbackType) => [
+    styles.card,
+    {
+      backgroundColor: surface,
+      borderColor: selected ? primary : baseBorder,
+      borderWidth: selected ? 2 : focused ? 2 : 1,
+      opacity: disabled ? 0.5 : 1,
+      transform: [{ scale: pressed ? 0.98 : 1 }],
+    },
+    focused && Platform.select({ web: styles.focusWeb as any, default: null }),
+    style,
+  ];
 
   return (
-    <Pressable style={[styles.card, { backgroundColor: cardBackgroundColor, borderColor }]} {...props}>
-      <View style={[styles.cardIndicator, { backgroundColor: finalIndicatorColor }]} />
-      <View style={styles.contentContainer}>
-        {children}
-      </View>
+    <Pressable
+      style={dynamicStyle}
+      onPress={disabled ? undefined : onPress}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
+      disabled={disabled}
+      android_ripple={
+        Platform.OS === 'android'
+          ? { color: rippleColor, borderless: false, foreground: true }
+          : undefined
+      }
+      accessibilityLabel={accessibilityLabel}
+      accessibilityHint={accessibilityHint}
+      accessibilityRole={onPress ? accessibilityRole : 'none'}
+      accessibilityState={{ disabled, selected }}
+      testID={testID}
+      hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
+      {...props}
+    >
+      {({ pressed }) => (
+        <>
+          {/* Indicador lateral */}
+          <View style={[styles.cardIndicator, { backgroundColor: finalIndicatorColor }]} />
+
+          {/* Overlay iOS (pressed) */}
+          {Platform.OS !== 'android' && pressed && (
+            <View
+              pointerEvents="none"
+              style={[styles.overlay, { backgroundColor: Platform.OS === 'ios' ? overlayLight : overlayLight }]}
+            />
+          )}
+
+          {/* Overlay seleccionado (tinte muy sutil) */}
+          {selected && (
+            <View pointerEvents="none" style={[styles.overlay, { backgroundColor: addOpacity(primary, 0.02) }]} />
+          )}
+
+          {/* Contenido */}
+          <View style={styles.contentContainer}>{children}</View>
+        </>
+      )}
     </Pressable>
   );
 };
 
 const styles = StyleSheet.create({
+  focusWeb: {
+    outlineWidth: 2,
+    outlineStyle: 'solid',
+    outlineOffset: 2,
+    borderRadius: 18,
+  },
   card: {
     borderRadius: 16,
-    marginBottom: 12,
-    borderWidth: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    elevation: 2,
+    padding: 20,
+    marginBottom: 16,
+    minHeight: 44,
     position: 'relative',
-    overflow: 'hidden', // Asegura que el indicador no se salga
+    overflow: 'hidden', // Para ripple/overlays y bordes
+    // Sin sombras
+    shadowColor: undefined as unknown as string,
+    shadowOffset: undefined as unknown as any,
+    shadowOpacity: undefined as unknown as number,
+    shadowRadius: undefined as unknown as number,
+    elevation: undefined as unknown as number,
   },
   cardIndicator: {
     position: 'absolute',
-    left: 0, top: 0, bottom: 0,
+    left: 0,
+    top: 0,
+    bottom: 0,
     width: 5,
+    borderTopLeftRadius: 16,
+    borderBottomLeftRadius: 16,
   },
   contentContainer: {
-    padding: 20,
-    marginLeft: 5, // Compensa el espacio del indicador
+    paddingLeft: 25, // 20 + 5 del indicador
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
   },
 });

@@ -7,6 +7,7 @@ export const Colors = {
     textLight: '#64748b',
     background: '#f8fafc',
     white: '#ffffff',
+    surface: '#ffffff',
     tint: '#00AECB',
     icon: '#64748b',
     tabIconDefault: '#64748b',
@@ -17,6 +18,7 @@ export const Colors = {
     success: '#10b981',
     warning: '#f59e0b',
     borderColor: '#f1f5f9',
+    outline: '#CBD5E1',
   },
   dark: {
     // Paleta oscura coherente para el futuro
@@ -24,6 +26,7 @@ export const Colors = {
     textLight: '#94a3b8',
     background: '#1e293b',
     white: '#ffffff',
+    surface: '#1e293b',
     tint: '#ffffff',
     icon: '#94a3b8',
     tabIconDefault: '#94a3b8',
@@ -34,5 +37,6 @@ export const Colors = {
     success: '#10b981',
     warning: '#f59e0b',
     borderColor: '#334155',
+    outline: '#475569',
   },
 };
