@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import { BaseCard } from './BaseCard';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -14,8 +14,14 @@ export const ConsultationCard = ({ consultation, onPress }: ConsultationCardProp
   const textColor = useThemeColor({}, 'text');
   const primaryColor = useThemeColor({}, 'primary');
 
+  const indicatorVariant = useMemo(() => {
+    const reason = (consultation.reason || '').toLowerCase();
+    if (/(urg|emerg|prioridad)/.test(reason)) return 'danger' as const;
+    return 'default' as const;
+  }, [consultation.reason]);
+
   return (
-    <BaseCard onPress={onPress} indicatorColor={primaryColor}>
+    <BaseCard onPress={onPress} indicatorVariant={indicatorVariant}>
       <Text style={[styles.dateText, { color: textLightColor }]}>
         {new Date(consultation.consultation_date).toLocaleDateString('es-ES', {
           year: 'numeric',

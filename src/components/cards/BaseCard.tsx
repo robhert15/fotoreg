@@ -7,10 +7,11 @@ import {
   type PressableProps,
   type PressableStateCallbackType,
 } from 'react-native';
+import { useColorScheme } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { addOpacity } from '@/utils/colorUtils';
 
-type IndicatorVariant = 'default' | 'danger' | 'warning' | 'info' | 'success';
+export type IndicatorVariant = 'default' | 'danger' | 'warning' | 'info' | 'success';
 
 interface BaseCardProps extends PressableProps {
   children: React.ReactNode;
@@ -53,6 +54,7 @@ export const BaseCard = ({
   const overlayDark = 'rgba(255,255,255,0.08)';
 
   const [focused, setFocused] = useState(false);
+  const colorScheme = useColorScheme() ?? 'light';
 
   const variantColors: Record<IndicatorVariant, string> = {
     default: primary,
@@ -63,18 +65,21 @@ export const BaseCard = ({
   };
   const finalIndicatorColor = indicatorColor || variantColors[indicatorVariant];
 
-  const dynamicStyle = ({ pressed }: PressableStateCallbackType) => [
-    styles.card,
-    {
-      backgroundColor: surface,
-      borderColor: selected ? primary : baseBorder,
-      borderWidth: selected ? 2 : focused ? 2 : 1,
-      opacity: disabled ? 0.5 : 1,
-      transform: [{ scale: pressed ? 0.98 : 1 }],
-    },
-    focused && Platform.select({ web: styles.focusWeb as any, default: null }),
-    style,
-  ];
+  const dynamicStyle = ({ pressed }: PressableStateCallbackType) => {
+    const external = typeof style === 'function' ? (style as any)({ pressed }) : style;
+    return [
+      styles.card,
+      {
+        backgroundColor: surface,
+        borderColor: selected ? primary : baseBorder,
+        borderWidth: selected ? 2 : focused ? 2 : 1,
+        opacity: disabled ? 0.5 : 1,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
+      },
+      focused && Platform.select({ web: styles.focusWeb as any, default: null }),
+      external,
+    ];
+  };
 
   return (
     <Pressable
@@ -105,7 +110,7 @@ export const BaseCard = ({
           {Platform.OS !== 'android' && pressed && (
             <View
               pointerEvents="none"
-              style={[styles.overlay, { backgroundColor: Platform.OS === 'ios' ? overlayLight : overlayLight }]}
+              style={[styles.overlay, { backgroundColor: colorScheme === 'dark' ? overlayDark : overlayLight }]}
             />
           )}
 

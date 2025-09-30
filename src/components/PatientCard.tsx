@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { BaseCard } from './cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,8 +19,20 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
 
   const displayName = [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
 
+  const indicatorVariant = useMemo(() => {
+    // Si hay última visita y es muy antigua (>180 días), marcar warning; si no, success por "Activo"
+    if (patient.last_visit) {
+      const last = new Date(patient.last_visit).getTime();
+      const now = Date.now();
+      const days = (now - last) / (1000 * 60 * 60 * 24);
+      if (days > 180) return 'warning' as const;
+      return 'success' as const;
+    }
+    return 'default' as const;
+  }, [patient.last_visit]);
+
   return (
-    <BaseCard onPress={onPress}>
+    <BaseCard onPress={onPress} indicatorVariant={indicatorVariant}>
       <View style={styles.cardHeader}>
         <View style={styles.patientInfo}>
           <Text style={[styles.patientName, { color: textColor }]} numberOfLines={1} ellipsizeMode="tail">{displayName}</Text>

@@ -34,7 +34,7 @@ export const globalStyles = StyleSheet.create({
     backgroundColor: AppColors.white,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: AppColors.tabIconDefault,
+    borderColor: AppColors.outline, // usar outline token
     padding: 12,
     marginBottom: 16,
   },
@@ -175,16 +175,11 @@ export const globalStyles = StyleSheet.create({
   // --- Tarjetas (Cards) ---
   card: {
     backgroundColor: AppColors.white,
-    borderRadius: 8,
-    padding: 15,
-    marginBottom: 10,
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
     borderWidth: 1,
-    borderColor: AppColors.tabIconDefault,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    borderColor: AppColors.outline, // sin sombras
   },
   cardTitle: {
     fontSize: 16,
