@@ -12,7 +12,6 @@ interface ConsultationCardProps {
 export const ConsultationCard = ({ consultation, onPress }: ConsultationCardProps) => {
   const textLightColor = useThemeColor({}, 'textLight');
   const textColor = useThemeColor({}, 'text');
-  const primaryColor = useThemeColor({}, 'primary');
 
   const indicatorVariant = useMemo(() => {
     const reason = (consultation.reason || '').toLowerCase();
