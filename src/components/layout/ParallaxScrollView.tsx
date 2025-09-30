@@ -113,26 +113,35 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
           { height: headerHeight },
           headerAnimatedStyle,
         ]}>
-        {header}
+        <View style={{ height: headerHeight - ARC_HEIGHT, width: '100%', backgroundColor: headerFill }}>
+          {header}
+        </View>
         {/* Arco en 3 partes con SVG: solo la píldora encima (animada) y los laterales fijos
             DEBUG: Colores visibles para verificar las piezas */}
         <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>          
-          {/* Píldora blanca animada: SOLO el rectángulo central se desvanece */}
+          {/* Píldora blanca: top fijo y bottom animado (blanco del tema) */}
+          {/* Top fijo (sin transparencia) */}
+          <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
+            <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT / 2} fill={backgroundColor} />
+          </Svg>
+          {/* Bottom animado (se desvanece) */}
           <Animated.View style={[StyleSheet.absoluteFill, pillAnimatedStyle]}>
             <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
-              {/* DEBUG: rectángulo central en amarillo */}
-              <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT} fill="#FFD54F" />
+              <Rect x={ARC_HEIGHT} y={ARC_HEIGHT / 2} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT / 2} fill={backgroundColor} />
             </Svg>
           </Animated.View>
 
           {/* Semicírculos laterales fijos (no se desvanecen) */}
           <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
-            {/* DEBUG: semicírculo izquierdo compuesto por dos cuartos */}
-            <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tl" fill="#E53935" />
-            <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="bl" fill="#1E88E5" />
-            {/* DEBUG: semicírculo derecho compuesto por dos cuartos */}
-            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tr" fill="#43A047" />
-            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="br" fill="#8E24AA" />
+            {/* Enjutas superiores (fondos) en color de cabecera */}
+            <Rect x={0} y={0} width={ARC_HEIGHT} height={ARC_HEIGHT} fill={headerFill} />
+            <Rect x={SCREEN_WIDTH - ARC_HEIGHT} y={0} width={ARC_HEIGHT} height={ARC_HEIGHT} fill={headerFill} />
+            {/* Semicírculo izquierdo compuesto por dos cuartos (blanco del tema) */}
+            <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tl" fill={backgroundColor} />
+            <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="bl" fill={backgroundColor} />
+            {/* Semicírculo derecho compuesto por dos cuartos (blanco del tema) */}
+            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tr" fill={backgroundColor} />
+            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="br" fill={backgroundColor} />
           </Svg>
         </View>
       </Animated.View>
@@ -164,6 +173,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: -1,
+    bottom: 0,
   }
 });
