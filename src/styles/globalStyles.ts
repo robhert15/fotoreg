@@ -26,7 +26,7 @@ export const globalStyles = StyleSheet.create({
     paddingHorizontal: 20,  // Espacio horizontal
     backgroundColor: AppColors.white,
     borderTopWidth: 1,
-    borderTopColor: AppColors.tabIconDefault,
+    borderTopColor: AppColors.outline,
     gap: 10, // Espacio automático entre botones
     marginBottom: 50, // Eleva el footer para darle más aire en la parte inferior
   },

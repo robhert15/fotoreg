@@ -53,6 +53,8 @@ function PatientsStackNavigator() {
 function MainTabNavigator() {
   const primaryColor = useThemeColor({}, 'primary');
   const grayColor = useThemeColor({}, 'icon'); // Usar el color 'icon' que ya existe
+  const surfaceColor = useThemeColor({}, 'surface');
+  const outlineColor = useThemeColor({}, 'outline');
 
   return (
     <Tab.Navigator
@@ -65,14 +67,15 @@ function MainTabNavigator() {
           bottom: 30,
           left: 20,
           right: 20,
-          elevation: 5,
-          backgroundColor: '#ffffff',
+          backgroundColor: surfaceColor,
           borderRadius: 15,
           height: 70,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 2 },
-          shadowOpacity: 0.25,
-          shadowRadius: 3.84,
+          // Flat: sin sombras
+          elevation: 0,
+          shadowColor: 'transparent',
+          // Delimitación sutil
+          borderWidth: 1,
+          borderColor: outlineColor,
         },
         tabBarIcon: ({ color, size }: { color: string; size: number }) => {
           const iconsMap: Record<keyof BottomTabParamList, keyof typeof Ionicons.glyphMap> = {
