@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -67,18 +68,21 @@ export default function PatientListScreen() {
   );
 
     return (
-    <ScreenLayout title="Pacientes">
-      <View style={globalStyles.contentContainer}>
-        <FlatList
+    <ScreenLayout
+      title="Pacientes"
+      renderScrollable={({ onScroll, scrollEventThrottle, contentContainerStyle }) => (
+        <Animated.FlatList
           data={patients}
-          keyExtractor={(item: PatientWithLastDiagnosis) => item.id.toString()}
-          renderItem={({ item }: { item: PatientWithLastDiagnosis }) => (
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => (
             <PatientCard 
               patient={item}
               onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
             />
           )}
-          contentContainerStyle={styles.listContent}
+          onScroll={onScroll}
+          scrollEventThrottle={scrollEventThrottle}
+          contentContainerStyle={[styles.listContent, contentContainerStyle]}
           ListHeaderComponent={
             <>
               <View style={globalStyles.searchSection}>
@@ -99,8 +103,9 @@ export default function PatientListScreen() {
             </>
           }
         />
-      </View>
-
+      )}
+    >
+      {/* Los botones FAB ahora van fuera del ScreenLayout para que no se vean afectados por el scroll */}
       <FabButton
         style={globalStyles.fab}
         variant="primary"

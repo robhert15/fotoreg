@@ -3,9 +3,8 @@ import { View, StyleSheet, Dimensions } from 'react-native';
 import Animated, {
   interpolate,
   Extrapolate,
-  useAnimatedScrollHandler,
   useAnimatedStyle,
-  useSharedValue,
+  SharedValue,
 } from 'react-native-reanimated';
 import { Svg, Rect, Path, Defs, ClipPath, G } from 'react-native-svg';
 
@@ -19,7 +18,8 @@ interface ParallaxScrollViewProps {
   children: React.ReactNode;
   header: React.ReactNode;
   headerHeight?: number;
-  headerColor?: string; // Color de la cabecera para el fondo turquesa del arco
+  headerColor?: string;
+  scrollY: SharedValue<number>; // Acepta el valor de scroll desde el padre
 }
 
 export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
@@ -27,17 +27,14 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
   header,
   headerHeight = DEFAULT_HEADER_HEIGHT,
   headerColor,
+  scrollY,
 }) => {
-  const scrollY = useSharedValue(0);
   const backgroundColor = useThemeColor({}, 'background'); // Blanco (contenido)
   const [layoutWidth, setLayoutWidth] = React.useState(SCREEN_WIDTH);
   const defaultHeaderColor = useThemeColor({}, 'primary'); // Turquesa por defecto
   const headerFill = headerColor ?? defaultHeaderColor;
   const widthF = Math.ceil(layoutWidth) + 1; // Fudge to avoid subpixel seam on the right edge
 
-  const scrollHandler = useAnimatedScrollHandler((event) => {
-    scrollY.value = event.contentOffset.y;
-  });
 
   const headerAnimatedStyle = useAnimatedStyle(() => {
         const translateY = interpolate(
@@ -162,12 +159,7 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
         </View>
       </Animated.View>
 
-      <Animated.ScrollView
-        onScroll={scrollHandler}
-        scrollEventThrottle={16}
-        contentContainerStyle={{ paddingTop: headerHeight }}>
-        {children}
-      </Animated.ScrollView>
+      {children}
     </View>
   );
 };

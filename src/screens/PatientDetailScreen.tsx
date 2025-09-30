@@ -9,7 +9,7 @@ import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/nativ
 import { getPatientById } from '@/db/api/patients';
 import { getConsultationsForPatient } from '@/db/api/consultations';
 import { Patient, Consultation } from '@/types';
-import { ParallaxScrollView } from '@/components/layout/ParallaxScrollView';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/AppNavigator';
 import { globalStyles } from '@/styles/globalStyles';
@@ -76,14 +76,11 @@ export default function PatientDetailScreen() {
   // Esto previene el "destello" de una pantalla de carga blanca.
   if (!patient) {
     return (
-      <ParallaxScrollView
-        headerHeight={138}
-        header={<View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]} />}
-      >
-        <View style={[styles.contentContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+      <ScreenLayout title="Cargando...">
+        <View style={[styles.contentContainer, { justifyContent: 'center', alignItems: 'center', flex: 1 }]}>
           <ActivityIndicator size="large" color={headerBackgroundColor} />
         </View>
-      </ParallaxScrollView>
+      </ScreenLayout>
     );
   }
   
@@ -111,17 +108,7 @@ export default function PatientDetailScreen() {
 
   return (
     <View style={globalStyles.container}>
-      <ParallaxScrollView
-        headerHeight={138}
-        header={
-          <View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]}>
-            <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </Pressable>
-            <Text style={styles.headerTitle} numberOfLines={1} ellipsizeMode="tail">{displayName || 'Paciente'}</Text>
-            <View style={{ width: 22 }} />
-          </View>
-        }>
+      <ScreenLayout title={displayName || 'Paciente'}>
         <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
             {/* Tarjeta de Detalles del Paciente */}
             <View style={{ marginBottom: 20 }}>
@@ -153,7 +140,7 @@ export default function PatientDetailScreen() {
               <Text style={globalStyles.emptyText}>Este paciente aún no tiene consultas.</Text>
             )}
         </View>
-      </ParallaxScrollView>
+      </ScreenLayout>
 
       <FabButton
         style={globalStyles.fab}

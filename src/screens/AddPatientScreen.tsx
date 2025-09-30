@@ -65,44 +65,41 @@ export default function AddPatientScreen() {
 
     return (
     <ScreenLayout title="Registrar Paciente">
-      <View style={globalStyles.contentContainer}>
-        <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 150 }}>
-          <BaseCard>
-            <Text style={globalStyles.label}>Nombres *</Text>
-            <TextInput style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
+      <View style={{ padding: 20, paddingBottom: 150 }}>
+        <BaseCard>
+          <Text style={globalStyles.label}>Nombres *</Text>
+          <TextInput style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
 
-            <Text style={globalStyles.label}>Apellido Paterno *</Text>
-            <TextInput style={globalStyles.input} placeholder="Apellido paterno" value={paternalLastName} onChangeText={setPaternalLastName} />
+          <Text style={globalStyles.label}>Apellido Paterno *</Text>
+          <TextInput style={globalStyles.input} placeholder="Apellido paterno" value={paternalLastName} onChangeText={setPaternalLastName} />
 
-            <Text style={globalStyles.label}>Apellido Materno</Text>
-            <TextInput style={globalStyles.input} placeholder="Apellido materno" value={maternalLastName} onChangeText={setMaternalLastName} />
+          <Text style={globalStyles.label}>Apellido Materno</Text>
+          <TextInput style={globalStyles.input} placeholder="Apellido materno" value={maternalLastName} onChangeText={setMaternalLastName} />
 
-            <Text style={globalStyles.label}>Número de Documento</Text>
-            <TextInput style={globalStyles.input} placeholder="DNI o Cédula" value={documentNumber} onChangeText={setDocumentNumber} keyboardType="numeric" />
+          <Text style={globalStyles.label}>Número de Documento</Text>
+          <TextInput style={globalStyles.input} placeholder="DNI o Cédula" value={documentNumber} onChangeText={setDocumentNumber} keyboardType="numeric" />
 
-            <Text style={globalStyles.label}>Fecha de Nacimiento</Text>
-            <TextInput style={globalStyles.input} placeholder="YYYY-MM-DD" value={dateOfBirth} onChangeText={setDateOfBirth} />
+          <Text style={globalStyles.label}>Fecha de Nacimiento</Text>
+          <TextInput style={globalStyles.input} placeholder="YYYY-MM-DD" value={dateOfBirth} onChangeText={setDateOfBirth} />
 
-            <Text style={globalStyles.label}>Sexo</Text>
-            <TextInput style={globalStyles.input} placeholder="masculino / femenino / otro" value={gender} onChangeText={setGender} />
+          <Text style={globalStyles.label}>Sexo</Text>
+          <TextInput style={globalStyles.input} placeholder="masculino / femenino / otro" value={gender} onChangeText={setGender} />
 
-            <Text style={globalStyles.label}>Domicilio</Text>
-            <TextInput style={globalStyles.input} placeholder="Dirección del paciente" value={address} onChangeText={setAddress} />
-            
-            <Text style={globalStyles.label}>Ocupación</Text>
-            <TextInput style={globalStyles.input} placeholder="Ocupación actual" value={occupation} onChangeText={setOccupation} />
+          <Text style={globalStyles.label}>Domicilio</Text>
+          <TextInput style={globalStyles.input} placeholder="Dirección del paciente" value={address} onChangeText={setAddress} />
+          
+          <Text style={globalStyles.label}>Ocupación</Text>
+          <TextInput style={globalStyles.input} placeholder="Ocupación actual" value={occupation} onChangeText={setOccupation} />
 
-            <Text style={globalStyles.label}>WhatsApp</Text>
-            <TextInput style={globalStyles.input} placeholder="Número de WhatsApp" value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" />
+          <Text style={globalStyles.label}>WhatsApp</Text>
+          <TextInput style={globalStyles.input} placeholder="Número de WhatsApp" value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" />
 
-            <Text style={globalStyles.label}>Celular de Contacto</Text>
-            <TextInput style={globalStyles.input} placeholder="Otro celular de contacto" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
+          <Text style={globalStyles.label}>Celular de Contacto</Text>
+          <TextInput style={globalStyles.input} placeholder="Otro celular de contacto" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
 
-            <Text style={globalStyles.label}>Actividad Física</Text>
-            <TextInput style={globalStyles.input} placeholder="Tipo y frecuencia. Ej: Correr, 3/semana" value={physicalActivity} onChangeText={setPhysicalActivity} />
-
-          </BaseCard>
-        </ScrollView>
+          <Text style={globalStyles.label}>Actividad Física</Text>
+          <TextInput style={globalStyles.input} placeholder="Tipo y frecuencia. Ej: Correr, 3/semana" value={physicalActivity} onChangeText={setPhysicalActivity} />
+        </BaseCard>
       </View>
 
       {/* Botones de Acción Flotantes */}
