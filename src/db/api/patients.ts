@@ -78,19 +78,19 @@ export const findPatientsWithLastConsultation = async (searchTerm: string): Prom
   const likeTerm = `%${searchTerm}%`;
 
   const query = `
-    SELECT
+    SELECT 
       p.*,
-      c.consultation_date as last_visit,
-      c.diagnosis as last_diagnosis
+      (SELECT consultation_date 
+       FROM consultations 
+       WHERE patient_id = p.id 
+       ORDER BY consultation_date DESC 
+       LIMIT 1) as last_visit,
+      (SELECT diagnosis 
+       FROM consultations 
+       WHERE patient_id = p.id 
+       ORDER BY consultation_date DESC 
+       LIMIT 1) as last_diagnosis
     FROM patients p
-    LEFT JOIN (
-      -- Subconsulta para encontrar la fecha más reciente de consulta para cada paciente
-      SELECT patient_id, MAX(consultation_date) as max_date
-      FROM consultations
-      GROUP BY patient_id
-    ) as max_consultations ON p.id = max_consultations.patient_id
-    LEFT JOIN consultations c ON 
-      max_consultations.patient_id = c.patient_id AND max_consultations.max_date = c.consultation_date
     WHERE 
       p.first_name LIKE ? OR 
       p.paternal_last_name LIKE ? OR 
