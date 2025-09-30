@@ -119,27 +119,28 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
         {/* Arco en 3 partes con SVG: solo la píldora encima (animada) y los laterales fijos
             DEBUG: Colores visibles para verificar las piezas */}
         <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>          
-          {/* Píldora blanca: top fijo y bottom animado (blanco del tema) */}
+          {/* Píldora (debug colors): top fijo y bottom animado */}
           {/* Top fijo (sin transparencia) */}
           <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
+            {/* Top center rect (white) */}
             <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT / 2} fill={backgroundColor} />
           </Svg>
           {/* Bottom animado (se desvanece) */}
           <Animated.View style={[StyleSheet.absoluteFill, pillAnimatedStyle]}>
             <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
+              {/* Bottom center rect (white) */}
               <Rect x={ARC_HEIGHT} y={ARC_HEIGHT / 2} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT / 2} fill={backgroundColor} />
             </Svg>
           </Animated.View>
 
           {/* Semicírculos laterales fijos (no se desvanecen) */}
           <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
-            {/* Enjutas superiores (fondos) en color de cabecera */}
-            <Rect x={0} y={0} width={ARC_HEIGHT} height={ARC_HEIGHT} fill={headerFill} />
-            <Rect x={SCREEN_WIDTH - ARC_HEIGHT} y={0} width={ARC_HEIGHT} height={ARC_HEIGHT} fill={headerFill} />
-            {/* Semicírculo izquierdo compuesto por dos cuartos (blanco del tema) */}
+            {/* Precise wedge-shaped enjutas (turquoise header color) */}
+            <Path d={`M 0 0 H ${ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 0 0 ${ARC_HEIGHT} Z`} fill={headerFill} />
+            <Path d={`M ${SCREEN_WIDTH} 0 H ${SCREEN_WIDTH - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${SCREEN_WIDTH} ${ARC_HEIGHT} Z`} fill={headerFill} />
+            {/* Quarter-circles (white) */}
             <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tl" fill={backgroundColor} />
             <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="bl" fill={backgroundColor} />
-            {/* Semicírculo derecho compuesto por dos cuartos (blanco del tema) */}
             <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tr" fill={backgroundColor} />
             <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="br" fill={backgroundColor} />
           </Svg>
