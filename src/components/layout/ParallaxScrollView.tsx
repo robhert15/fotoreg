@@ -7,7 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
 } from 'react-native-reanimated';
-import { Svg, Rect, Path } from 'react-native-svg';
+import { Svg, Rect, Path, Defs, ClipPath, G } from 'react-native-svg';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
 
@@ -119,17 +119,29 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
         {/* Arco en 3 partes con SVG: solo la píldora encima (animada) y los laterales fijos
             DEBUG: Colores visibles para verificar las piezas */}
         <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>          
-          {/* Píldora (debug colors): top fijo y bottom animado */}
-          {/* Top fijo (sin transparencia) */}
+          {/* Píldora con clipPath: top fijo y bottom animado, sin costuras */}
+          {/* Top fijo (sin transparencia) clippeado a la forma completa de la cápsula */}
           <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
-            {/* Top center rect (white) */}
-            <Rect x={ARC_HEIGHT} y={0} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT / 2} fill={backgroundColor} />
+            <Defs>
+              <ClipPath id="pillClipTop">
+                <Path d={`M ${ARC_HEIGHT} 0 H ${SCREEN_WIDTH - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${SCREEN_WIDTH} ${ARC_HEIGHT} H 0 A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${ARC_HEIGHT} 0 Z`} />
+              </ClipPath>
+            </Defs>
+            <G clipPath="url(#pillClipTop)">
+              <Rect x={0} y={0} width={SCREEN_WIDTH} height={ARC_HEIGHT / 2} fill={backgroundColor} />
+            </G>
           </Svg>
           {/* Bottom animado (se desvanece) */}
           <Animated.View style={[StyleSheet.absoluteFill, pillAnimatedStyle]}>
             <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
-              {/* Bottom center rect (white) */}
-              <Rect x={ARC_HEIGHT} y={ARC_HEIGHT / 2} width={SCREEN_WIDTH - ARC_HEIGHT * 2} height={ARC_HEIGHT / 2} fill={backgroundColor} />
+              <Defs>
+                <ClipPath id="pillClipBottom">
+                  <Path d={`M ${ARC_HEIGHT} 0 H ${SCREEN_WIDTH - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${SCREEN_WIDTH} ${ARC_HEIGHT} H 0 A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${ARC_HEIGHT} 0 Z`} />
+                </ClipPath>
+              </Defs>
+              <G clipPath="url(#pillClipBottom)">
+                <Rect x={0} y={ARC_HEIGHT / 2} width={SCREEN_WIDTH} height={ARC_HEIGHT / 2} fill={backgroundColor} />
+              </G>
             </Svg>
           </Animated.View>
 
