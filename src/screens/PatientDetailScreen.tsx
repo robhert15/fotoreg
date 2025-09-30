@@ -1,15 +1,15 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, Alert, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Alert, StyleSheet, ActivityIndicator } from 'react-native';
 import { ConsultationCard } from '@/components/cards/ConsultationCard';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
-import { ParallaxScrollView } from '@/components/layout/ParallaxScrollView';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import { getPatientById } from '@/db/api/patients';
 import { getConsultationsForPatient } from '@/db/api/consultations';
 import { Patient, Consultation } from '@/types';
+import { ParallaxScrollView } from '@/components/layout/ParallaxScrollView';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/AppNavigator';
 import { globalStyles } from '@/styles/globalStyles';
@@ -71,11 +71,19 @@ export default function PatientDetailScreen() {
     }, [patientId])
   );
 
+  // Renderiza la estructura principal de la pantalla inmediatamente,
+  // mostrando un indicador de carga hasta que los datos del paciente estén listos.
+  // Esto previene el "destello" de una pantalla de carga blanca.
   if (!patient) {
     return (
-      <View style={[globalStyles.container, { justifyContent: 'center', alignItems: 'center' }]}>
-        <Text style={globalStyles.emptyText}>Cargando datos del paciente...</Text>
-      </View>
+      <ParallaxScrollView
+        headerHeight={138}
+        header={<View style={[styles.headerContainer, { backgroundColor: headerBackgroundColor }]} />}
+      >
+        <View style={[styles.contentContainer, { justifyContent: 'center', alignItems: 'center' }]}>
+          <ActivityIndicator size="large" color={headerBackgroundColor} />
+        </View>
+      </ParallaxScrollView>
     );
   }
   
