@@ -12,7 +12,7 @@ import { Svg, Rect, Path, Defs, ClipPath, G } from 'react-native-svg';
 import { useThemeColor } from '@/hooks/use-theme-color';
 
 const DEFAULT_HEADER_HEIGHT = 250;
-const MIN_HEADER_HEIGHT = 100; // Altura final de la cabecera
+const MIN_HEADER_HEIGHT = 115; // Altura final de la cabecera
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 interface ParallaxScrollViewProps {
