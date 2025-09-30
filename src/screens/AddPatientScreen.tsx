@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, ScrollView, Alert } from 'react-native';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
+import { FabButton } from '@/components/buttons/FabButton';
 import { useNavigation } from '@react-navigation/native';
 import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
@@ -105,12 +106,20 @@ export default function AddPatientScreen() {
       </View>
 
       {/* Botones de Acción Flotantes */}
-      <Pressable style={[globalStyles.fab, { right: 90, backgroundColor: '#6c757d' }]} onPress={() => navigation.goBack()}>
-        <Ionicons name="close" size={24} color="white" />
-      </Pressable>
-      <Pressable style={globalStyles.fab} onPress={handleSavePatient}>
-        <Ionicons name="checkmark" size={24} color="white" />
-      </Pressable>
+      <FabButton
+        style={[globalStyles.fab, { right: 90 }]}
+        variant="neutral"
+        onPress={() => navigation.goBack()}
+        accessibilityLabel="Cancelar registro"
+        icon={<Ionicons name="close" size={24} color="white" />}
+      />
+      <FabButton
+        style={globalStyles.fab}
+        variant="primary"
+        onPress={handleSavePatient}
+        accessibilityLabel="Guardar paciente"
+        icon={<Ionicons name="checkmark" size={24} color="white" />}
+      />
     </ScreenLayout>
   );
 }

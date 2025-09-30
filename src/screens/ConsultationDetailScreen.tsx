@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, ActivityIndicator, Alert, Pressable } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { FabButton } from '@/components/buttons/FabButton';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { getConsultationById, updateConsultation, createDraftFromConsultation, moveDraftPhotosToConsultation, deleteDraft } from '@/db/api/consultations';
@@ -130,17 +131,29 @@ export default function ConsultationDetailScreen() {
 
       {isEditing ? (
         <>
-          <Pressable style={[globalStyles.fab, { right: 90, backgroundColor: Colors.light.icon }]} onPress={handleCancel}>
-            <Ionicons name="close" size={24} color="white" />
-          </Pressable>
-          <Pressable style={globalStyles.fab} onPress={handleSave}>
-            <Ionicons name="checkmark" size={24} color="white" />
-          </Pressable>
+          <FabButton
+            style={[globalStyles.fab, { right: 90 }]}
+            variant="neutral"
+            onPress={handleCancel}
+            accessibilityLabel="Cancelar edición"
+            icon={<Ionicons name="close" size={24} color="white" />}
+          />
+          <FabButton
+            style={globalStyles.fab}
+            variant="primary"
+            onPress={handleSave}
+            accessibilityLabel="Guardar cambios"
+            icon={<Ionicons name="checkmark" size={24} color="white" />}
+          />
         </>
       ) : (
-        <Pressable style={globalStyles.fab} onPress={handleStartEdit}>
-          <Ionicons name="pencil" size={24} color="white" />
-        </Pressable>
+        <FabButton
+          style={globalStyles.fab}
+          variant="primary"
+          onPress={handleStartEdit}
+          accessibilityLabel="Editar consulta"
+          icon={<Ionicons name="pencil" size={24} color="white" />}
+        />
       )}
     </ScreenLayout>
   );

@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert } from 'react-native';
+import { FabButton } from '@/components/buttons/FabButton';
 import { Ionicons } from '@expo/vector-icons';
 import { globalStyles } from '@/styles/globalStyles';
 import { BaseCard } from '../cards/BaseCard';
@@ -265,13 +266,14 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <>
               <View style={styles.photoActionContainer}>
                 <Text style={globalStyles.label}>Fotos de Inicio (Antes)</Text>
-                <Pressable
-                  style={[globalStyles.miniFab, !draftId && globalStyles.inputDisabled]}
+                <FabButton
+                  size="mini"
+                  variant="secondary"
                   onPress={() => handleTakePhoto('antes')}
                   disabled={!draftId}
-                >
-                  <Ionicons name="camera" size={24} color="white" />
-                </Pressable>
+                  accessibilityLabel="Tomar foto antes"
+                  icon={<Ionicons name="camera" size={24} color="white" />}
+                />
               </View>
               {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
             </>
@@ -288,13 +290,14 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <>
               <View style={[styles.photoActionContainer, { marginTop: 20 }]}>
                 <Text style={globalStyles.label}>Fotos de Seguimiento (Después)</Text>
-                <Pressable
-                  style={[globalStyles.miniFab, !draftId && globalStyles.inputDisabled]}
+                <FabButton
+                  size="mini"
+                  variant="secondary"
                   onPress={() => handleTakePhoto('despues')}
                   disabled={!draftId}
-                >
-                  <Ionicons name="camera" size={24} color="white" />
-                </Pressable>
+                  accessibilityLabel="Tomar foto después"
+                  icon={<Ionicons name="camera" size={24} color="white" />}
+                />
               </View>
               {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
             </>
@@ -316,13 +319,14 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             <>
               <View style={styles.photoActionContainer}>
                 <Text style={globalStyles.label}>Foto del Voucher</Text>
-                <Pressable
-                  style={[globalStyles.miniFab, !draftId && globalStyles.inputDisabled]}
+                <FabButton
+                  size="mini"
+                  variant="secondary"
                   onPress={() => handleTakePhoto('voucher')}
                   disabled={!draftId}
-                >
-                  <Ionicons name="camera" size={24} color="white" />
-                </Pressable>
+                  accessibilityLabel="Tomar foto del voucher"
+                  icon={<Ionicons name="camera" size={24} color="white" />}
+                />
               </View>
               {!draftId && <Text style={globalStyles.helperText}>Preparando borrador...</Text>}
             </>

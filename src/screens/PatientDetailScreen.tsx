@@ -3,6 +3,7 @@ import { View, Text, Pressable, Alert, StyleSheet } from 'react-native';
 import { ConsultationCard } from '@/components/cards/ConsultationCard';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
+import { FabButton } from '@/components/buttons/FabButton';
 import { ParallaxScrollView } from '@/components/layout/ParallaxScrollView';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
@@ -146,9 +147,13 @@ export default function PatientDetailScreen() {
         </View>
       </ParallaxScrollView>
 
-      <Pressable style={globalStyles.fab} onPress={handleNewConsultation}>
-        <Ionicons name="add" size={24} color="white" />
-      </Pressable>
+      <FabButton
+        style={globalStyles.fab}
+        variant="primary"
+        onPress={handleNewConsultation}
+        accessibilityLabel="Nueva consulta"
+        icon={<Ionicons name="add" size={24} color="white" />}
+      />
     </View>
   );
 }

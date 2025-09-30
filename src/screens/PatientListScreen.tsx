@@ -1,9 +1,10 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, TextInput, Pressable, Alert } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TextInput, Alert } from 'react-native';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { FabButton } from '@/components/buttons/FabButton';
 
 import { Patient, PatientWithLastDiagnosis } from '@/types';
 import { findPatients } from '@/db/api/patients';
@@ -104,12 +105,13 @@ export default function PatientListScreen() {
         />
       </View>
 
-      <Pressable 
-        style={globalStyles.fab} 
+      <FabButton
+        style={globalStyles.fab}
+        variant="primary"
         onPress={() => navigation.navigate('AddPatient')}
-      >
-        <Ionicons name="add" size={24} color={colors.white} />
-      </Pressable>
+        accessibilityLabel="Registrar paciente"
+        icon={<Ionicons name="add" size={24} color={colors.white} />}
+      />
     </ScreenLayout>
   );
 }

@@ -201,12 +201,7 @@ export const globalStyles = StyleSheet.create({
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: AppColors.primary,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-        shadowRadius: 4,
+    // Flat: sin sombras, color y borde son responsabilidad del componente FabButton
   },
   // Mini Botón de Acción Flotante (para acciones dentro de tarjetas)
   miniFab: {
@@ -215,12 +210,7 @@ export const globalStyles = StyleSheet.create({
     borderRadius: 24,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: AppColors.secondary,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
+    // Flat: sin sombras, color y borde son responsabilidad del componente FabButton
   },
 
   // --- Imágenes ---
