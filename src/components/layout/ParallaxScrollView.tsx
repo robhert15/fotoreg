@@ -30,8 +30,10 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
 }) => {
   const scrollY = useSharedValue(0);
   const backgroundColor = useThemeColor({}, 'background'); // Blanco (contenido)
+  const [layoutWidth, setLayoutWidth] = React.useState(SCREEN_WIDTH);
   const defaultHeaderColor = useThemeColor({}, 'primary'); // Turquesa por defecto
   const headerFill = headerColor ?? defaultHeaderColor;
+  const widthF = Math.ceil(layoutWidth) + 1; // Fudge to avoid subpixel seam on the right edge
 
   const scrollHandler = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -108,6 +110,7 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <Animated.View
+        onLayout={(e) => setLayoutWidth(e.nativeEvent.layout.width)}
         style={[
           styles.header,
           { height: headerHeight },
@@ -121,40 +124,40 @@ export const ParallaxScrollView: React.FC<ParallaxScrollViewProps> = ({
         <View pointerEvents="none" style={[styles.headerArc, { height: ARC_HEIGHT }]}>          
           {/* Píldora con clipPath: top fijo y bottom animado, sin costuras */}
           {/* Top fijo (sin transparencia) clippeado a la forma completa de la cápsula */}
-          <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
+          <Svg width={layoutWidth} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
             <Defs>
               <ClipPath id="pillClipTop">
-                <Path d={`M ${ARC_HEIGHT} 0 H ${SCREEN_WIDTH - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${SCREEN_WIDTH} ${ARC_HEIGHT} H 0 A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${ARC_HEIGHT} 0 Z`} />
+                <Path d={`M ${ARC_HEIGHT} 0 H ${widthF - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${widthF} ${ARC_HEIGHT} H 0 A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${ARC_HEIGHT} 0 Z`} />
               </ClipPath>
             </Defs>
             <G clipPath="url(#pillClipTop)">
-              <Rect x={0} y={0} width={SCREEN_WIDTH} height={ARC_HEIGHT / 2} fill={backgroundColor} />
+              <Rect x={0} y={0} width={widthF} height={ARC_HEIGHT / 2} fill={backgroundColor} />
             </G>
           </Svg>
           {/* Bottom animado (se desvanece) */}
           <Animated.View style={[StyleSheet.absoluteFill, pillAnimatedStyle]}>
-            <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT}>
+            <Svg width={layoutWidth} height={ARC_HEIGHT}>
               <Defs>
                 <ClipPath id="pillClipBottom">
-                  <Path d={`M ${ARC_HEIGHT} 0 H ${SCREEN_WIDTH - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${SCREEN_WIDTH} ${ARC_HEIGHT} H 0 A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${ARC_HEIGHT} 0 Z`} />
+                  <Path d={`M ${ARC_HEIGHT} 0 H ${widthF - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${widthF} ${ARC_HEIGHT} H 0 A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${ARC_HEIGHT} 0 Z`} />
                 </ClipPath>
               </Defs>
               <G clipPath="url(#pillClipBottom)">
-                <Rect x={0} y={ARC_HEIGHT / 2} width={SCREEN_WIDTH} height={ARC_HEIGHT / 2} fill={backgroundColor} />
+                <Rect x={0} y={ARC_HEIGHT / 2} width={widthF} height={ARC_HEIGHT / 2} fill={backgroundColor} />
               </G>
             </Svg>
           </Animated.View>
 
           {/* Semicírculos laterales fijos (no se desvanecen) */}
-          <Svg width={SCREEN_WIDTH} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
+          <Svg width={layoutWidth} height={ARC_HEIGHT} style={StyleSheet.absoluteFill}>
             {/* Precise wedge-shaped enjutas (turquoise header color) */}
             <Path d={`M 0 0 H ${ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 0 0 ${ARC_HEIGHT} Z`} fill={headerFill} />
-            <Path d={`M ${SCREEN_WIDTH} 0 H ${SCREEN_WIDTH - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${SCREEN_WIDTH} ${ARC_HEIGHT} Z`} fill={headerFill} />
+            <Path d={`M ${widthF} 0 H ${widthF - ARC_HEIGHT} A ${ARC_HEIGHT} ${ARC_HEIGHT} 0 0 1 ${widthF} ${ARC_HEIGHT} Z`} fill={headerFill} />
             {/* Quarter-circles (white) */}
             <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tl" fill={backgroundColor} />
             <QuarterCircle cx={ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="bl" fill={backgroundColor} />
-            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tr" fill={backgroundColor} />
-            <QuarterCircle cx={SCREEN_WIDTH - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="br" fill={backgroundColor} />
+            <QuarterCircle cx={layoutWidth - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="tr" fill={backgroundColor} />
+            <QuarterCircle cx={layoutWidth - ARC_HEIGHT} cy={ARC_HEIGHT} r={ARC_HEIGHT} quadrant="br" fill={backgroundColor} />
           </Svg>
         </View>
       </Animated.View>

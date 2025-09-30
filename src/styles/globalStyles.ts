@@ -8,7 +8,7 @@ export const globalStyles = StyleSheet.create({
   // --- Contenedores y Layout ---
   container: {
     flex: 1,
-    backgroundColor: AppColors.white, // El nuevo diseño usa fondo blanco por defecto
+    backgroundColor: AppColors.background, // Usar background para coincidir con Parallax y evitar destellos
   },
   // Estilo para el nuevo encabezado con gradiente
   header: {

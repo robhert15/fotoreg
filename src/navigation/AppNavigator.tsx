@@ -98,9 +98,10 @@ function MainTabNavigator() {
 
 // El navegador principal ahora es un Stack que contiene el Tab Navigator y las pantallas modales
 export default function AppNavigator() {
+  const backgroundColor = useThemeColor({}, 'background');
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <Stack.Navigator screenOptions={{ headerShown: false, cardStyle: { backgroundColor } }}>
         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
         {/* Las pantallas que deben aparecer POR ENCIMA de las pestañas van aquí */}
         <Stack.Screen name="PatientDetail" component={PatientDetailScreen} />
