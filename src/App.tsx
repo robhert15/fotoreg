@@ -7,6 +7,7 @@ import { LogBox } from 'react-native';
 
 import { initializeDatabase } from './db/database';
 import AppNavigator from './navigation/AppNavigator';
+import { logger } from '@/utils/logger';
 
 // Silenciar aviso deprecado de SafeAreaView proveniente de dependencias externas (lo antes posible)
 LogBox.ignoreLogs([
@@ -22,11 +23,11 @@ export default function App() {
       try {
         await initializeDatabase();
         if (__DEV__) {
-          console.log('Base de datos inicializada correctamente.');
+          logger.info('Base de datos inicializada correctamente.');
         }
         setIsDbInitialized(true); // Marcar la BD como lista
       } catch (error) {
-        console.error('Error fatal inicializando la base de datos:', error);
+        logger.error('Error fatal inicializando la base de datos', error as Error);
         // En un caso real, podríamos mostrar una pantalla de error aquí
       }
     };

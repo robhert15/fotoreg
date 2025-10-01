@@ -9,6 +9,7 @@ import { NewConsultation } from '@/types';
 import { globalStyles } from '@/styles/globalStyles';
 import { Colors } from '@/constants/theme'; // Keep for ActivityIndicator color
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
+import { logger } from '@/utils/logger';
 
 
 export default function ConsultationDetailScreen() {
@@ -68,7 +69,7 @@ export default function ConsultationDetailScreen() {
       setIsEditing(false);
     } catch (error) {
       Alert.alert('Error', 'No se pudo guardar los cambios.');
-      console.error(error);
+      logger.error('ConsultationDetailScreen save failed', error as Error);
     }
   };
 
@@ -95,7 +96,7 @@ export default function ConsultationDetailScreen() {
       setIsEditing(true);
     } catch (e) {
       Alert.alert('Error', 'No se pudo iniciar la edición.');
-      console.error(e);
+      logger.error('ConsultationDetailScreen start edit failed', e as Error);
     }
   };
 

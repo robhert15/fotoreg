@@ -1,5 +1,6 @@
 import { openDatabaseAsync } from 'expo-sqlite';
 import { Consultation, ConsultationDraft, NewConsultation, Photo } from '@/types';
+import { logger } from '@/utils/logger';
 
 const db = openDatabaseAsync('fotoreg.db');
 
@@ -24,7 +25,7 @@ const deserializeConsultation = (dbResult: any): Consultation | null => {
       medicalConditions = JSON.parse(mc);
     } catch (e) {
       if (__DEV__ && LOG_PARSE_WARNINGS && !WARNED_MC_ONCE) {
-        console.warn('deserializeConsultation medical_conditions parse failed:', e);
+        logger.warn('deserializeConsultation medical_conditions parse failed', { error: String(e) });
         WARNED_MC_ONCE = true;
       }
       medicalConditions = [];
@@ -43,7 +44,7 @@ const deserializeConsultation = (dbResult: any): Consultation | null => {
       habitsObj = JSON.parse(hb);
     } catch (e) {
       if (__DEV__ && LOG_PARSE_WARNINGS && !WARNED_HB_ONCE) {
-        console.warn('deserializeConsultation habits parse failed:', e);
+        logger.warn('deserializeConsultation habits parse failed', { error: String(e) });
         WARNED_HB_ONCE = true;
       }
       habitsObj = {};
@@ -98,7 +99,7 @@ export const getConsultationsForPatient = async (patientId: number): Promise<Con
       }
     }
   } catch (e) {
-    console.warn('getConsultationsForPatient document join failed, using direct id lookup', e);
+    logger.warn('getConsultationsForPatient document join failed, using direct id lookup', { error: String(e) });
   }
 
   // Fallback to direct lookup by id

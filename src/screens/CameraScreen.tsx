@@ -7,6 +7,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { addPhoto } from '@/db/api/consultations';
 import { RootStackParamList } from '@/navigation/AppNavigator';
 import { Image } from 'expo-image';
+import { logger } from '@/utils/logger';
 
 export default function CameraScreen() {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
@@ -40,12 +41,12 @@ export default function CameraScreen() {
     try {
       const pic = await cameraRef.current.takePictureAsync({ quality: 1, exif: true, skipProcessing: false });
       if (__DEV__) {
-        console.log('Foto capturada:', pic?.uri, pic?.width, pic?.height);
+        logger.debug('Foto capturada', { uri: pic?.uri, width: pic?.width, height: pic?.height });
       }
       setPreviewError(false);
       setPhoto(pic);
     } catch (e) {
-      console.error('Error capturando foto:', e);
+      logger.error('Error capturando foto', e as Error);
       Alert.alert('Error', 'No se pudo capturar la foto. Intenta nuevamente.');
     }
   };
@@ -56,7 +57,7 @@ export default function CameraScreen() {
       await addPhoto(draftId, photo.uri, stage);
       navigation.goBack();
     } catch (e) {
-      console.error('Error al guardar la foto:', e);
+      logger.error('Error al guardar la foto', e as Error);
       Alert.alert('Error', 'No se pudo guardar la foto. Intenta nuevamente.');
     }
   };
@@ -70,7 +71,7 @@ export default function CameraScreen() {
             source={{ uri: photo.uri }}
             style={StyleSheet.absoluteFill}
             contentFit="contain"
-            onError={(e) => { console.error('Error mostrando preview (expo-image):', e); setPreviewError(true); }}
+            onError={(e) => { logger.error('Error mostrando preview (expo-image)', e as unknown as Error); setPreviewError(true); }}
           />
         ) : (
           <ImageBackground

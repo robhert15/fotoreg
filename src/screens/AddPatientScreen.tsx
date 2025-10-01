@@ -8,6 +8,7 @@ import { useNavigation } from '@react-navigation/native';
 import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
 import { NewPatient, Patient } from '@/types';
+import { logger } from '@/utils/logger';
  
 
 export default function AddPatientScreen() {
@@ -66,7 +67,7 @@ export default function AddPatientScreen() {
       } else {
         Alert.alert('Error', 'No se pudo registrar el paciente.');
       }
-      console.error('Error saving patient:', error);
+      logger.error('Error saving patient', error as Error);
     }
   };
 

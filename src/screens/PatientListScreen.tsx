@@ -15,6 +15,7 @@ import { PatientCard } from '@/components/PatientCard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, BottomTabParamList } from '@/navigation/AppNavigator';
+import { logger } from '@/utils/logger';
 
 // Definimos un tipo de navegación compuesto para manejar la anidación
 type PatientListNavigationProp = CompositeNavigationProp<
@@ -43,7 +44,7 @@ export default function PatientListScreen() {
       const patientsData = await findPatientsWithLastConsultation(searchTerm);
       setPatients(patientsData);
     } catch (error) {
-      console.error('loadPatients failed:', error);
+      logger.error('loadPatients failed', error as Error);
       Alert.alert('Error', 'No se pudieron buscar los pacientes.');
     }
   }, [searchTerm]);

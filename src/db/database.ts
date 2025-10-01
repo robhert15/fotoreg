@@ -1,4 +1,5 @@
 import * as SQLite from 'expo-sqlite';
+import { logger } from '@/utils/logger';
 
 const db = SQLite.openDatabaseAsync('fotoreg.db');
 
@@ -87,10 +88,10 @@ export const initializeDatabase = async () => {
     }
 
     if (__DEV__) {
-      console.log('Base de datos V3 inicializada correctamente.');
+      logger.info('Base de datos V3 inicializada correctamente.');
     }
   } catch (error) {
-    console.error('Error inicializando la base de datos V3:', error);
+    logger.error('Error inicializando la base de datos V3', error as Error);
     throw error;
   }
 };

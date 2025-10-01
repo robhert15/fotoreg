@@ -13,6 +13,7 @@ import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/AppNavigator';
 import { globalStyles } from '@/styles/globalStyles';
+import { logger } from '@/utils/logger';
 
 type PatientDetailNavigationProp = StackNavigationProp<
   RootStackParamList,
@@ -50,7 +51,7 @@ export default function PatientDetailScreen() {
               setConsultations(consultationHistory);
             }
           } catch (e) {
-            console.warn('No se pudo obtener el historial de consultas para el paciente', patientId, e);
+            logger.warn('No se pudo obtener el historial de consultas para el paciente', { patientId, error: String(e) });
             if (isMounted) {
               setConsultations([]);
             }
@@ -59,7 +60,7 @@ export default function PatientDetailScreen() {
           if (isMounted) { // Only show alert if component is mounted
             Alert.alert('Error', 'No se pudo cargar la información del paciente.');
           }
-          console.error('PatientDetailScreen loadData failed:', error);
+          logger.error('PatientDetailScreen loadData failed', error as Error);
         }
       };
 

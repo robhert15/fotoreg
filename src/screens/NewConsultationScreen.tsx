@@ -15,6 +15,7 @@ import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { globalStyles } from '@/styles/globalStyles';
+import { logger } from '@/utils/logger';
 
 export default function NewConsultationScreen() {
   const navigation = useNavigation();
@@ -64,7 +65,7 @@ export default function NewConsultationScreen() {
         }
       } catch (error) {
         Alert.alert("Error", "No se pudo iniciar la nueva consulta.");
-        console.error(error);
+        logger.error('NewConsultationScreen loadDraft failed', error as Error);
         navigation.goBack();
       }
     };
@@ -90,7 +91,7 @@ export default function NewConsultationScreen() {
       ]);
     } catch (error) {
       Alert.alert('Error', 'Ocurrió un problema al guardar la consulta.');
-      console.error(error);
+      logger.error('NewConsultationScreen finalize failed', error as Error);
     }
   }, [draftId, patientId, formData, navigation]);
 
@@ -112,7 +113,7 @@ export default function NewConsultationScreen() {
               await deletePhotosForConsultation(draftId);
               await deleteDraft(draftId);
             } catch (err) {
-              console.error('Error al descartar el borrador:', err);
+              logger.error('Error al descartar el borrador', err as Error);
             } finally {
               navigation.goBack();
             }
