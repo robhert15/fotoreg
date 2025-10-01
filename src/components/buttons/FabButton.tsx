@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Pressable, View, StyleSheet, type PressableProps, Platform } from 'react-native';
+import { Pressable, View, StyleSheet, type PressableProps, Platform, type StyleProp, type ViewStyle } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { addOpacity } from '@/utils/colorUtils';
 
@@ -10,7 +10,7 @@ interface FabButtonProps extends Omit<PressableProps, 'style'> {
   icon: React.ReactNode;
   variant?: FabVariant;
   size?: FabSize;
-  style?: any; // allow positioning overrides
+  style?: StyleProp<ViewStyle>; // allow positioning overrides
   accessibilityLabel?: string;
   accessibilityHint?: string;
   testID?: string;
@@ -61,7 +61,7 @@ export const FabButton: React.FC<FabButtonProps> = ({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityHint={accessibilityHint}
-      accessibilityState={{ disabled }}
+      accessibilityState={{ disabled: !!disabled }}
       testID={testID}
       hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
       style={({ pressed }) => [

@@ -7,7 +7,7 @@ import { FabButton } from '@/components/buttons/FabButton';
 import { useNavigation } from '@react-navigation/native';
 import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
-import { NewPatient } from '@/types';
+import { NewPatient, Patient } from '@/types';
  
 
 export default function AddPatientScreen() {
@@ -34,13 +34,20 @@ export default function AddPatientScreen() {
       return;
     }
 
+    // Normalizar género: aceptar solo valores permitidos, de lo contrario null
+    const allowedGenders: Patient['gender'][] = ['masculino', 'femenino', 'otro', 'no especificado'];
+    const normalizedGender = (() => {
+      const g = gender.trim().toLowerCase();
+      return (allowedGenders as string[]).includes(g) ? (g as Patient['gender']) : undefined;
+    })();
+
     const newPatient: NewPatient = {
       first_name: trimmedFirstName,
       paternal_last_name: trimmedPaternalLastName,
       maternal_last_name: maternalLastName.trim(),
       document_number: documentNumber.trim(),
       date_of_birth: dateOfBirth.trim(),
-      gender: gender.trim() as any, // Cast temporal, idealmente usar un Picker
+      gender: normalizedGender,
       address: address.trim(),
       occupation: occupation.trim(),
       whatsapp: whatsapp.trim(),

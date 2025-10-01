@@ -6,6 +6,10 @@ import {
   ScrollViewProps,
   FlatListProps,
   Pressable,
+  NativeSyntheticEvent,
+  NativeScrollEvent,
+  StyleProp,
+  ViewStyle,
 } from 'react-native';
 import Animated, {
   useAnimatedScrollHandler,
@@ -13,6 +17,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ParallaxScrollView } from './ParallaxScrollView'; // Asumimos que la lógica base se mantiene aquí
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -28,16 +33,21 @@ interface ScreenLayoutProps<T> {
   title: string;
   children?: React.ReactNode; // Children is now optional
   headerRight?: React.ReactNode;
-  renderScrollable?: (props: { onScroll: any; scrollEventThrottle: number; contentContainerStyle: any }) => React.ReactNode;
+  renderScrollable?: (props: {
+    onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
+    scrollEventThrottle: number;
+    contentContainerStyle: StyleProp<ViewStyle>;
+  }) => React.ReactNode;
 }
 
 // --- Componente de Cabecera por Defecto ---
 const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: React.ReactNode }) => {
   const navigation = useNavigation();
   const canGoBack = navigation.canGoBack();
+  const insets = useSafeAreaInsets();
 
   return (
-    <View style={styles.headerContainer}>
+    <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
       {canGoBack ? (
         <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -59,7 +69,9 @@ export const ScreenLayout = <T extends {}>({ title, children, headerRight, rende
   });
 
   const headerBackgroundColor = useThemeColor({}, 'primary');
-  const headerHeight = 138;
+  const insets = useSafeAreaInsets();
+  const headerBaseHeight = 138;
+  const headerHeight = headerBaseHeight + insets.top; // include safe area top
 
   const scrollableContent = renderScrollable ? (
     renderScrollable({
@@ -96,7 +108,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 10,
-    paddingTop: 50, // Ajustar según sea necesario para el área segura
+    paddingTop: 16, // baseline; actual padding provided via insets in component
     gap: 10,
   },
   headerTitle: {

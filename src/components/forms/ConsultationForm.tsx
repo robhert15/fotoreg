@@ -23,6 +23,10 @@ export interface ConsultationFormProps {
   consultationId?: number; // para combinar fotos en modo edición/lectura
 }
 
+// Tipos locales ligeros (evitamos dependencias no exportadas)
+type MedicalConditionLite = { name: string; status?: string };
+type HabitsLike = { [key: string]: boolean | null | undefined; is_smoker?: boolean; consumes_alcohol?: boolean };
+
 
 const styles = StyleSheet.create({
   photoActionContainer: {
@@ -45,14 +49,17 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   // ---------- Handlers de campos simples ----------
   const handleSimpleChange = (
     field: keyof NewConsultation,
-    value: any
+    value: string | boolean | null
   ) => {
     if (isReadOnly) return;
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   // ---------- Historial (condiciones) ----------
-  const localConditions = useMemo(() => formData.medical_conditions || [], [formData.medical_conditions]);
+  const localConditions = useMemo<MedicalConditionLite[]>(
+    () => (Array.isArray(formData.medical_conditions) ? formData.medical_conditions : []),
+    [formData.medical_conditions]
+  );
   const medicalConditionsOptions = useMemo(
     () => [
       'Diabetes',
@@ -66,8 +73,8 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
   const handleConditionsChange = (selectedNames: string[]) => {
     if (isReadOnly) return;
-    const newConditions = selectedNames.map((name) => {
-      const existing = localConditions.find((c: any) => c.name === name);
+    const newConditions: MedicalConditionLite[] = selectedNames.map((name) => {
+      const existing = localConditions.find((c) => c.name === name);
       return existing || { name };
     });
     setFormData((prev) => ({ ...prev, medical_conditions: newConditions }));
@@ -75,23 +82,23 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
   const updateConditionStatus = (conditionName: string, status: string | null) => {
     if (isReadOnly) return;
-    const updatedConditions = localConditions.map((c: any) =>
-      c.name === conditionName ? { ...c, status } : c
+    const updatedConditions: MedicalConditionLite[] = localConditions.map((c) =>
+      c.name === conditionName ? { ...c, status: status ?? undefined } : c
     );
     setFormData((prev) => ({ ...prev, medical_conditions: updatedConditions }));
   };
 
   const selectedConditionNames = useMemo(
-    () => localConditions.map((c: any) => c.name),
+    () => localConditions.map((c) => c.name),
     [localConditions]
   );
   const hasDiabetes = selectedConditionNames.includes('Diabetes');
 
   // ---------- Hábitos ----------
-  const habits = useMemo(() => formData.habits || {}, [formData.habits]);
+  const habits = useMemo<HabitsLike>(() => (formData.habits as HabitsLike) || {}, [formData.habits]);
   const handleHabitChange = (field: string, value: boolean | null) => {
     if (isReadOnly) return;
-    const newHabits = { ...habits, [field]: value };
+    const newHabits = { ...habits, [field]: value ?? undefined };
     setFormData((prev) => ({ ...prev, habits: newHabits }));
   };
 
@@ -223,7 +230,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
               <RadioGroup
                 title="¿Cómo tiene controlada la diabetes?"
                 options={["Controlada", "No Controlada"]}
-                selectedValue={localConditions.find((c: any) => c.name === 'Diabetes')?.status || null}
+                selectedValue={localConditions.find((c) => c.name === 'Diabetes')?.status || null}
                 onSelectionChange={(status: string | null) => updateConditionStatus('Diabetes', status)}
                 disabled={isReadOnly}
               />

@@ -5,7 +5,7 @@ import { FabButton } from '@/components/buttons/FabButton';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { getConsultationById, updateConsultation, createDraftFromConsultation, moveDraftPhotosToConsultation, deleteDraft } from '@/db/api/consultations';
-import { Consultation } from '@/types';
+import { NewConsultation } from '@/types';
 import { globalStyles } from '@/styles/globalStyles';
 import { Colors } from '@/constants/theme'; // Keep for ActivityIndicator color
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
@@ -17,8 +17,8 @@ export default function ConsultationDetailScreen() {
   const navigation = useNavigation();
   const { consultationId } = route.params as { consultationId: number };
   
-  const [consultation, setConsultation] = useState<Partial<Consultation>>({});
-  const [originalConsultation, setOriginalConsultation] = useState<Partial<Consultation>>({});
+  const [consultation, setConsultation] = useState<Partial<NewConsultation>>({});
+  const [originalConsultation, setOriginalConsultation] = useState<Partial<NewConsultation>>({});
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [draftId, setDraftId] = useState<number | null>(null);
@@ -29,7 +29,7 @@ export default function ConsultationDetailScreen() {
         setLoading(true);
         const data = await getConsultationById(consultationId);
         if (data) {
-          const formData: Partial<Consultation> = {
+          const formData: Partial<NewConsultation> = {
             ...data,
             // Ya llegan deserializados desde la capa de datos; usamos fallbacks seguros
             medical_conditions: Array.isArray((data as any).medical_conditions)
@@ -57,7 +57,7 @@ export default function ConsultationDetailScreen() {
   const handleSave = async () => {
     try {
       // La capa de datos serializa internamente; enviamos el objeto tal cual
-      await updateConsultation(consultationId, consultation as any);
+      await updateConsultation(consultationId, consultation);
       if (draftId) {
         await moveDraftPhotosToConsultation(draftId, consultationId);
         await deleteDraft(draftId);
@@ -112,14 +112,13 @@ export default function ConsultationDetailScreen() {
     const consultationDate = new Date(consultation.consultation_date || Date.now()).toLocaleDateString('es-ES', {
     year: 'numeric', month: 'long', day: 'numeric'
   });
-
   return (
     <View style={{ flex: 1 }}>
       <ScreenLayout title={`Consulta del ${consultationDate}`}>
         <View style={{ padding: 20, paddingBottom: 150 }}>
           <ConsultationForm
-            formData={consultation as any}
-            setFormData={setConsultation as any}
+            formData={consultation}
+            setFormData={setConsultation}
             isReadOnly={!isEditing}
             draftId={draftId}
             consultationId={consultationId}
