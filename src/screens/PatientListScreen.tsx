@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, TextInput, Alert } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, CompositeNavigationProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 
@@ -13,10 +13,14 @@ import { findPatientsWithLastConsultation } from '@/db/api/patients';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { PatientCard } from '@/components/PatientCard';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '@/navigation/AppNavigator';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { RootStackParamList, BottomTabParamList } from '@/navigation/AppNavigator';
 
-// Usamos 'any' porque esta pantalla ahora está anidada y no pertenece directamente al RootStack
-type PatientListNavigationProp = StackNavigationProp<any>;
+// Definimos un tipo de navegación compuesto para manejar la anidación
+type PatientListNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<BottomTabParamList, 'PatientsStack'>,
+  StackNavigationProp<RootStackParamList>
+>;
 
 export default function PatientListScreen() {
   const navigation = useNavigation<PatientListNavigationProp>();

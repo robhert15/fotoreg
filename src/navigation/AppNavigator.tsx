@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavigationContainer, RouteProp } from '@react-navigation/native';
-import { createStackNavigator, CardStyleInterpolators } from '@react-navigation/stack';
+import { createStackNavigator, StackCardInterpolationProps } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -100,7 +100,7 @@ function MainTabNavigator() {
 export default function AppNavigator() {
   const backgroundColor = useThemeColor({}, 'background');
 
-  const forFade = ({ current }) => ({
+  const forFade = ({ current }: StackCardInterpolationProps) => ({
     cardStyle: {
       opacity: current.progress,
     },

@@ -1,19 +1,20 @@
 import React, { useState, useRef } from 'react';
 import { View, Text, StyleSheet, Pressable, Alert, ImageBackground } from 'react-native';
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import { CameraView, useCameraPermissions, CameraCapturedPicture } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { addPhoto } from '@/db/api/consultations';
 import { RootStackParamList } from '@/navigation/AppNavigator';
 import { Image } from 'expo-image';
 
 export default function CameraScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Camera'>>();
   const { draftId, stage } = route.params;
 
   const [permission, requestPermission] = useCameraPermissions();
-  const [photo, setPhoto] = useState<any>(null);
+  const [photo, setPhoto] = useState<CameraCapturedPicture | null>(null);
   const [previewError, setPreviewError] = useState<boolean>(false);
   const cameraRef = useRef<CameraView>(null);
 

@@ -5,6 +5,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { globalStyles } from '@/styles/globalStyles';
 import { BaseCard } from '../cards/BaseCard';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 import { DatePickerInput } from './DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
 import { RadioGroup } from './RadioGroup';
@@ -38,7 +40,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   draftId,
   consultationId,
 }) => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
 
   // ---------- Handlers de campos simples ----------
   const handleSimpleChange = (
