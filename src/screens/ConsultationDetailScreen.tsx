@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, ActivityIndicator, Alert, Pressable } from 'react-native';
+import { View, Text, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -12,6 +12,7 @@ import { ConsultationForm } from '@/components/forms/ConsultationForm';
 
 
 export default function ConsultationDetailScreen() {
+
   const route = useRoute();
   const navigation = useNavigation();
   const { consultationId } = route.params as { consultationId: number };
@@ -113,12 +114,9 @@ export default function ConsultationDetailScreen() {
   });
 
   return (
-    <ScreenLayout title={`Consulta del ${consultationDate}`}>
-      <View style={globalStyles.contentContainer}>
-        <ScrollView 
-          contentContainerStyle={{ padding: 20, paddingBottom: 150 }}
-          keyboardShouldPersistTaps="handled"
-        >
+    <View style={{ flex: 1 }}>
+      <ScreenLayout title={`Consulta del ${consultationDate}`}>
+        <View style={{ padding: 20, paddingBottom: 150 }}>
           <ConsultationForm
             formData={consultation as any}
             setFormData={setConsultation as any}
@@ -126,8 +124,8 @@ export default function ConsultationDetailScreen() {
             draftId={draftId}
             consultationId={consultationId}
           />
-        </ScrollView>
-      </View>
+        </View>
+      </ScreenLayout>
 
       {isEditing ? (
         <>
@@ -155,7 +153,7 @@ export default function ConsultationDetailScreen() {
           icon={<Ionicons name="pencil" size={24} color="white" />}
         />
       )}
-    </ScreenLayout>
+    </View>
   );
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, StyleSheet, Alert } from 'react-native';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NewConsultation } from '@/types';
 import { 
@@ -13,7 +13,8 @@ import {
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
 import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
-import { BaseButton } from '@/components/buttons/BaseButton';
+import { FabButton } from '@/components/buttons/FabButton';
+import { globalStyles } from '@/styles/globalStyles';
 
 export default function NewConsultationScreen() {
   const navigation = useNavigation();
@@ -122,51 +123,41 @@ export default function NewConsultationScreen() {
   }, [draftId, navigation]);
   
   if (isLoading) {
-    return <SafeAreaView style={styles.container}><Text>Cargando...</Text></SafeAreaView>;
+    return <ScreenLayout title="Cargando..."><View /></ScreenLayout>; // Render placeholder content
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Nueva Consulta</Text>
-      </View>
-      
-      <ScrollView keyboardShouldPersistTaps="handled">
-        <ConsultationForm
-          formData={formData}
-          setFormData={setFormData}
-          isReadOnly={false}
-          draftId={draftId}
-        />
-      </ScrollView>
-      
-      <View style={styles.footer}>
-        <BaseButton title="Cancelar" variant="outline" onPress={handleCancel} style={{ flex: 1, marginRight: 5 }} />
-        <BaseButton title="Guardar" variant="primary" onPress={handleFinalSave} style={{ flex: 1, marginLeft: 5 }} />
-      </View>
-    </SafeAreaView>
+    <View style={{ flex: 1 }}>
+      <ScreenLayout title="Nueva Consulta">
+        <View style={{ padding: 20, paddingBottom: 150 }}>
+          <ConsultationForm
+            formData={formData}
+            setFormData={setFormData}
+            isReadOnly={false}
+            draftId={draftId}
+          />
+        </View>
+      </ScreenLayout>
+
+      {/* Botones de Acción Flotantes en el pie de página */}
+      <FabButton
+        style={[globalStyles.fab, { right: 90 }]}
+        variant="neutral"
+        onPress={handleCancel}
+        accessibilityLabel="Cancelar consulta"
+        icon={<Ionicons name="close" size={24} color="white" />}
+      />
+      <FabButton
+        style={globalStyles.fab}
+        variant="primary"
+        onPress={handleFinalSave}
+        accessibilityLabel="Guardar consulta"
+        icon={<Ionicons name="checkmark" size={24} color="white" />}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Colors.light.background },
-  header: {
-    backgroundColor: Colors.light.white,
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.light.borderColor,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: Colors.light.text,
-  },
-  footer: {
-    flexDirection: 'row',
-    padding: 10,
-    backgroundColor: Colors.light.white,
-    borderTopWidth: 1,
-    borderTopColor: Colors.light.borderColor,
-  },
-  // Botones migrados a BaseButton
+  // Los estilos de los botones ahora se manejan globalmente a través de FabButton y globalStyles
 });

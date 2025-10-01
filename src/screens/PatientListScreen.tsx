@@ -68,52 +68,52 @@ export default function PatientListScreen() {
   );
 
     return (
-    <ScreenLayout
-      title="Pacientes"
-      renderScrollable={({ onScroll, scrollEventThrottle, contentContainerStyle }) => (
-        <Animated.FlatList
-          data={patients}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <PatientCard 
-              patient={item}
-              onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
+      <View style={{ flex: 1 }}>
+        <ScreenLayout
+          title="Pacientes"
+          renderScrollable={({ onScroll, scrollEventThrottle, contentContainerStyle }) => (
+            <Animated.FlatList
+              data={patients}
+              keyExtractor={(item) => item.id.toString()}
+              renderItem={({ item }) => (
+                <PatientCard 
+                  patient={item}
+                  onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
+                />
+              )}
+              onScroll={onScroll}
+              scrollEventThrottle={scrollEventThrottle}
+              contentContainerStyle={[styles.listContent, contentContainerStyle]}
+              ListHeaderComponent={
+                <>
+                  <View style={globalStyles.searchSection}>
+                    <View style={globalStyles.searchContainer}>
+                      <Ionicons name="search" size={18} color={colors.textLight} style={globalStyles.searchIcon} />
+                      <TextInput
+                        style={[globalStyles.searchInput, { borderColor: colors.borderColor, color: colors.text, backgroundColor: colors.background }]}
+                        placeholder="Buscar por nombre o documento..."
+                        placeholderTextColor={colors.textLight}
+                        value={searchTerm}
+                        onChangeText={setSearchTerm}
+                      />
+                    </View>
+                  </View>
+                  <Text style={[styles.resultsCount, { color: colors.textLight }]}>
+                    {patients.length} pacientes encontrados
+                  </Text>
+                </>
+              }
             />
           )}
-          onScroll={onScroll}
-          scrollEventThrottle={scrollEventThrottle}
-          contentContainerStyle={[styles.listContent, contentContainerStyle]}
-          ListHeaderComponent={
-            <>
-              <View style={globalStyles.searchSection}>
-                <View style={globalStyles.searchContainer}>
-                  <Ionicons name="search" size={18} color={colors.textLight} style={globalStyles.searchIcon} />
-                  <TextInput
-                    style={[globalStyles.searchInput, { borderColor: colors.borderColor, color: colors.text, backgroundColor: colors.background }]}
-                    placeholder="Buscar por nombre o documento..."
-                    placeholderTextColor={colors.textLight}
-                    value={searchTerm}
-                    onChangeText={setSearchTerm}
-                  />
-                </View>
-              </View>
-              <Text style={[styles.resultsCount, { color: colors.textLight }]}>
-                {patients.length} pacientes encontrados
-              </Text>
-            </>
-          }
         />
-      )}
-    >
-      {/* Los botones FAB ahora van fuera del ScreenLayout para que no se vean afectados por el scroll */}
-      <FabButton
-        style={globalStyles.fab}
-        variant="primary"
-        onPress={() => navigation.navigate('AddPatient')}
-        accessibilityLabel="Registrar paciente"
-        icon={<Ionicons name="add" size={24} color={colors.white} />}
-      />
-    </ScreenLayout>
+        <FabButton
+          style={globalStyles.fab}
+          variant="primary"
+          onPress={() => navigation.navigate('AddPatient')}
+          accessibilityLabel="Registrar paciente"
+          icon={<Ionicons name="add" size={24} color={colors.white} />}
+        />
+      </View>
   );
 }
 
