@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
@@ -9,7 +10,16 @@ import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
 import { NewPatient, Patient } from '@/types';
 import { logger } from '@/utils/logger';
- 
+
+const styles = StyleSheet.create({
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    flexDirection: 'row-reverse',
+    gap: 15,
+    zIndex: 1,
+  },
+});
 
 export default function AddPatientScreen() {
   const [firstName, setFirstName] = useState('');
@@ -25,6 +35,7 @@ export default function AddPatientScreen() {
   const [physicalActivity, setPhysicalActivity] = useState('');
 
   const navigation = useNavigation();
+  const { height } = useWindowDimensions();
 
   const handleSavePatient = async () => {
     const trimmedFirstName = firstName.trim();
@@ -35,7 +46,6 @@ export default function AddPatientScreen() {
       return;
     }
 
-    // Normalizar género: aceptar solo valores permitidos, de lo contrario null
     const allowedGenders: Patient['gender'][] = ['masculino', 'femenino', 'otro', 'no especificado'];
     const normalizedGender = (() => {
       const g = gender.trim().toLowerCase();
@@ -71,66 +81,62 @@ export default function AddPatientScreen() {
     }
   };
 
-    return (
-    <ScreenLayout
-      title="Registrar Paciente"
-      fab={
-        <>
-          <FabButton
-            style={{ right: 90 }}
-            variant="neutral"
-            onPress={() => navigation.goBack()}
-            accessibilityLabel="Cancelar registro"
-            icon={<Ionicons name="close" size={24} color="white" />}
-          />
-          <FabButton
-            variant="primary"
-            onPress={handleSavePatient}
-            accessibilityLabel="Guardar paciente"
-            icon={<Ionicons name="checkmark" size={24} color="white" />}
-          />
-        </>
-      }
-    >
-      <View>
-        <BaseCard>
-          <Text style={globalStyles.label}>Nombres *</Text>
-          <TextInput style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
+  return (
+    <View style={{ flex: 1 }}>
+      <ScreenLayout title="Registrar Paciente">
+        <View style={{ padding: 20, paddingBottom: 150 }}>
+          <BaseCard>
+            <Text style={globalStyles.label}>Nombres *</Text>
+            <TextInput style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
 
-          <Text style={globalStyles.label}>Apellido Paterno *</Text>
-          <TextInput style={globalStyles.input} placeholder="Apellido paterno" value={paternalLastName} onChangeText={setPaternalLastName} />
+            <Text style={globalStyles.label}>Apellido Paterno *</Text>
+            <TextInput style={globalStyles.input} placeholder="Apellido paterno" value={paternalLastName} onChangeText={setPaternalLastName} />
 
-          <Text style={globalStyles.label}>Apellido Materno</Text>
-          <TextInput style={globalStyles.input} placeholder="Apellido materno" value={maternalLastName} onChangeText={setMaternalLastName} />
+            <Text style={globalStyles.label}>Apellido Materno</Text>
+            <TextInput style={globalStyles.input} placeholder="Apellido materno" value={maternalLastName} onChangeText={setMaternalLastName} />
 
-          <Text style={globalStyles.label}>Número de Documento</Text>
-          <TextInput style={globalStyles.input} placeholder="DNI o Cédula" value={documentNumber} onChangeText={setDocumentNumber} keyboardType="numeric" />
+            <Text style={globalStyles.label}>Número de Documento</Text>
+            <TextInput style={globalStyles.input} placeholder="DNI o Cédula" value={documentNumber} onChangeText={setDocumentNumber} keyboardType="numeric" />
 
-          <Text style={globalStyles.label}>Fecha de Nacimiento</Text>
-          <TextInput style={globalStyles.input} placeholder="YYYY-MM-DD" value={dateOfBirth} onChangeText={setDateOfBirth} />
+            <Text style={globalStyles.label}>Fecha de Nacimiento</Text>
+            <TextInput style={globalStyles.input} placeholder="YYYY-MM-DD" value={dateOfBirth} onChangeText={setDateOfBirth} />
 
-          <Text style={globalStyles.label}>Sexo</Text>
-          <TextInput style={globalStyles.input} placeholder="masculino / femenino / otro" value={gender} onChangeText={setGender} />
+            <Text style={globalStyles.label}>Sexo</Text>
+            <TextInput style={globalStyles.input} placeholder="masculino / femenino / otro" value={gender} onChangeText={setGender} />
 
-          <Text style={globalStyles.label}>Domicilio</Text>
-          <TextInput style={globalStyles.input} placeholder="Dirección del paciente" value={address} onChangeText={setAddress} />
-          
-          <Text style={globalStyles.label}>Ocupación</Text>
-          <TextInput style={globalStyles.input} placeholder="Ocupación actual" value={occupation} onChangeText={setOccupation} />
+            <Text style={globalStyles.label}>Domicilio</Text>
+            <TextInput style={globalStyles.input} placeholder="Dirección del paciente" value={address} onChangeText={setAddress} />
+            
+            <Text style={globalStyles.label}>Ocupación</Text>
+            <TextInput style={globalStyles.input} placeholder="Ocupación actual" value={occupation} onChangeText={setOccupation} />
 
-          <Text style={globalStyles.label}>WhatsApp</Text>
-          <TextInput style={globalStyles.input} placeholder="Número de WhatsApp" value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" />
+            <Text style={globalStyles.label}>WhatsApp</Text>
+            <TextInput style={globalStyles.input} placeholder="Número de WhatsApp" value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" />
 
-          <Text style={globalStyles.label}>Celular de Contacto</Text>
-          <TextInput style={globalStyles.input} placeholder="Otro celular de contacto" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
+            <Text style={globalStyles.label}>Celular de Contacto</Text>
+            <TextInput style={globalStyles.input} placeholder="Otro celular de contacto" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
 
-          <Text style={globalStyles.label}>Actividad Física</Text>
-          <TextInput style={globalStyles.input} placeholder="Tipo y frecuencia. Ej: Correr, 3/semana" value={physicalActivity} onChangeText={setPhysicalActivity} />
-        </BaseCard>
+            <Text style={globalStyles.label}>Actividad Física</Text>
+            <TextInput style={globalStyles.input} placeholder="Tipo y frecuencia. Ej: Correr, 3/semana" value={physicalActivity} onChangeText={setPhysicalActivity} />
+          </BaseCard>
+        </View>
+      </ScreenLayout>
+
+      <View style={[styles.fabContainer, { top: height * 0.75 }]}>
+        <FabButton
+          variant="primary"
+          onPress={handleSavePatient}
+          accessibilityLabel="Guardar paciente"
+          icon={<Ionicons name="checkmark" size={24} color="white" />}
+        />
+        <FabButton
+          variant="neutral"
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Cancelar registro"
+          icon={<Ionicons name="close" size={24} color="white" />}
+        />
       </View>
-
-    </ScreenLayout>
+    </View>
   );
 }
 
-// ...los estilos permanecen iguales...

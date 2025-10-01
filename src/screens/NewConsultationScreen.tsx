@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { NewConsultation } from '@/types';
@@ -21,6 +22,7 @@ export default function NewConsultationScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { patientId } = route.params as { patientId: number };
+  const { height } = useWindowDimensions();
   
   const [draftId, setDraftId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<NewConsultation>>({});
@@ -128,27 +130,9 @@ export default function NewConsultationScreen() {
   }
 
   return (
-    <ScreenLayout
-      title="Nueva Consulta"
-      fab={
-        <>
-          <FabButton
-            style={{ right: 90 }}
-            variant="neutral"
-            onPress={handleCancel}
-            accessibilityLabel="Cancelar consulta"
-            icon={<Ionicons name="close" size={24} color="white" />}
-          />
-          <FabButton
-            variant="primary"
-            onPress={handleFinalSave}
-            accessibilityLabel="Guardar consulta"
-            icon={<Ionicons name="checkmark" size={24} color="white" />}
-          />
-        </>
-      }
-    >
-        <View>
+    <View style={{ flex: 1 }}>
+      <ScreenLayout title="Nueva Consulta">
+        <View style={{ padding: 20, paddingBottom: 150 }}>
           <ConsultationForm
             formData={formData}
             setFormData={setFormData}
@@ -156,10 +140,32 @@ export default function NewConsultationScreen() {
             draftId={draftId}
           />
         </View>
-    </ScreenLayout>
+      </ScreenLayout>
+
+      <View style={[styles.fabContainer, { top: height * 0.75 }]}>
+        <FabButton
+          variant="primary"
+          onPress={handleFinalSave}
+          accessibilityLabel="Guardar consulta"
+          icon={<Ionicons name="checkmark" size={24} color="white" />}
+        />
+        <FabButton
+          variant="neutral"
+          onPress={handleCancel}
+          accessibilityLabel="Cancelar consulta"
+          icon={<Ionicons name="close" size={24} color="white" />}
+        />
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  // Los estilos de los botones ahora se manejan globalmente a través de FabButton y globalStyles
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    flexDirection: 'row-reverse',
+    gap: 15,
+    zIndex: 1,
+  },
 });

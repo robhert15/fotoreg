@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, useWindowDimensions } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -17,16 +17,28 @@ import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { RootStackParamList, BottomTabParamList } from '@/navigation/AppNavigator';
 import { logger } from '@/utils/logger';
 
-// Definimos un tipo de navegación compuesto para manejar la anidación
 type PatientListNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<BottomTabParamList, 'PatientsStack'>,
   StackNavigationProp<RootStackParamList>
 >;
 
+const styles = StyleSheet.create({
+  listContent: {
+    paddingHorizontal: 15,
+    paddingBottom: 150, // Aumentar espacio para el FAB flotante y la barra de navegación
+  },
+  resultsCount: {
+    fontSize: 14,
+    marginBottom: 10,
+    paddingHorizontal: 15, // Alinear con los items de la lista
+  },
+});
+
 export default function PatientListScreen() {
   const navigation = useNavigation<PatientListNavigationProp>();
   const [patients, setPatients] = useState<PatientWithLastDiagnosis[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const { height } = useWindowDimensions();
 
   // Carga de colores del tema
   const colors = {
@@ -49,7 +61,7 @@ export default function PatientListScreen() {
     }
   }, [searchTerm]);
 
-    // Efecto para la búsqueda en tiempo real con debounce
+  // Efecto para la búsqueda en tiempo real con debounce
   useEffect(() => {
     const handler = setTimeout(() => {
       loadPatients();
@@ -64,25 +76,16 @@ export default function PatientListScreen() {
   // Efecto para recargar al volver a la pantalla (sin el término de búsqueda)
   useFocusEffect(
     useCallback(() => {
-      // Solo recarga si el campo de búsqueda está vacío, 
-      // para no interferir con una búsqueda activa.
       if (searchTerm === '') {
         loadPatients();
       }
-    }, [searchTerm, loadPatients]) // se mantiene la dependencia por si acaso
+    }, [searchTerm, loadPatients])
   );
 
-    return (
+  return (
+    <View style={{ flex: 1 }}>
       <ScreenLayout
         title="Pacientes"
-        fab={
-          <FabButton
-            variant="primary"
-            onPress={() => navigation.navigate('AddPatient')}
-            accessibilityLabel="Registrar paciente"
-            icon={<Ionicons name="add" size={24} color={colors.white} />}
-          />
-        }
         renderScrollable={({ onScroll, scrollEventThrottle, contentContainerStyle }) => (
           <Animated.FlatList
             data={patients}
@@ -95,7 +98,7 @@ export default function PatientListScreen() {
             )}
             onScroll={onScroll}
             scrollEventThrottle={scrollEventThrottle}
-            contentContainerStyle={[contentContainerStyle, { paddingHorizontal: 15, paddingBottom: 150 }]}
+            contentContainerStyle={[styles.listContent, contentContainerStyle]}
             ListHeaderComponent={
               <>
                 <View style={globalStyles.searchSection}>
@@ -118,14 +121,13 @@ export default function PatientListScreen() {
           />
         )}
       />
+      <FabButton
+        style={[globalStyles.fab, { top: height * 0.75 }]}
+        variant="primary"
+        onPress={() => navigation.navigate('AddPatient')}
+        accessibilityLabel="Registrar paciente"
+        icon={<Ionicons name="add" size={24} color={colors.white} />}
+      />
+    </View>
   );
 }
-
-// Los estilos locales se han movido a globalStyles.ts
-// Solo mantenemos los que son verdaderamente específicos de esta pantalla.
-const styles = StyleSheet.create({
-  resultsCount: {
-    fontSize: 14,
-    marginBottom: 10, // Reducir un poco el margen
-  },
-});

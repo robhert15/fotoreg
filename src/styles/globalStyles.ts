@@ -143,7 +143,8 @@ export const globalStyles = StyleSheet.create({
   },
     // Estilo específico para la sección de búsqueda (el padding horizontal lo controla la lista)
   searchSection: {
-    paddingVertical: 20, // Mantiene el espaciado vertical interno
+    paddingTop: 5, // Reducido para acercar el buscador a la cabecera
+    paddingBottom: 20,
     marginBottom: -10, // Reduce el espacio antes de la lista
   },
   // Contenedor del input de búsqueda
@@ -195,6 +196,7 @@ export const globalStyles = StyleSheet.create({
   fab: {
     position: 'absolute',
     right: 20,
+    zIndex: 1,
     width: 56,
     height: 56,
     borderRadius: 28,

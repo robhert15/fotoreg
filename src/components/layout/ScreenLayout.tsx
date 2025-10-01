@@ -33,7 +33,6 @@ interface ScreenLayoutProps<T> {
   title: string;
   children?: React.ReactNode; // Children is now optional
   headerRight?: React.ReactNode;
-  fab?: React.ReactNode;
   renderScrollable?: (props: {
     onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle: number;
@@ -50,7 +49,7 @@ const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: Re
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.headerContainer, { paddingTop: insets.top + 10 }]}>
+    <View style={styles.headerContainer}>
       {canGoBack ? (
         <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={24} color="white" />
@@ -65,7 +64,7 @@ const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: Re
 };
 
 // --- Layout Principal con Parallax Integrado ---
-export const ScreenLayout = <T extends {}>({ title, children, headerRight, fab, renderScrollable, contentPadding = 20, contentBottomPadding = 150 }: ScreenLayoutProps<T>) => {
+export const ScreenLayout = <T extends {}>({ title, children, headerRight, renderScrollable, contentPadding = 20, contentBottomPadding = 150 }: ScreenLayoutProps<T>) => {
   const scrollY = useSharedValue(0);
   const handleScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -73,7 +72,7 @@ export const ScreenLayout = <T extends {}>({ title, children, headerRight, fab, 
 
   const headerBackgroundColor = useThemeColor({}, 'primary');
   const insets = useSafeAreaInsets();
-  const headerBaseHeight = 138;
+  const headerBaseHeight = 110; // Reducido en ~20% desde 138
   const headerHeight = headerBaseHeight + insets.top; // include safe area top
 
   const scrollableContent = renderScrollable ? (
@@ -100,25 +99,24 @@ export const ScreenLayout = <T extends {}>({ title, children, headerRight, fab, 
       scrollY={scrollY} // Pasar scrollY para que ParallaxScrollView lo use
     >
       {scrollableContent}
-      {fab}
     </ParallaxScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   headerContainer: {
-    flex: 1,
+    flex: 1, // Ocupar todo el espacio vertical disponible
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-end', // Alinear items en la parte inferior
     paddingHorizontal: 10,
-    paddingTop: 16, // baseline; actual padding provided via insets in component
+    paddingBottom: 12, // Un pequeño margen inferior
     gap: 10,
   },
   headerTitle: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: 'white',
+    color: 'white', // Restaurar el color del texto
     flex: 1,
     textAlign: 'center',
   },

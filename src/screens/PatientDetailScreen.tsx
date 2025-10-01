@@ -1,30 +1,30 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, Pressable, Alert, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
+import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+
 import { ConsultationCard } from '@/components/cards/ConsultationCard';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { useThemeColor } from '@/hooks/use-theme-color';
-import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
+import { ScreenLayout } from '@/components/layout/ScreenLayout';
+import { globalStyles } from '@/styles/globalStyles';
+import { Patient, Consultation } from '@/types';
 import { getPatientById } from '@/db/api/patients';
 import { getConsultationsForPatient } from '@/db/api/consultations';
-import { Patient, Consultation } from '@/types';
-import { ScreenLayout } from '@/components/layout/ScreenLayout';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { RootStackParamList } from '@/navigation/AppNavigator';
-import { globalStyles } from '@/styles/globalStyles';
 import { logger } from '@/utils/logger';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 
-type PatientDetailNavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'PatientDetail'
->;
+type PatientDetailScreenRouteProp = RouteProp<RootStackParamList, 'PatientDetail'>;
+type PatientDetailNavigationProp = StackNavigationProp<RootStackParamList, 'PatientDetail'>;
 
 export default function PatientDetailScreen() {
   const navigation = useNavigation<PatientDetailNavigationProp>();
-  const route = useRoute();
-  const { patientId } = route.params as { patientId: number };
-  
+  const route = useRoute<PatientDetailScreenRouteProp>();
+  const { height } = useWindowDimensions();
+  const { patientId } = route.params;
+
   const [patient, setPatient] = useState<Patient | null>(null);
   const [consultations, setConsultations] = useState<Consultation[]>([]);
 
@@ -33,31 +33,24 @@ export default function PatientDetailScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      let isMounted = true; // Flag to check if component is still mounted
+      let isMounted = true;
 
       const loadData = async () => {
         try {
           const patientData = await getPatientById(patientId);
-          if (!isMounted) return; // Exit if component was unmounted
+          if (!isMounted) return;
 
           if (!patientData) {
             throw new Error('Paciente no encontrado');
           }
           setPatient(patientData);
 
-          try {
-            const consultationHistory = await getConsultationsForPatient(patientData.id);
-            if (isMounted) { // Check again before setting state
-              setConsultations(consultationHistory);
-            }
-          } catch (e) {
-            logger.warn('No se pudo obtener el historial de consultas para el paciente', { patientId, error: String(e) });
-            if (isMounted) {
-              setConsultations([]);
-            }
+          const consultationHistory = await getConsultationsForPatient(patientData.id);
+          if (isMounted) {
+            setConsultations(consultationHistory);
           }
         } catch (error) {
-          if (isMounted) { // Only show alert if component is mounted
+          if (isMounted) {
             Alert.alert('Error', 'No se pudo cargar la información del paciente.');
           }
           logger.error('PatientDetailScreen loadData failed', error as Error);
@@ -67,14 +60,11 @@ export default function PatientDetailScreen() {
       loadData();
 
       return () => {
-        isMounted = false; // Cleanup function sets flag to false
+        isMounted = false;
       };
     }, [patientId])
   );
 
-  // Renderiza la estructura principal de la pantalla inmediatamente,
-  // mostrando un indicador de carga hasta que los datos del paciente estén listos.
-  // Esto previene el "destello" de una pantalla de carga blanca.
   if (!patient) {
     return (
       <ScreenLayout title="Cargando...">
@@ -84,11 +74,11 @@ export default function PatientDetailScreen() {
       </ScreenLayout>
     );
   }
-  
+
   const handleNewConsultation = () => {
     navigation.navigate('NewConsultation', { patientId: patient.id });
   };
-  
+
   const displayName = [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
   const displayDocument = patient.document_number ?? 'No especificado';
   const displayCreatedAt = new Date(patient.created_at).toLocaleDateString('es-ES');
@@ -108,19 +98,9 @@ export default function PatientDetailScreen() {
   const age = calculateAge(patient.date_of_birth);
 
   return (
-    <ScreenLayout
-      title={displayName || 'Paciente'}
-      fab={
-        <FabButton
-          variant="primary"
-          onPress={handleNewConsultation}
-          accessibilityLabel="Nueva consulta"
-          icon={<Ionicons name="add" size={24} color="white" />}
-        />
-      }
-    >
-        <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor, padding: 20, paddingBottom: 150 }]}>
-            {/* Tarjeta de Detalles del Paciente */}
+    <View style={{ flex: 1 }}>
+      <ScreenLayout title={displayName || 'Paciente'}>
+        <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
             <View style={{ marginBottom: 20 }}>
               <BaseCard>
                 <Text style={globalStyles.title}>Detalles</Text>
@@ -136,7 +116,6 @@ export default function PatientDetailScreen() {
               </BaseCard>
             </View>
 
-            {/* Historial de Consultas */}
             <Text style={globalStyles.title}>Historial de Consultas</Text>
             {consultations.length > 0 ? (
               consultations.map((item) => (
@@ -150,37 +129,25 @@ export default function PatientDetailScreen() {
               <Text style={globalStyles.emptyText}>Este paciente aún no tiene consultas.</Text>
             )}
         </View>
-    </ScreenLayout>
+      </ScreenLayout>
+
+      <FabButton
+        style={[globalStyles.fab, { top: height * 0.75 }]}
+        variant="primary"
+        onPress={handleNewConsultation}
+        accessibilityLabel="Nueva consulta"
+        icon={<Ionicons name="add" size={24} color="white" />}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   contentContainer: {
+    padding: 20,
+    paddingBottom: 150,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    overflow: 'hidden', // Forzar al contenido a respetar los bordes redondeados
-  },
-  headerContainer: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 10,
-    paddingTop: 50,
-    gap: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-    flex: 1,
-    textAlign: 'center',
-  },
-  headerButton: {
-    padding: 10,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    borderRadius: 50,
+    overflow: 'hidden',
   },
 });
-
-
