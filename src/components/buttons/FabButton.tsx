@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, View, StyleSheet, type PressableProps, Platform, type StyleProp, type ViewStyle } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { addOpacity } from '@/utils/colorUtils';
 
@@ -11,6 +12,7 @@ interface FabButtonProps extends Omit<PressableProps, 'style'> {
   variant?: FabVariant;
   size?: FabSize;
   style?: StyleProp<ViewStyle>; // allow positioning overrides
+  bottom?: number;
   accessibilityLabel?: string;
   accessibilityHint?: string;
   testID?: string;
@@ -21,6 +23,7 @@ export const FabButton: React.FC<FabButtonProps> = ({
   variant = 'primary',
   size = 'default',
   style,
+  bottom,
   disabled,
   accessibilityLabel,
   accessibilityHint,
@@ -47,6 +50,8 @@ export const FabButton: React.FC<FabButtonProps> = ({
 
   const [focused, setFocused] = useState(false);
   const ringColor = addOpacity('#FFFFFF', 0.8);
+  const insets = useSafeAreaInsets();
+  const defaultBottom = insets.bottom > 0 ? insets.bottom + 10 : 20;
 
   return (
     <Pressable
@@ -66,6 +71,7 @@ export const FabButton: React.FC<FabButtonProps> = ({
       hitSlop={{ top: 8, right: 8, bottom: 8, left: 8 }}
       style={({ pressed }) => [
         styles.base,
+        style, // Apply external styles first
         {
           width: diameter,
           height: diameter,
@@ -73,9 +79,10 @@ export const FabButton: React.FC<FabButtonProps> = ({
           backgroundColor: getBg(),
           opacity: disabled ? 0.6 : 1,
           transform: [{ scale: pressed ? 0.98 : 1 }],
+          // Ensure our calculated bottom takes precedence
+          bottom: bottom ?? defaultBottom,
         },
         focused && { borderWidth: 2, borderColor: ringColor },
-        style,
       ]}
       {...props}
     >

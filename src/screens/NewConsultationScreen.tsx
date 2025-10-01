@@ -128,9 +128,27 @@ export default function NewConsultationScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <ScreenLayout title="Nueva Consulta">
-        <View style={{ padding: 20, paddingBottom: 150 }}>
+    <ScreenLayout
+      title="Nueva Consulta"
+      fab={
+        <>
+          <FabButton
+            style={{ right: 90 }}
+            variant="neutral"
+            onPress={handleCancel}
+            accessibilityLabel="Cancelar consulta"
+            icon={<Ionicons name="close" size={24} color="white" />}
+          />
+          <FabButton
+            variant="primary"
+            onPress={handleFinalSave}
+            accessibilityLabel="Guardar consulta"
+            icon={<Ionicons name="checkmark" size={24} color="white" />}
+          />
+        </>
+      }
+    >
+        <View>
           <ConsultationForm
             formData={formData}
             setFormData={setFormData}
@@ -138,24 +156,7 @@ export default function NewConsultationScreen() {
             draftId={draftId}
           />
         </View>
-      </ScreenLayout>
-
-      {/* Botones de Acción Flotantes en el pie de página */}
-      <FabButton
-        style={[globalStyles.fab, { right: 90 }]}
-        variant="neutral"
-        onPress={handleCancel}
-        accessibilityLabel="Cancelar consulta"
-        icon={<Ionicons name="close" size={24} color="white" />}
-      />
-      <FabButton
-        style={globalStyles.fab}
-        variant="primary"
-        onPress={handleFinalSave}
-        accessibilityLabel="Guardar consulta"
-        icon={<Ionicons name="checkmark" size={24} color="white" />}
-      />
-    </View>
+    </ScreenLayout>
   );
 }
 

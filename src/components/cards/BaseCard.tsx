@@ -6,6 +6,8 @@ import {
   Platform,
   type PressableProps,
   type PressableStateCallbackType,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -65,8 +67,8 @@ export const BaseCard = ({
   };
   const finalIndicatorColor = indicatorColor || variantColors[indicatorVariant];
 
-  const dynamicStyle = ({ pressed }: PressableStateCallbackType) => {
-    const external = typeof style === 'function' ? (style as any)({ pressed }) : style;
+  const dynamicStyle = (state: PressableStateCallbackType): StyleProp<ViewStyle> => {
+    const externalStyle = typeof style === 'function' ? style(state) : style;
     return [
       styles.card,
       {
@@ -74,10 +76,10 @@ export const BaseCard = ({
         borderColor: selected ? primary : baseBorder,
         borderWidth: selected ? 2 : focused ? 2 : 1,
         opacity: disabled ? 0.5 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
+        transform: [{ scale: state.pressed ? 0.98 : 1 }],
       },
-      focused && Platform.select({ web: styles.focusWeb as any, default: null }),
-      external,
+      focused && Platform.OS === 'web' && styles.focusWeb,
+      externalStyle,
     ];
   };
 
@@ -142,11 +144,9 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden', // Para ripple/overlays y bordes
     // Sin sombras
-    shadowColor: undefined as unknown as string,
-    shadowOffset: undefined as unknown as any,
-    shadowOpacity: undefined as unknown as number,
-    shadowRadius: undefined as unknown as number,
-    elevation: undefined as unknown as number,
+    // No shadows by default
+    shadowColor: 'transparent',
+    elevation: 0,
   },
   cardIndicator: {
     position: 'absolute',

@@ -73,62 +73,57 @@ export default function PatientListScreen() {
   );
 
     return (
-      <View style={{ flex: 1 }}>
-        <ScreenLayout
-          title="Pacientes"
-          renderScrollable={({ onScroll, scrollEventThrottle, contentContainerStyle }) => (
-            <Animated.FlatList
-              data={patients}
-              keyExtractor={(item) => item.id.toString()}
-              renderItem={({ item }) => (
-                <PatientCard 
-                  patient={item}
-                  onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
-                />
-              )}
-              onScroll={onScroll}
-              scrollEventThrottle={scrollEventThrottle}
-              contentContainerStyle={[styles.listContent, contentContainerStyle]}
-              ListHeaderComponent={
-                <>
-                  <View style={globalStyles.searchSection}>
-                    <View style={globalStyles.searchContainer}>
-                      <Ionicons name="search" size={18} color={colors.textLight} style={globalStyles.searchIcon} />
-                      <TextInput
-                        style={[globalStyles.searchInput, { borderColor: colors.borderColor, color: colors.text, backgroundColor: colors.background }]}
-                        placeholder="Buscar por nombre o documento..."
-                        placeholderTextColor={colors.textLight}
-                        value={searchTerm}
-                        onChangeText={setSearchTerm}
-                      />
-                    </View>
+      <ScreenLayout
+        title="Pacientes"
+        fab={
+          <FabButton
+            variant="primary"
+            onPress={() => navigation.navigate('AddPatient')}
+            accessibilityLabel="Registrar paciente"
+            icon={<Ionicons name="add" size={24} color={colors.white} />}
+          />
+        }
+        renderScrollable={({ onScroll, scrollEventThrottle, contentContainerStyle }) => (
+          <Animated.FlatList
+            data={patients}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <PatientCard 
+                patient={item}
+                onPress={() => navigation.navigate('PatientDetail', { patientId: item.id })}
+              />
+            )}
+            onScroll={onScroll}
+            scrollEventThrottle={scrollEventThrottle}
+            contentContainerStyle={[contentContainerStyle, { paddingHorizontal: 15, paddingBottom: 150 }]}
+            ListHeaderComponent={
+              <>
+                <View style={globalStyles.searchSection}>
+                  <View style={globalStyles.searchContainer}>
+                    <Ionicons name="search" size={18} color={colors.textLight} style={globalStyles.searchIcon} />
+                    <TextInput
+                      style={[globalStyles.searchInput, { borderColor: colors.borderColor, color: colors.text, backgroundColor: colors.background }]}
+                      placeholder="Buscar por nombre o documento..."
+                      placeholderTextColor={colors.textLight}
+                      value={searchTerm}
+                      onChangeText={setSearchTerm}
+                    />
                   </View>
-                  <Text style={[styles.resultsCount, { color: colors.textLight }]}>
-                    {patients.length} pacientes encontrados
-                  </Text>
-                </>
-              }
-            />
-          )}
-        />
-        <FabButton
-          style={globalStyles.fab}
-          variant="primary"
-          onPress={() => navigation.navigate('AddPatient')}
-          accessibilityLabel="Registrar paciente"
-          icon={<Ionicons name="add" size={24} color={colors.white} />}
-        />
-      </View>
+                </View>
+                <Text style={[styles.resultsCount, { color: colors.textLight }]}>
+                  {patients.length} pacientes encontrados
+                </Text>
+              </>
+            }
+          />
+        )}
+      />
   );
 }
 
 // Los estilos locales se han movido a globalStyles.ts
 // Solo mantenemos los que son verdaderamente específicos de esta pantalla.
 const styles = StyleSheet.create({
-  listContent: {
-    paddingHorizontal: 15,
-    paddingBottom: 150, // Aumentar espacio para el FAB flotante y la barra de navegación
-  },
   resultsCount: {
     fontSize: 14,
     marginBottom: 10, // Reducir un poco el margen

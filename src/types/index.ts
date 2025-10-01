@@ -71,6 +71,13 @@ export interface Photo {
 }
 export type NewPhoto = Omit<Photo, 'id'>;
 
+// --- Anotaciones de Fotos ---
+export interface PhotoAnnotationData {
+  strokes: { path: string; color: string; strokeWidth: number }[];
+  width: number;
+  height: number;
+}
+
 // --- Tipos compuestos ---
 export type PatientWithLastDiagnosis = Patient & {
   last_visit?: string | null;

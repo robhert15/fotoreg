@@ -1,5 +1,5 @@
 import { openDatabaseAsync } from 'expo-sqlite';
-import { Consultation, ConsultationDraft, NewConsultation, Photo } from '@/types';
+import { Consultation, ConsultationDraft, NewConsultation, Photo, Patient } from '@/types';
 import { logger } from '@/utils/logger';
 
 const db = openDatabaseAsync('fotoreg.db');
@@ -10,11 +10,17 @@ const LOG_PARSE_WARNINGS = false;
 let WARNED_MC_ONCE = false;
 let WARNED_HB_ONCE = false;
 
-const deserializeConsultation = (dbResult: any): Consultation | null => {
+// Define a type for the raw database row to avoid 'any'
+type ConsultationRow = Omit<Consultation, 'medical_conditions' | 'habits'> & {
+  medical_conditions: string | null;
+  habits: string | null;
+};
+
+const deserializeConsultation = (dbResult: ConsultationRow | null): Consultation | null => {
   if (!dbResult) return null;
 
   // medical_conditions: tolerate legacy/plain values and parsing errors
-  let medicalConditions: any = [];
+  let medicalConditions: Consultation['medical_conditions'] = [];
   const mc = dbResult.medical_conditions;
   if (mc == null || mc === '') {
     medicalConditions = [];
@@ -33,7 +39,7 @@ const deserializeConsultation = (dbResult: any): Consultation | null => {
   }
 
   // habits: tolerate legacy/plain values and parsing errors
-  let habitsObj: any = {};
+  let habitsObj: Consultation['habits'] = {};
   const hb = dbResult.habits;
   if (hb == null || hb === '') {
     habitsObj = {};
@@ -58,7 +64,7 @@ const deserializeConsultation = (dbResult: any): Consultation | null => {
   } as Consultation;
 };
 
-const serializeConsultation = (data: Partial<NewConsultation>): any => {
+const serializeConsultation = (data: Partial<NewConsultation>): Partial<ConsultationRow> => {
   return {
     ...data,
     medical_conditions: JSON.stringify(data.medical_conditions || []),
@@ -69,7 +75,7 @@ const serializeConsultation = (data: Partial<NewConsultation>): any => {
 // --- Helper: detectar columnas de patients para compatibilidad V2/V3 ---
 const patientsHasColumn = async (columnName: string): Promise<boolean> => {
   const dbInstance = await db;
-  const rows = await dbInstance.getAllAsync<any>(`PRAGMA table_info(patients)`);
+  const rows = await dbInstance.getAllAsync<{ name: string }>(`PRAGMA table_info(patients)`);
   return rows.some((r) => r.name === columnName);
 };
 
@@ -77,19 +83,19 @@ const patientsHasColumn = async (columnName: string): Promise<boolean> => {
 
 export const getConsultationById = async (consultationId: number): Promise<Consultation | null> => {
   const dbInstance = await db;
-  const result = await dbInstance.getFirstAsync<any>('SELECT * FROM consultations WHERE id = ?', consultationId);
+  const result = await dbInstance.getFirstAsync<ConsultationRow>('SELECT * FROM consultations WHERE id = ?', consultationId);
   return deserializeConsultation(result);
 };
 
 export const getConsultationsForPatient = async (patientId: number): Promise<Consultation[]> => {
   const dbInstance = await db;
   try {
-    const patientRow = await dbInstance.getFirstAsync<any>('SELECT * FROM patients WHERE id = ?', patientId);
+    const patientRow = await dbInstance.getFirstAsync<Patient>('SELECT * FROM patients WHERE id = ?', patientId);
     if (patientRow) {
-      const doc = patientRow.document_number ?? patientRow.documentNumber ?? null;
+      const doc = patientRow.document_number ?? null;
       if (doc) {
         const hasV3 = await patientsHasColumn('document_number');
-        const results = await dbInstance.getAllAsync<any>(
+        const results = await dbInstance.getAllAsync<ConsultationRow>(
           hasV3
             ? `SELECT c.* FROM consultations c WHERE c.patient_id IN (SELECT id FROM patients WHERE document_number = ?) ORDER BY c.consultation_date DESC`
             : `SELECT c.* FROM consultations c WHERE c.patient_id IN (SELECT id FROM patients WHERE documentNumber = ?) ORDER BY c.consultation_date DESC`,
@@ -103,7 +109,7 @@ export const getConsultationsForPatient = async (patientId: number): Promise<Con
   }
 
   // Fallback to direct lookup by id
-  const results = await dbInstance.getAllAsync<any>(
+  const results = await dbInstance.getAllAsync<ConsultationRow>(
     'SELECT * FROM consultations WHERE patient_id = ? ORDER BY consultation_date DESC',
     patientId
   );
@@ -156,8 +162,8 @@ export const updateConsultation = async (consultationId: number, data: Partial<N
     dataToStore.diagnosis ?? null,
     dataToStore.treatment ?? null,
     dataToStore.notes ?? null,
-    dataToStore.medical_conditions,
-    dataToStore.habits,
+    dataToStore.medical_conditions ?? JSON.stringify([]),
+    dataToStore.habits ?? JSON.stringify({}),
     dataToStore.shoe_type ?? null,
     consultationId
   );
@@ -200,7 +206,7 @@ export const createDraftFromConsultation = async (patientId: number, consultatio
   await dbInstance.runAsync('DELETE FROM consultation_drafts WHERE patient_id = ?', patientId);
 
   // 3) Construir payload serializable sin ids y con fallbacks seguros
-  const { id: _ignoredId, patient_id: _ignoredPid, ...rest } = original as any;
+  const { id: _ignoredId, patient_id: _ignoredPid, ...rest } = original;
   const mc = Array.isArray(rest.medical_conditions) ? rest.medical_conditions : [];
   const hb = typeof rest.habits === 'object' && rest.habits !== null ? rest.habits : {};
   const dataAsJson = JSON.stringify({ ...rest, medical_conditions: mc, habits: hb });
@@ -258,7 +264,7 @@ export const moveDraftPhotosToConsultation = async (draftId: number, consultatio
 export const getLastConsultationForPatient = async (patientId: number): Promise<Pick<Consultation, 'consultation_date' | 'diagnosis'> | null> => {
   const dbInstance = await db;
   const query = `SELECT consultation_date, diagnosis FROM consultations WHERE patient_id = ? ORDER BY consultation_date DESC LIMIT 1;`;
-  const result = await dbInstance.getFirstAsync<any>(query, patientId);
+  const result = await dbInstance.getFirstAsync<Pick<Consultation, 'consultation_date' | 'diagnosis'>>(query, patientId);
   // No necesita deserialización completa porque los campos seleccionados no son JSON
   return result ?? null;
 };

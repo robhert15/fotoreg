@@ -72,8 +72,27 @@ export default function AddPatientScreen() {
   };
 
     return (
-    <ScreenLayout title="Registrar Paciente">
-      <View style={{ padding: 20, paddingBottom: 150 }}>
+    <ScreenLayout
+      title="Registrar Paciente"
+      fab={
+        <>
+          <FabButton
+            style={{ right: 90 }}
+            variant="neutral"
+            onPress={() => navigation.goBack()}
+            accessibilityLabel="Cancelar registro"
+            icon={<Ionicons name="close" size={24} color="white" />}
+          />
+          <FabButton
+            variant="primary"
+            onPress={handleSavePatient}
+            accessibilityLabel="Guardar paciente"
+            icon={<Ionicons name="checkmark" size={24} color="white" />}
+          />
+        </>
+      }
+    >
+      <View>
         <BaseCard>
           <Text style={globalStyles.label}>Nombres *</Text>
           <TextInput style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
@@ -110,21 +129,6 @@ export default function AddPatientScreen() {
         </BaseCard>
       </View>
 
-      {/* Botones de Acción Flotantes */}
-      <FabButton
-        style={[globalStyles.fab, { right: 90 }]}
-        variant="neutral"
-        onPress={() => navigation.goBack()}
-        accessibilityLabel="Cancelar registro"
-        icon={<Ionicons name="close" size={24} color="white" />}
-      />
-      <FabButton
-        style={globalStyles.fab}
-        variant="primary"
-        onPress={handleSavePatient}
-        accessibilityLabel="Guardar paciente"
-        icon={<Ionicons name="checkmark" size={24} color="white" />}
-      />
     </ScreenLayout>
   );
 }

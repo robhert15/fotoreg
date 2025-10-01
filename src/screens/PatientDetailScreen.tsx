@@ -108,9 +108,18 @@ export default function PatientDetailScreen() {
   const age = calculateAge(patient.date_of_birth);
 
   return (
-    <View style={globalStyles.container}>
-      <ScreenLayout title={displayName || 'Paciente'}>
-        <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
+    <ScreenLayout
+      title={displayName || 'Paciente'}
+      fab={
+        <FabButton
+          variant="primary"
+          onPress={handleNewConsultation}
+          accessibilityLabel="Nueva consulta"
+          icon={<Ionicons name="add" size={24} color="white" />}
+        />
+      }
+    >
+        <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor, padding: 20, paddingBottom: 150 }]}>
             {/* Tarjeta de Detalles del Paciente */}
             <View style={{ marginBottom: 20 }}>
               <BaseCard>
@@ -141,23 +150,12 @@ export default function PatientDetailScreen() {
               <Text style={globalStyles.emptyText}>Este paciente aún no tiene consultas.</Text>
             )}
         </View>
-      </ScreenLayout>
-
-      <FabButton
-        style={globalStyles.fab}
-        variant="primary"
-        onPress={handleNewConsultation}
-        accessibilityLabel="Nueva consulta"
-        icon={<Ionicons name="add" size={24} color="white" />}
-      />
-    </View>
+    </ScreenLayout>
   );
 }
 
 const styles = StyleSheet.create({
   contentContainer: {
-    padding: 20,
-    paddingBottom: 150,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     overflow: 'hidden', // Forzar al contenido a respetar los bordes redondeados

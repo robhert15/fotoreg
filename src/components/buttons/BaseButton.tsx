@@ -6,6 +6,9 @@ import {
   StyleSheet,
   Platform,
   type PressableProps,
+  type PressableStateCallbackType,
+  type StyleProp,
+  type ViewStyle,
 } from 'react-native';
 import { useColorScheme } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -75,20 +78,20 @@ export const BaseButton: React.FC<BaseButtonProps> = ({
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
       disabled={disabled}
-      style={({ pressed }) => {
-        const external = typeof style === 'function' ? (style as any)({ pressed }) : style;
+      style={(state: PressableStateCallbackType) => {
+        const externalStyle = typeof style === 'function' ? style(state) : style;
         return [
           styles.button,
           {
             backgroundColor: colors.bg,
             borderColor: colors.border,
             opacity: disabled ? 0.5 : 1,
-            transform: [{ scale: pressed ? 0.98 : 1 }],
+            transform: [{ scale: state.pressed ? 0.98 : 1 }],
             alignSelf: fullWidth ? 'stretch' : 'auto',
           },
           focused && styles.focused,
           variant === 'text' && styles.textButton,
-          external,
+          externalStyle,
         ];
       }}
       {...props}

@@ -33,11 +33,14 @@ interface ScreenLayoutProps<T> {
   title: string;
   children?: React.ReactNode; // Children is now optional
   headerRight?: React.ReactNode;
+  fab?: React.ReactNode;
   renderScrollable?: (props: {
     onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle: number;
     contentContainerStyle: StyleProp<ViewStyle>;
   }) => React.ReactNode;
+  contentPadding?: number;
+  contentBottomPadding?: number;
 }
 
 // --- Componente de Cabecera por Defecto ---
@@ -62,7 +65,7 @@ const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: Re
 };
 
 // --- Layout Principal con Parallax Integrado ---
-export const ScreenLayout = <T extends {}>({ title, children, headerRight, renderScrollable }: ScreenLayoutProps<T>) => {
+export const ScreenLayout = <T extends {}>({ title, children, headerRight, fab, renderScrollable, contentPadding = 20, contentBottomPadding = 150 }: ScreenLayoutProps<T>) => {
   const scrollY = useSharedValue(0);
   const handleScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -83,7 +86,7 @@ export const ScreenLayout = <T extends {}>({ title, children, headerRight, rende
     <Animated.ScrollView
       onScroll={handleScroll}
       scrollEventThrottle={16}
-      contentContainerStyle={{ paddingTop: headerHeight }}
+      contentContainerStyle={{ paddingTop: headerHeight, paddingHorizontal: contentPadding, paddingBottom: contentBottomPadding }}
     >
       {children}
     </Animated.ScrollView>
@@ -97,6 +100,7 @@ export const ScreenLayout = <T extends {}>({ title, children, headerRight, rende
       scrollY={scrollY} // Pasar scrollY para que ParallaxScrollView lo use
     >
       {scrollableContent}
+      {fab}
     </ParallaxScrollView>
   );
 };

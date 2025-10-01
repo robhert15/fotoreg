@@ -194,7 +194,6 @@ export const globalStyles = StyleSheet.create({
     // Botón de Acción Flotante (FAB)
   fab: {
     position: 'absolute',
-    bottom: 115, // Posición sobre la barra de navegación
     right: 20,
     width: 56,
     height: 56,

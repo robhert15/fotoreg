@@ -2,26 +2,32 @@ import * as SQLite from 'expo-sqlite';
 
 const db = SQLite.openDatabaseAsync('fotoreg.db');
 
+import { PhotoAnnotationData } from '@/types';
+
 export type PhotoAnnotation = {
   photo_id: number;
-  data: any; // JSON serializable (strokes, colors, width, etc.)
+  data: PhotoAnnotationData | null;
   updated_at: string;
 };
 
 export const getAnnotationForPhoto = async (photoId: number): Promise<PhotoAnnotation | null> => {
   const dbInstance = await db;
-  const row = await dbInstance.getFirstAsync<any>('SELECT photo_id, data, updated_at FROM photo_annotations WHERE photo_id = ?', photoId);
+  const row = await dbInstance.getFirstAsync<{ photo_id: number; data: string | null; updated_at: string }>('SELECT photo_id, data, updated_at FROM photo_annotations WHERE photo_id = ?', photoId);
   if (!row) return null;
-  let parsed: any = null;
-  try {
-    parsed = row.data ? JSON.parse(row.data) : null;
-  } catch (e) {
-    parsed = null;
+
+  let parsedData: PhotoAnnotationData | null = null;
+  if (row.data) {
+    try {
+      parsedData = JSON.parse(row.data);
+    } catch (e) {
+      // Silently fail, return null data
+    }
   }
-  return { photo_id: row.photo_id, data: parsed, updated_at: row.updated_at };
+
+  return { photo_id: row.photo_id, data: parsedData, updated_at: row.updated_at };
 };
 
-export const saveAnnotationForPhoto = async (photoId: number, data: any): Promise<void> => {
+export const saveAnnotationForPhoto = async (photoId: number, data: PhotoAnnotationData | null): Promise<void> => {
   const dbInstance = await db;
   const now = new Date().toISOString();
   const dataJson = JSON.stringify(data ?? null);
