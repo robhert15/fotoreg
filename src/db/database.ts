@@ -74,6 +74,12 @@ export const initializeDatabase = async () => {
         data TEXT, -- JSON con trazos/colores/etc.
         updated_at TEXT NOT NULL
       );`,
+
+      // --- Índices para rendimiento ---
+      `CREATE INDEX IF NOT EXISTS idx_consultations_patient_date ON consultations(patient_id, consultation_date);`,
+      `CREATE INDEX IF NOT EXISTS idx_patients_name ON patients(paternal_last_name, maternal_last_name, first_name);`,
+      `CREATE INDEX IF NOT EXISTS idx_patients_document_number ON patients(document_number);`,
+      `CREATE INDEX IF NOT EXISTS idx_photos_consultation ON photos(consultation_id);`,
     ];
 
     for (const query of queries) {
