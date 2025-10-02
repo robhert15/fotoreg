@@ -64,7 +64,7 @@ const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: Re
 };
 
 // --- Layout Principal con Parallax Integrado ---
-export const ScreenLayout = <T extends {}>({ title, children, headerRight, renderScrollable, contentPadding = 20, contentBottomPadding = 150 }: ScreenLayoutProps<T>) => {
+export const ScreenLayout = <T extends {}>({ title, children, headerRight, renderScrollable, contentPadding = 15, contentBottomPadding = 150 }: ScreenLayoutProps<T>) => {
   const scrollY = useSharedValue(0);
   const handleScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;

@@ -84,7 +84,7 @@ export default function AddPatientScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScreenLayout title="Registrar Paciente">
-        <View style={{ padding: 20, paddingBottom: 150 }}>
+        <View style={{ paddingBottom: 150 }}>
           <BaseCard>
             <Text style={globalStyles.label}>Nombres *</Text>
             <TextInput style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />

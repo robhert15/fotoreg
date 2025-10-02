@@ -132,7 +132,7 @@ export default function NewConsultationScreen() {
   return (
     <View style={{ flex: 1 }}>
       <ScreenLayout title="Nueva Consulta">
-        <View style={{ padding: 20, paddingBottom: 150 }}>
+        <View style={{ paddingBottom: 150 }}>
           <ConsultationForm
             formData={formData}
             setFormData={setFormData}

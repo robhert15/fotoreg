@@ -144,7 +144,6 @@ export default function PatientDetailScreen() {
 
 const styles = StyleSheet.create({
   contentContainer: {
-    padding: 20,
     paddingBottom: 150,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
