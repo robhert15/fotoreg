@@ -15,8 +15,9 @@ const styles = StyleSheet.create({
   fabContainer: {
     position: 'absolute',
     right: 20,
-    flexDirection: 'row-reverse',
-    gap: 15,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 12,
     zIndex: 1,
   },
 });
@@ -115,14 +116,12 @@ export default function AddPatientScreen() {
 
             <Text style={globalStyles.label}>Celular de Contacto</Text>
             <TextInput style={globalStyles.input} placeholder="Otro celular de contacto" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
-
-            <Text style={globalStyles.label}>Actividad Física</Text>
             <TextInput style={globalStyles.input} placeholder="Tipo y frecuencia. Ej: Correr, 3/semana" value={physicalActivity} onChangeText={setPhysicalActivity} />
           </BaseCard>
         </View>
       </ScreenLayout>
 
-      <View style={[styles.fabContainer, { top: height * 0.75 }]}>
+      <View style={[styles.fabContainer, { top: height * 0.5 }]}>
         <FabButton
           variant="primary"
           onPress={handleSavePatient}
@@ -139,4 +138,3 @@ export default function AddPatientScreen() {
     </View>
   );
 }
-

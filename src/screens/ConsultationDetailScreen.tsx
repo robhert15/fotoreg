@@ -133,7 +133,7 @@ export default function ConsultationDetailScreen() {
           {patient && (
             <View style={{ marginBottom: 20 }}>
               <BaseCard 
-                onPress={() => navigation.navigate('PatientDetail', { patientId: patient.id })}
+                onPress={() => (navigation as any).navigate('PatientDetail', { patientId: patient.id })}
                 indicatorVariant="info"
               >
                 <Text style={globalStyles.title}>Paciente</Text>
@@ -157,8 +157,8 @@ export default function ConsultationDetailScreen() {
             <BaseCard indicatorVariant="success">
               <Text style={globalStyles.title}>Información de la Consulta</Text>
               <Text style={globalStyles.bodyText}>Fecha: {consultationDate}</Text>
-              {consultation.consultation_reason && (
-                <Text style={globalStyles.bodyText}>Motivo: {consultation.consultation_reason}</Text>
+              {consultation.reason && (
+                <Text style={globalStyles.bodyText}>Motivo: {consultation.reason}</Text>
               )}
               {consultation.diagnosis && (
                 <Text style={globalStyles.bodyText}>Diagnóstico: {consultation.diagnosis}</Text>
@@ -188,33 +188,42 @@ export default function ConsultationDetailScreen() {
         </View>
       </ScreenLayout>
 
-      {isEditing ? (
-        <>
+      <View style={[styles.fabContainer, { top: height * 0.5 }]}>
+        {isEditing ? (
+          <>
+            <FabButton
+              variant="neutral"
+              onPress={handleCancel}
+              accessibilityLabel="Cancelar edición"
+              icon={<Ionicons name="close" size={24} color="white" />}
+            />
+            <FabButton
+              variant="primary"
+              onPress={handleSave}
+              accessibilityLabel="Guardar cambios"
+              icon={<Ionicons name="checkmark" size={24} color="white" />}
+            />
+          </>
+        ) : (
           <FabButton
-            style={[globalStyles.fab, { right: 90, top: height * 0.75 }]}
-            variant="neutral"
-            onPress={handleCancel}
-            accessibilityLabel="Cancelar edición"
-            icon={<Ionicons name="close" size={24} color="white" />}
-          />
-          <FabButton
-            style={[globalStyles.fab, { top: height * 0.75 }]}
             variant="primary"
-            onPress={handleSave}
-            accessibilityLabel="Guardar cambios"
-            icon={<Ionicons name="checkmark" size={24} color="white" />}
+            onPress={handleStartEdit}
+            accessibilityLabel="Editar consulta"
+            icon={<Ionicons name="pencil" size={24} color="white" />}
           />
-        </>
-      ) : (
-        <FabButton
-          style={[globalStyles.fab, { top: height * 0.75 }]}
-          variant="primary"
-          onPress={handleStartEdit}
-          accessibilityLabel="Editar consulta"
-          icon={<Ionicons name="pencil" size={24} color="white" />}
-        />
-      )}
+        )}
+      </View>
     </View>
   );
 }
 
+const styles = StyleSheet.create({
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 12,
+    zIndex: 1,
+  },
+});

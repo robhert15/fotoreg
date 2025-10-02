@@ -142,7 +142,7 @@ export default function NewConsultationScreen() {
         </View>
       </ScreenLayout>
 
-      <View style={[styles.fabContainer, { top: height * 0.75 }]}>
+      <View style={[styles.fabContainer, { top: height * 0.5 }]}>
         <FabButton
           variant="primary"
           onPress={handleFinalSave}
@@ -164,8 +164,9 @@ const styles = StyleSheet.create({
   fabContainer: {
     position: 'absolute',
     right: 20,
-    flexDirection: 'row-reverse',
-    gap: 15,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 12,
     zIndex: 1,
   },
 });
