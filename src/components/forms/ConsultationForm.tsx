@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import Animated from 'react-native-reanimated';
-import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert, findNodeHandle } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert, useWindowDimensions } from 'react-native';
 import { FabButton } from '@/components/buttons/FabButton';
 import { Ionicons } from '@expo/vector-icons';
 import { globalStyles } from '@/styles/globalStyles';
@@ -23,7 +23,7 @@ export interface ConsultationFormProps {
   draftId: number | null;
   consultationId?: number; // para combinar fotos en modo edición/lectura
   autoFocusFirstInput?: boolean;
-  scrollRef?: React.RefObject<Animated.ScrollView>;
+    scrollRef?: React.Ref<Animated.ScrollView>;
 }
 
 // Tipos locales ligeros (evitamos dependencias no exportadas)
@@ -49,27 +49,41 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   autoFocusFirstInput = false,
   scrollRef,
 }) => {
-  const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-    const firstInputRef = useRef<TextInput>(null);
-  const formWrapperRef = useRef<View>(null);
+    const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const firstInputRef = useRef<TextInput>(null);
+  const { height: screenHeight } = useWindowDimensions();
 
-          useEffect(() => {
+  useEffect(() => {
     if (autoFocusFirstInput && scrollRef?.current) {
       const timer = setTimeout(() => {
-        firstInputRef.current?.focus();
-                formWrapperRef.current?.measure((x, y, width, height, pageX, pageY) => {
-          // La cabecera tiene una altura aproximada de 110 + safeArea.top.
-          // Si la posición Y del formulario en la pantalla (pageY) es mayor que ~150,
-          // significa que está parcial o totalmente oculto y necesitamos desplazar.
-          if (pageY > 150) {
-            scrollRef.current?.scrollTo({ y: pageY - 120, animated: true });
-          }
-        });
+        const inputNode = firstInputRef.current;
+        const scrollNode = scrollRef.current;
+
+        if (inputNode && scrollNode) {
+          inputNode.focus();
+
+          // Usamos measureLayout con la referencia correcta (de useAnimatedRef)
+          // para obtener la posición 'y' del campo RELATIVA al ScrollView.
+          inputNode.measureLayout(
+            scrollNode as any, // Cast necesario por la complejidad de tipos de reanimated
+            (x, y) => {
+              // Calculamos el desplazamiento para que el campo quede a un 20% de la altura de la pantalla
+              const targetY = screenHeight * 0.2;
+              const scrollToY = y - targetY;
+
+              // Solo nos desplazamos si es necesario (evita saltos si ya está visible)
+              if (scrollToY > 0) {
+                scrollNode.scrollTo({ y: scrollToY, animated: true });
+              }
+            },
+            () => { /* Medición fallida, no hacer nada */ }
+          );
+        }
       }, 300);
 
       return () => clearTimeout(timer);
     }
-  }, [autoFocusFirstInput, scrollRef]);
+  }, [autoFocusFirstInput, scrollRef, screenHeight]);
 
   // ---------- Handlers de campos simples ----------
   const handleSimpleChange = (
@@ -197,7 +211,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   );
 
     return (
-    <View style={{ paddingBottom: 40 }} ref={formWrapperRef}>
+    <View style={{ paddingBottom: 40 }}>
       {/* --- Sección Consulta --- */}
       <View style={{ marginHorizontal: 15, marginBottom: 20 }}>
         <Text style={globalStyles.sectionTitle}>Consulta</Text>

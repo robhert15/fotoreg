@@ -30,7 +30,7 @@ type ScrollableComponentProps<T> =
 
 // --- Props del Layout Principal ---
 interface ScreenLayoutProps<T> {
-  scrollRef?: React.RefObject<Animated.ScrollView>;
+    scrollRef?: React.Ref<Animated.ScrollView>;
   title: string;
   children?: React.ReactNode; // Children is now optional
   headerRight?: React.ReactNode;
