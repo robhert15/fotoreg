@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { useNavigation } from '@react-navigation/native';
+import { useFabPosition } from '@/hooks/useFabPosition';
 import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
 import { NewPatient, Patient } from '@/types';
@@ -35,7 +36,7 @@ export default function AddPatientScreen() {
   const [physicalActivity, setPhysicalActivity] = useState('');
 
   const navigation = useNavigation();
-  const { height } = useWindowDimensions();
+  const { fabTop } = useFabPosition(0.70); // 70% de la altura
 
   const handleSavePatient = async () => {
     const trimmedFirstName = firstName.trim();
@@ -122,7 +123,7 @@ export default function AddPatientScreen() {
         </View>
       </ScreenLayout>
 
-      <View style={[styles.fabContainer, { top: height * 0.75 }]}>
+      <View style={[styles.fabContainer, { top: fabTop }]}>
         <FabButton
           variant="primary"
           onPress={handleSavePatient}

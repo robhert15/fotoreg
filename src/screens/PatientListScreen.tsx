@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Alert, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -11,6 +11,7 @@ import { PatientWithLastDiagnosis } from '@/types';
 import { findPatientsWithLastConsultation } from '@/db/api/patients';
 
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useFabPosition } from '@/hooks/useFabPosition';
 import { PatientCard } from '@/components/PatientCard';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -38,7 +39,7 @@ export default function PatientListScreen() {
   const navigation = useNavigation<PatientListNavigationProp>();
   const [patients, setPatients] = useState<PatientWithLastDiagnosis[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const { height } = useWindowDimensions();
+  const { fabTop } = useFabPosition();
 
   // Carga de colores del tema
   const colors = {
@@ -122,7 +123,7 @@ export default function PatientListScreen() {
         )}
       />
       <FabButton
-        style={[globalStyles.fab, { top: height * 0.75 }]}
+        style={[globalStyles.fab, { top: fabTop }]}
         variant="primary"
         onPress={() => navigation.navigate('AddPatient')}
         accessibilityLabel="Registrar paciente"

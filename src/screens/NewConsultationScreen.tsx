@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, Alert } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { useRoute, useNavigation } from '@react-navigation/native';
@@ -15,6 +15,7 @@ import { ConsultationForm } from '@/components/forms/ConsultationForm';
 import { Colors } from '@/constants/theme';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
+import { useFabPosition } from '@/hooks/useFabPosition';
 import { globalStyles } from '@/styles/globalStyles';
 import { logger } from '@/utils/logger';
 
@@ -22,7 +23,7 @@ export default function NewConsultationScreen() {
   const navigation = useNavigation();
   const route = useRoute();
   const { patientId } = route.params as { patientId: number };
-  const { height } = useWindowDimensions();
+  const { fabTop } = useFabPosition(0.68); // Posición más alta para formularios
   
   const [draftId, setDraftId] = useState<number | null>(null);
   const [formData, setFormData] = useState<Partial<NewConsultation>>({});
@@ -142,7 +143,7 @@ export default function NewConsultationScreen() {
         </View>
       </ScreenLayout>
 
-      <View style={[styles.fabContainer, { top: height * 0.75 }]}>
+      <View style={[styles.fabContainer, { top: fabTop }]}>
         <FabButton
           variant="primary"
           onPress={handleFinalSave}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ActivityIndicator, Alert, StyleSheet, useWindowDimensions } from 'react-native';
+import { View, Text, ActivityIndicator, Alert, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -9,6 +9,7 @@ import { getPatientById } from '@/db/api/patients';
 import { NewConsultation, Patient } from '@/types';
 import { globalStyles } from '@/styles/globalStyles';
 import { BaseCard } from '@/components/cards/BaseCard';
+import { useFabPosition } from '@/hooks/useFabPosition';
 import { Colors } from '@/constants/theme'; // Keep for ActivityIndicator color
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
 import { logger } from '@/utils/logger';
@@ -18,7 +19,7 @@ export default function ConsultationDetailScreen() {
 
   const route = useRoute();
   const navigation = useNavigation();
-  const { height } = useWindowDimensions();
+  const { fabTop } = useFabPosition(0.68); // Posición más alta para formularios
   const { consultationId } = route.params as { consultationId: number };
   
   const [consultation, setConsultation] = useState<Partial<NewConsultation>>({});
@@ -124,6 +125,12 @@ export default function ConsultationDetailScreen() {
     year: 'numeric', month: 'long', day: 'numeric'
   });
   const patientName = patient ? [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ') : 'Paciente';
+  
+  const handleNavigateToPatient = () => {
+    if (patient) {
+      (navigation as any).navigate('PatientDetail', { patientId: patient.id });
+    }
+  };
 
   return (
     <View style={{ flex: 1 }}>
@@ -133,7 +140,7 @@ export default function ConsultationDetailScreen() {
           {patient && (
             <View style={{ marginBottom: 20 }}>
               <BaseCard 
-                onPress={() => navigation.navigate('PatientDetail', { patientId: patient.id })}
+                onPress={handleNavigateToPatient}
                 indicatorVariant="info"
               >
                 <Text style={globalStyles.title}>Paciente</Text>
@@ -157,8 +164,8 @@ export default function ConsultationDetailScreen() {
             <BaseCard indicatorVariant="success">
               <Text style={globalStyles.title}>Información de la Consulta</Text>
               <Text style={globalStyles.bodyText}>Fecha: {consultationDate}</Text>
-              {consultation.consultation_reason && (
-                <Text style={globalStyles.bodyText}>Motivo: {consultation.consultation_reason}</Text>
+              {(consultation as any).consultation_reason && (
+                <Text style={globalStyles.bodyText}>Motivo: {(consultation as any).consultation_reason}</Text>
               )}
               {consultation.diagnosis && (
                 <Text style={globalStyles.bodyText}>Diagnóstico: {consultation.diagnosis}</Text>
@@ -191,14 +198,14 @@ export default function ConsultationDetailScreen() {
       {isEditing ? (
         <>
           <FabButton
-            style={[globalStyles.fab, { right: 90, top: height * 0.75 }]}
+            style={[globalStyles.fab, { right: 90, top: fabTop }]}
             variant="neutral"
             onPress={handleCancel}
             accessibilityLabel="Cancelar edición"
             icon={<Ionicons name="close" size={24} color="white" />}
           />
           <FabButton
-            style={[globalStyles.fab, { top: height * 0.75 }]}
+            style={[globalStyles.fab, { top: fabTop }]}
             variant="primary"
             onPress={handleSave}
             accessibilityLabel="Guardar cambios"
@@ -207,7 +214,7 @@ export default function ConsultationDetailScreen() {
         </>
       ) : (
         <FabButton
-          style={[globalStyles.fab, { top: height * 0.75 }]}
+          style={[globalStyles.fab, { top: fabTop }]}
           variant="primary"
           onPress={handleStartEdit}
           accessibilityLabel="Editar consulta"

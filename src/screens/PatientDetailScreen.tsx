@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 
@@ -8,6 +8,7 @@ import { BaseCard } from '@/components/cards/BaseCard';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { useThemeColor } from '@/hooks/use-theme-color';
+import { useFabPosition } from '@/hooks/useFabPosition';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { globalStyles } from '@/styles/globalStyles';
 import { Patient, Consultation } from '@/types';
@@ -22,7 +23,7 @@ type PatientDetailNavigationProp = StackNavigationProp<RootStackParamList, 'Pati
 export default function PatientDetailScreen() {
   const navigation = useNavigation<PatientDetailNavigationProp>();
   const route = useRoute<PatientDetailScreenRouteProp>();
-  const { height } = useWindowDimensions();
+  const { fabTop } = useFabPosition();
   const { patientId } = route.params;
 
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -132,7 +133,7 @@ export default function PatientDetailScreen() {
       </ScreenLayout>
 
       <FabButton
-        style={[globalStyles.fab, { top: height * 0.75 }]}
+        style={[globalStyles.fab, { top: fabTop }]}
         variant="primary"
         onPress={handleNewConsultation}
         accessibilityLabel="Nueva consulta"
