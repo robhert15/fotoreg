@@ -184,6 +184,7 @@ export default function ConsultationDetailScreen() {
             isReadOnly={!isEditing}
             draftId={draftId}
             consultationId={consultationId}
+            autoFocusFirstInput={isEditing}
           />
         </View>
       </ScreenLayout>

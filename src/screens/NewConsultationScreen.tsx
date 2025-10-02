@@ -138,6 +138,7 @@ export default function NewConsultationScreen() {
             setFormData={setFormData}
             isReadOnly={false}
             draftId={draftId}
+            autoFocusFirstInput={true}
           />
         </View>
       </ScreenLayout>

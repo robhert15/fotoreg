@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Alert, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -37,6 +37,14 @@ export default function AddPatientScreen() {
 
   const navigation = useNavigation();
   const { height } = useWindowDimensions();
+  const firstNameInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      firstNameInputRef.current?.focus();
+    }, 100); // Pequeño retardo para asegurar que la transición de pantalla haya terminado
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSavePatient = async () => {
     const trimmedFirstName = firstName.trim();
@@ -88,7 +96,7 @@ export default function AddPatientScreen() {
         <View style={{ paddingBottom: 150 }}>
           <BaseCard>
             <Text style={globalStyles.label}>Nombres *</Text>
-            <TextInput style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
+            <TextInput ref={firstNameInputRef} style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
 
             <Text style={globalStyles.label}>Apellido Paterno *</Text>
             <TextInput style={globalStyles.input} placeholder="Apellido paterno" value={paternalLastName} onChangeText={setPaternalLastName} />

@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert } from 'react-native';
 import { FabButton } from '@/components/buttons/FabButton';
 import { Ionicons } from '@expo/vector-icons';
@@ -21,6 +21,7 @@ export interface ConsultationFormProps {
   isReadOnly?: boolean;
   draftId: number | null;
   consultationId?: number; // para combinar fotos en modo edición/lectura
+  autoFocusFirstInput?: boolean;
 }
 
 // Tipos locales ligeros (evitamos dependencias no exportadas)
@@ -43,8 +44,19 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   isReadOnly = false,
   draftId,
   consultationId,
+  autoFocusFirstInput = false,
 }) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+  const firstInputRef = useRef<TextInput>(null);
+
+  useEffect(() => {
+    if (autoFocusFirstInput) {
+      const timer = setTimeout(() => {
+        firstInputRef.current?.focus();
+      }, 100); // Pequeño retardo para la transición de pantalla
+      return () => clearTimeout(timer);
+    }
+  }, [autoFocusFirstInput]);
 
   // ---------- Handlers de campos simples ----------
   const handleSimpleChange = (
@@ -184,6 +196,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             disabled={isReadOnly}
           />
           <TextInput
+            ref={firstInputRef}
             style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
             placeholder="Motivo de la visita"
             value={formData.reason || ''}
