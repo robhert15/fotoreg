@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { type RefObject } from 'react';
 import {
   View,
   Text,
@@ -30,6 +30,7 @@ type ScrollableComponentProps<T> =
 
 // --- Props del Layout Principal ---
 interface ScreenLayoutProps<T> {
+  scrollRef?: React.RefObject<Animated.ScrollView>;
   title: string;
   children?: React.ReactNode; // Children is now optional
   headerRight?: React.ReactNode;
@@ -64,7 +65,7 @@ const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: Re
 };
 
 // --- Layout Principal con Parallax Integrado ---
-export const ScreenLayout = <T extends {}>({ title, children, headerRight, renderScrollable, contentPadding = 15, contentBottomPadding = 150 }: ScreenLayoutProps<T>) => {
+export const ScreenLayout = <T extends {}>({ title, children, headerRight, renderScrollable, contentPadding = 15, contentBottomPadding = 150, scrollRef }: ScreenLayoutProps<T>) => {
   const scrollY = useSharedValue(0);
   const handleScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -83,6 +84,7 @@ export const ScreenLayout = <T extends {}>({ title, children, headerRight, rende
     })
   ) : (
     <Animated.ScrollView
+      ref={scrollRef}
       onScroll={handleScroll}
       scrollEventThrottle={16}
       contentContainerStyle={{ paddingTop: headerHeight, paddingHorizontal: contentPadding, paddingBottom: contentBottomPadding }}

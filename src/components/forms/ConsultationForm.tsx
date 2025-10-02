@@ -1,5 +1,6 @@
 import React, { useCallback, useMemo, useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert } from 'react-native';
+import Animated from 'react-native-reanimated';
+import { View, Text, TextInput, StyleSheet, Pressable, Image, FlatList, Alert, findNodeHandle } from 'react-native';
 import { FabButton } from '@/components/buttons/FabButton';
 import { Ionicons } from '@expo/vector-icons';
 import { globalStyles } from '@/styles/globalStyles';
@@ -22,6 +23,7 @@ export interface ConsultationFormProps {
   draftId: number | null;
   consultationId?: number; // para combinar fotos en modo edición/lectura
   autoFocusFirstInput?: boolean;
+  scrollRef?: React.RefObject<Animated.ScrollView>;
 }
 
 // Tipos locales ligeros (evitamos dependencias no exportadas)
@@ -45,18 +47,29 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   draftId,
   consultationId,
   autoFocusFirstInput = false,
+  scrollRef,
 }) => {
   const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
-  const firstInputRef = useRef<TextInput>(null);
+    const firstInputRef = useRef<TextInput>(null);
+  const formWrapperRef = useRef<View>(null);
 
-  useEffect(() => {
-    if (autoFocusFirstInput) {
+          useEffect(() => {
+    if (autoFocusFirstInput && scrollRef?.current) {
       const timer = setTimeout(() => {
         firstInputRef.current?.focus();
-      }, 100); // Pequeño retardo para la transición de pantalla
+                formWrapperRef.current?.measure((x, y, width, height, pageX, pageY) => {
+          // La cabecera tiene una altura aproximada de 110 + safeArea.top.
+          // Si la posición Y del formulario en la pantalla (pageY) es mayor que ~150,
+          // significa que está parcial o totalmente oculto y necesitamos desplazar.
+          if (pageY > 150) {
+            scrollRef.current?.scrollTo({ y: pageY - 120, animated: true });
+          }
+        });
+      }, 300);
+
       return () => clearTimeout(timer);
     }
-  }, [autoFocusFirstInput]);
+  }, [autoFocusFirstInput, scrollRef]);
 
   // ---------- Handlers de campos simples ----------
   const handleSimpleChange = (
@@ -184,7 +197,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   );
 
     return (
-    <View style={{ paddingBottom: 40 }}>
+    <View style={{ paddingBottom: 40 }} ref={formWrapperRef}>
       {/* --- Sección Consulta --- */}
       <View style={{ marginHorizontal: 15, marginBottom: 20 }}>
         <Text style={globalStyles.sectionTitle}>Consulta</Text>

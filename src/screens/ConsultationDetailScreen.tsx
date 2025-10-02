@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, ActivityIndicator, Alert, StyleSheet, useWindowDimensions } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -19,6 +20,7 @@ export default function ConsultationDetailScreen() {
   const route = useRoute();
   const navigation = useNavigation();
   const { height } = useWindowDimensions();
+  const scrollRef = React.useRef<Animated.ScrollView>(null) as React.RefObject<Animated.ScrollView>;
   const { consultationId } = route.params as { consultationId: number };
   
   const [consultation, setConsultation] = useState<Partial<NewConsultation>>({});
@@ -127,7 +129,7 @@ export default function ConsultationDetailScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScreenLayout title={`Consulta del ${consultationDate}`}>
+      <ScreenLayout title={`Consulta del ${consultationDate}`} scrollRef={scrollRef}>
         <View style={{ paddingBottom: 150 }}>
           {/* Tarjeta de información del paciente */}
           {patient && (
@@ -185,6 +187,7 @@ export default function ConsultationDetailScreen() {
             draftId={draftId}
             consultationId={consultationId}
             autoFocusFirstInput={isEditing}
+            scrollRef={scrollRef}
           />
         </View>
       </ScreenLayout>
