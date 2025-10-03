@@ -32,6 +32,7 @@ export default function BirthDateInput({
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(value ?? '');
   const [inputError, setInputError] = useState('');
+  const [isFocused, setIsFocused] = useState(false);
 
   const [step, setStep] = useState<Step>('year');
   const [selectedYear, setSelectedYear] = useState<number | null>(null);
@@ -40,6 +41,7 @@ export default function BirthDateInput({
 
   const [startYear, setStartYear] = useState(new Date().getFullYear()); // rango de 12
   const inputRef = useRef<TextInput>(null);
+
 
   const months = useMemo(
     () => [
@@ -196,6 +198,7 @@ export default function BirthDateInput({
   const handleClose = () => {
     setIsOpen(false);
     setStep('year');
+    // Ya no es necesario enfocar manualmente, el foco se gestiona con onFocus/onBlur
   };
 
   const handleYearSelect = (year: number) => {
@@ -286,15 +289,16 @@ export default function BirthDateInput({
             ref={inputRef}
             value={inputValue}
             onChangeText={handleInputChange}
-            onFocus={handleOpenCalendar}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
             placeholder="dd/mm/aaaa"
             keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'numeric'}
             style={[
               styles.input,
-              inputError
+              isFocused
+                ? styles.inputFocused
+                : inputError
                 ? styles.inputError
-                : inputValue.length === 10 && !inputError
-                ? styles.inputValid
                 : styles.inputDefault,
             ]}
           />
@@ -304,13 +308,6 @@ export default function BirthDateInput({
         </View>
 
         {!!inputError && <Text style={styles.errorText}>{inputError}</Text>}
-
-        {inputValue.length === 10 && !inputError && (
-          <View style={{ marginTop: 6, flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={{ fontSize: 14, color: '#16a34a' }}>✓</Text>
-            <Text style={{ fontSize: 12, color: '#16a34a' }}>Fecha válida</Text>
-          </View>
-        )}
       </View>
 
       <Modal visible={isOpen} transparent animationType="fade" onRequestClose={handleClose}>
@@ -474,7 +471,9 @@ export default function BirthDateInput({
 }
 
 const styles = StyleSheet.create({
-  container: {},
+  container: {
+    marginBottom: 10,
+  },
   label: {
     fontSize: 16,
     fontWeight: 'bold',
@@ -497,8 +496,9 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: Colors.light.warning, // O un rojo específico para errores
   },
-  inputValid: {
-    borderColor: Colors.light.success,
+  inputFocused: {
+    borderColor: Colors.light.primary,
+    borderWidth: 2,
   },
   calendarBtn: {
     position: 'absolute',
