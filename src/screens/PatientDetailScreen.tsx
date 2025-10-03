@@ -82,13 +82,15 @@ export default function PatientDetailScreen() {
     navigation.navigate('NewConsultation', { patientId: patient.id });
   };
 
-  const displayName = [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
+  const lastNames = [patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
+  const displayName = lastNames ? `${lastNames}, ${patient.first_name}` : patient.first_name;
 
   return (
     <View style={{ flex: 1 }}>
       <ScreenLayout title={displayName || 'Paciente'}>
         <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
             <View style={{ marginBottom: 20 }}>
+              <Text style={globalStyles.title}>Datos del Paciente</Text>
               <PatientInfoCard patient={patient} />
             </View>
 

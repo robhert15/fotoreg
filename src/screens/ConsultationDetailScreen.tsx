@@ -122,18 +122,17 @@ export default function ConsultationDetailScreen() {
     );
   }
 
-    const consultationDate = new Date(consultation.consultation_date || Date.now()).toLocaleDateString('es-ES', {
-    year: 'numeric', month: 'long', day: 'numeric'
-  });
-  const patientName = patient ? [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ') : 'Paciente';
+  const lastNames = patient ? [patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ') : '';
+  const displayName = patient && lastNames ? `${lastNames}, ${patient.first_name}` : (patient?.first_name || 'Paciente');
 
   return (
     <View style={{ flex: 1 }}>
-      <ScreenLayout title={`Consulta del ${consultationDate}`} scrollRef={scrollRef}>
+      <ScreenLayout title={displayName} scrollRef={scrollRef}>
         <View style={{ paddingBottom: 150 }}>
           {/* Tarjeta de información del paciente */}
           {patient && (
             <View style={{ marginBottom: 20 }}>
+              <Text style={globalStyles.title}>Datos del Paciente</Text>
               <PatientInfoCard patient={patient} />
             </View>
           )}

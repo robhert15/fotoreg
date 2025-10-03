@@ -223,7 +223,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
     <View style={{ paddingBottom: 40 }}>
       {/* --- Sección Consulta --- */}
       <View style={{ marginBottom: 20 }}>
-        <Text style={globalStyles.sectionTitle}>Consulta</Text>
+        <Text style={globalStyles.title}>Detalle de la Consulta</Text>
         <BaseCard variant="form">
           <DatePickerInput
             title="Fecha de la Consulta"

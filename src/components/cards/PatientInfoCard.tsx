@@ -27,7 +27,6 @@ export const PatientInfoCard = ({ patient }: PatientInfoCardProps) => {
 
   return (
     <BaseCard variant="form">
-      <Text style={globalStyles.title}>Datos del Paciente</Text>
       <Text style={globalStyles.bodyText}>Documento: {displayDocument}</Text>
       {patient.date_of_birth && <Text style={globalStyles.bodyText}>Fecha de Nacimiento: {new Date(patient.date_of_birth).toLocaleDateString('es-ES')}{age !== null ? ` (${age} años)` : ''}</Text>}
       {patient.gender && <Text style={globalStyles.bodyText}>Sexo: {patient.gender}</Text>}

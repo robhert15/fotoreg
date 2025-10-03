@@ -52,6 +52,7 @@ export const globalStyles = StyleSheet.create({
     fontWeight: 'bold',
     color: AppColors.text,
     marginBottom: 10,
+    paddingLeft: 15, // Añadir sangría
   },
   sectionTitle: {
     fontSize: 18,
