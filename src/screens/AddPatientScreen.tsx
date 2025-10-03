@@ -11,7 +11,7 @@ import { globalStyles } from '@/styles/globalStyles';
 import { NewPatient, Patient } from '@/types';
 import { logger } from '@/utils/logger';
 import { Colors } from '@/constants/theme';
-import { DatePickerInput } from '@/components/forms/DatePickerInput';
+import BirthDateInput from '@/components/forms/BirthDateInput';
 
 const styles = StyleSheet.create({
   fabContainer: {
@@ -71,15 +71,19 @@ export default function AddPatientScreen() {
   const { height } = useWindowDimensions();
   const firstNameInputRef = useRef<TextInput>(null);
 
-  const toISODate = (d: Date) => {
-    // Usar métodos UTC para extraer los componentes de la fecha
-    // y evitar que la zona horaria local la altere.
-    const y = d.getUTCFullYear();
-    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(d.getUTCDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
+  const isoToDdmmyyyy = (iso: string): string => {
+    if (!iso) return '';
+    const parts = iso.split('-');
+    if (parts.length !== 3) return '';
+    return `${parts[2]}/${parts[1]}/${parts[0]}`;
   };
-  const dobDate = dateOfBirth ? new Date(dateOfBirth) : null;
+
+  const ddmmyyyyToISO = (ddmmyyyy: string | null): string => {
+    if (!ddmmyyyy) return '';
+    const parts = ddmmyyyy.split('/');
+    if (parts.length !== 3) return '';
+    return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  };
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -149,13 +153,10 @@ export default function AddPatientScreen() {
             <Text style={globalStyles.label}>Número de Documento</Text>
             <FocusedInput placeholder="DNI o Cédula" value={documentNumber} onChangeText={setDocumentNumber} keyboardType="numeric" />
 
-            <DatePickerInput
-              title="Fecha de Nacimiento"
-              date={dobDate}
-              onDateChange={(d) => setDateOfBirth(toISODate(d))}
-              maximumDate={new Date()}
-              minimumDate={new Date(1900, 0, 1)}
-              useCustomModal={true}
+            <BirthDateInput
+              label="Fecha de Nacimiento"
+              value={isoToDdmmyyyy(dateOfBirth)}
+              onChange={(d) => setDateOfBirth(ddmmyyyyToISO(d))}
             />
 
             <Text style={globalStyles.label}>Sexo</Text>
