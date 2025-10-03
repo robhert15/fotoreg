@@ -90,6 +90,7 @@ export default function PatientListScreen() {
           <Animated.FlatList
             data={patients}
             keyExtractor={(item) => item.id.toString()}
+            keyboardShouldPersistTaps='handled'
             renderItem={({ item }) => (
               <PatientCard 
                 patient={item}
@@ -112,7 +113,7 @@ export default function PatientListScreen() {
                       onChangeText={setSearchTerm}
                     />
                     {searchTerm.length > 0 && (
-                      <Pressable onPress={() => setSearchTerm('')} style={globalStyles.clearIcon}>
+                      <Pressable onPress={() => setSearchTerm('')} style={globalStyles.clearIcon} hitSlop={60}>
                         <Ionicons name="close-circle" size={20} color={colors.textLight} />
                       </Pressable>
                     )}
