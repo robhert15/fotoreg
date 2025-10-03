@@ -4,7 +4,7 @@ import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navig
 import { StackNavigationProp } from '@react-navigation/stack';
 
 import { ConsultationCard } from '@/components/cards/ConsultationCard';
-import { BaseCard } from '@/components/cards/BaseCard';
+import { PatientInfoCard } from '@/components/cards/PatientInfoCard';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
 import { useThemeColor } from '@/hooks/use-theme-color';
@@ -83,40 +83,13 @@ export default function PatientDetailScreen() {
   };
 
   const displayName = [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
-  const displayDocument = patient.document_number ?? 'No especificado';
-  const displayCreatedAt = new Date(patient.created_at).toLocaleDateString('es-ES');
-
-  const calculateAge = (dob: string | undefined) => {
-    if (!dob) return null;
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const age = calculateAge(patient.date_of_birth);
 
   return (
     <View style={{ flex: 1 }}>
       <ScreenLayout title={displayName || 'Paciente'}>
         <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
             <View style={{ marginBottom: 20 }}>
-              <BaseCard variant="form">
-                <Text style={globalStyles.title}>Detalles</Text>
-                <Text style={globalStyles.bodyText}>Documento: {displayDocument}</Text>
-                {patient.date_of_birth && <Text style={globalStyles.bodyText}>Fecha de Nacimiento: {new Date(patient.date_of_birth).toLocaleDateString('es-ES')}{age !== null ? ` (${age} años)` : ''}</Text>}
-                {patient.gender && <Text style={globalStyles.bodyText}>Sexo: {patient.gender}</Text>}
-                <Text style={globalStyles.bodyText}>Ocupación: {patient.occupation || 'No especificado'}</Text>
-                {patient.address && <Text style={globalStyles.bodyText}>Domicilio: {patient.address}</Text>}
-                {patient.whatsapp && <Text style={globalStyles.bodyText}>WhatsApp: {patient.whatsapp}</Text>}
-                {patient.contact_phone && <Text style={globalStyles.bodyText}>Celular: {patient.contact_phone}</Text>}
-                {patient.physical_activity && <Text style={globalStyles.bodyText}>Actividad Física: {patient.physical_activity}</Text>}
-                <Text style={globalStyles.bodyText}>Miembro desde: {displayCreatedAt}</Text>
-              </BaseCard>
+              <PatientInfoCard patient={patient} />
             </View>
 
             <Text style={globalStyles.title}>Historial de Consultas</Text>

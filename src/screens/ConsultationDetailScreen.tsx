@@ -9,7 +9,7 @@ import { getConsultationById, updateConsultation, createDraftFromConsultation, m
 import { getPatientById } from '@/db/api/patients';
 import { NewConsultation, Patient } from '@/types';
 import { globalStyles } from '@/styles/globalStyles';
-import { BaseCard } from '@/components/cards/BaseCard';
+import { PatientInfoCard } from '@/components/cards/PatientInfoCard';
 import { Colors } from '@/constants/theme'; // Keep for ActivityIndicator color
 import { ConsultationForm } from '@/components/forms/ConsultationForm';
 import { logger } from '@/utils/logger';
@@ -134,50 +134,10 @@ export default function ConsultationDetailScreen() {
           {/* Tarjeta de información del paciente */}
           {patient && (
             <View style={{ marginBottom: 20 }}>
-              <BaseCard 
-                onPress={() => (navigation as any).navigate('PatientDetail', { patientId: patient.id })}
-                indicatorVariant="info"
-              >
-                <Text style={globalStyles.title}>Paciente</Text>
-                <Text style={globalStyles.bodyText}>Nombre: {patientName}</Text>
-                <Text style={globalStyles.bodyText}>Documento: {patient.document_number || 'No especificado'}</Text>
-                {patient.date_of_birth && (
-                  <Text style={globalStyles.bodyText}>
-                    Edad: {new Date().getFullYear() - new Date(patient.date_of_birth).getFullYear()} años
-                  </Text>
-                )}
-                <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                  <Ionicons name="person-outline" size={16} color="#3B82F6" style={{ marginRight: 5 }} />
-                  <Text style={[globalStyles.bodyText, { color: '#3B82F6' }]}>Ver perfil completo</Text>
-                </View>
-              </BaseCard>
+              <PatientInfoCard patient={patient} />
             </View>
           )}
 
-          {/* Tarjeta de información de la consulta */}
-          <View style={{ marginBottom: 20 }}>
-            <BaseCard indicatorVariant="success">
-              <Text style={globalStyles.title}>Información de la Consulta</Text>
-              <Text style={globalStyles.bodyText}>Fecha: {consultationDate}</Text>
-              {consultation.reason && (
-                <Text style={globalStyles.bodyText}>Motivo: {consultation.reason}</Text>
-              )}
-              {consultation.diagnosis && (
-                <Text style={globalStyles.bodyText}>Diagnóstico: {consultation.diagnosis}</Text>
-              )}
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}>
-                <Ionicons 
-                  name={isEditing ? "create-outline" : "document-text-outline"} 
-                  size={16} 
-                  color={isEditing ? "#F59E0B" : "#10B981"} 
-                  style={{ marginRight: 5 }} 
-                />
-                <Text style={[globalStyles.bodyText, { color: isEditing ? "#F59E0B" : "#10B981" }]}>
-                  {isEditing ? 'Editando...' : 'Solo lectura'}
-                </Text>
-              </View>
-            </BaseCard>
-          </View>
 
           {/* Formulario de consulta */}
           <ConsultationForm
