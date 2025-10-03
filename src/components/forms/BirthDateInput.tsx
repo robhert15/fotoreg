@@ -10,6 +10,7 @@ import {
   Keyboard,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/theme';
 
 type Step = 'year' | 'month' | 'day';
@@ -303,7 +304,7 @@ export default function BirthDateInput({
             ]}
           />
           <Pressable onPress={handleOpenCalendar} style={styles.calendarBtn} hitSlop={8}>
-            <Text style={styles.calendarIcon} accessibilityLabel="Abrir calendario">📅</Text>
+            <Ionicons name="calendar" style={styles.calendarIcon} />
           </Pressable>
         </View>
 
@@ -322,7 +323,7 @@ export default function BirthDateInput({
                   <Text style={styles.headerBtnText}>←</Text>
                 </Pressable>
               )}
-              <Text style={styles.headerIcon}>📅</Text>
+              <Ionicons name="calendar" size={18} color={Colors.light.white} />
               <Text style={styles.headerTitle}>Seleccionar Fecha</Text>
               <View style={{ flex: 1 }} />
               <Pressable onPress={handleClose} style={styles.headerBtn} hitSlop={8}>
