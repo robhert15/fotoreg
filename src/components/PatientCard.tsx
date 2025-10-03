@@ -18,15 +18,8 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
   const primaryColor = useThemeColor({}, 'primary');
 
   const displayName = useMemo(() => {
-    const capitalize = (s: string) => s.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
-
-    const formattedFirstName = patient.first_name ? capitalize(patient.first_name) : '';
-    const formattedPaternalLastName = patient.paternal_last_name ? capitalize(patient.paternal_last_name) : '';
-    const formattedMaternalLastName = patient.maternal_last_name ? capitalize(patient.maternal_last_name) : '';
-
-    const lastNames = [formattedPaternalLastName, formattedMaternalLastName].filter(Boolean).join(' ');
-    
-    return lastNames ? `${lastNames}, ${formattedFirstName}` : formattedFirstName;
+    const lastNames = [patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
+    return lastNames ? `${lastNames}, ${patient.first_name}` : patient.first_name;
   }, [patient]);
 
   const indicatorVariant = useMemo(() => {
