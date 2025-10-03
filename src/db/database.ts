@@ -81,6 +81,7 @@ export const initializeDatabase = async () => {
       `CREATE INDEX IF NOT EXISTS idx_patients_name ON patients(paternal_last_name, maternal_last_name, first_name);`,
       `CREATE INDEX IF NOT EXISTS idx_patients_document_number ON patients(document_number);`,
       `CREATE INDEX IF NOT EXISTS idx_photos_consultation ON photos(consultation_id);`,
+      `CREATE INDEX IF NOT EXISTS idx_patients_last_accessed ON patients(last_accessed_at);`,
     ];
 
     for (const query of queries) {

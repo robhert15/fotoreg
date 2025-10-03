@@ -91,6 +91,20 @@ export const findPatientsWithLastConsultation = async (
   const dbInstance = await db;
   const likeTerm = `%${searchTerm}%`;
 
+  let orderByClause = '';
+  switch (orderBy) {
+    case 'asc':
+      orderByClause = 'ORDER BY p.paternal_last_name ASC, p.maternal_last_name ASC, p.first_name ASC';
+      break;
+    case 'desc':
+      orderByClause = 'ORDER BY p.paternal_last_name DESC, p.maternal_last_name DESC, p.first_name DESC';
+      break;
+    case 'recent':
+    default:
+      orderByClause = 'ORDER BY p.last_accessed_at DESC';
+      break;
+  }
+
   const query = `
     SELECT 
       p.*,
@@ -110,12 +124,7 @@ export const findPatientsWithLastConsultation = async (
       p.paternal_last_name LIKE ? OR 
       p.maternal_last_name LIKE ? OR 
       p.document_number LIKE ?
-    ORDER BY 
-      CASE WHEN ? = 'recent' THEN p.last_accessed_at END DESC,
-      CASE WHEN ? = 'asc' THEN p.paternal_last_name END ASC,
-      CASE WHEN ? = 'desc' THEN p.paternal_last_name END DESC,
-      p.maternal_last_name ASC,
-      p.first_name ASC;
+    ${orderByClause};
   `;
 
   const result = await dbInstance.getAllAsync<PatientWithLastDiagnosis>(
@@ -123,10 +132,7 @@ export const findPatientsWithLastConsultation = async (
     likeTerm,
     likeTerm,
     likeTerm,
-    likeTerm,
-    orderBy, // 'recent'
-    orderBy, // 'asc'
-    orderBy  // 'desc'
+    likeTerm
   );
 
   return result;

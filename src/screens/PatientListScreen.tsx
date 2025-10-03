@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, Alert, useWindowDimensions, Pressable } from 'react-native';
+import { TouchableOpacity } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -135,12 +136,12 @@ export default function PatientListScreen() {
                   <Text style={[styles.resultsCount, { color: colors.textLight }]}>
                     {patients.length} pacientes encontrados
                   </Text>
-                  <Pressable onPress={() => setOrderBy(prev => prev === 'recent' ? 'asc' : prev === 'asc' ? 'desc' : 'recent')} style={styles.orderByButton} hitSlop={20}>
+                  <TouchableOpacity onPress={() => setOrderBy(prev => prev === 'recent' ? 'asc' : prev === 'asc' ? 'desc' : 'recent')} style={styles.orderByButton} hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}>
                     <Ionicons name="swap-vertical" size={16} color={colors.textLight} />
                     <Text style={{ color: colors.textLight }}>
                       {orderBy === 'recent' ? 'Recientes' : orderBy === 'asc' ? 'A-Z' : 'Z-A'}
                     </Text>
-                  </Pressable>
+                  </TouchableOpacity>
                 </View>
               </>
             }
