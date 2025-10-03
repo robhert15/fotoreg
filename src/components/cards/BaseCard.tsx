@@ -17,6 +17,7 @@ export type IndicatorVariant = 'default' | 'danger' | 'warning' | 'info' | 'succ
 
 interface BaseCardProps extends PressableProps {
   children: React.ReactNode;
+  variant?: 'default' | 'form'; // 'default' para listas, 'form' para formularios
   onPress?: () => void;
   disabled?: boolean;
   selected?: boolean;
@@ -30,6 +31,7 @@ interface BaseCardProps extends PressableProps {
 
 export const BaseCard = ({
   children,
+  variant = 'default',
   onPress,
   disabled = false,
   selected = false,
@@ -105,8 +107,10 @@ export const BaseCard = ({
     >
       {({ pressed }) => (
         <>
-          {/* Indicador lateral */}
-          <View style={[styles.cardIndicator, { backgroundColor: finalIndicatorColor }]} />
+          {/* Indicador lateral (solo para la variante por defecto) */}
+          {variant === 'default' && (
+            <View style={[styles.cardIndicator, { backgroundColor: finalIndicatorColor }]} />
+          )}
 
           {/* Overlay iOS (pressed) */}
           {Platform.OS !== 'android' && pressed && (
@@ -122,7 +126,9 @@ export const BaseCard = ({
           )}
 
           {/* Contenido */}
-          <View style={styles.contentContainer}>{children}</View>
+          <View style={[styles.contentContainer, { paddingLeft: variant === 'default' ? 25 : 0 }]}>
+            {children}
+          </View>
         </>
       )}
     </Pressable>
@@ -158,7 +164,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 16,
   },
   contentContainer: {
-    paddingLeft: 25, // 20 + 5 del indicador
+    // El padding se ajustará dinámicamente
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

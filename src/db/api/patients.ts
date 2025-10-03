@@ -1,5 +1,6 @@
 import { openDatabaseAsync } from 'expo-sqlite';
 import { NewPatient, Patient, PatientWithLastDiagnosis } from '@/types';
+import { normalizeText } from '@/utils/textUtils';
 
 const db = openDatabaseAsync('fotoreg.db');
 
@@ -14,8 +15,9 @@ export const addPatient = async (patient: NewPatient): Promise<number> => {
   const result = await dbInstance.runAsync(
     `INSERT INTO patients (
       first_name, paternal_last_name, maternal_last_name, document_number, date_of_birth, 
-      gender, address, occupation, whatsapp, contact_phone, physical_activity, created_at, last_accessed_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      gender, address, occupation, whatsapp, contact_phone, physical_activity, created_at, last_accessed_at,
+      first_name_normalized, paternal_last_name_normalized, maternal_last_name_normalized
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     patient.first_name,
     patient.paternal_last_name,
     patient.maternal_last_name || null,
@@ -28,7 +30,10 @@ export const addPatient = async (patient: NewPatient): Promise<number> => {
     patient.contact_phone || null,
     patient.physical_activity || null,
     now,
-    now
+    now,
+    normalizeText(patient.first_name),
+    normalizeText(patient.paternal_last_name),
+    patient.maternal_last_name ? normalizeText(patient.maternal_last_name) : null
   );
   return result.lastInsertRowId;
 };
@@ -89,7 +94,8 @@ export const findPatientsWithLastConsultation = async (
   orderBy: 'recent' | 'asc' | 'desc' = 'recent'
 ): Promise<PatientWithLastDiagnosis[]> => {
   const dbInstance = await db;
-  const likeTerm = `%${searchTerm}%`;
+  const normalizedSearchTerm = normalizeText(searchTerm);
+  const likeTerm = `%${normalizedSearchTerm}%`;
 
   let orderByClause = '';
   switch (orderBy) {
@@ -120,9 +126,9 @@ export const findPatientsWithLastConsultation = async (
        LIMIT 1) as last_diagnosis
     FROM patients p
     WHERE 
-      p.first_name LIKE ? OR 
-      p.paternal_last_name LIKE ? OR 
-      p.maternal_last_name LIKE ? OR 
+      p.first_name_normalized LIKE ? OR 
+      p.paternal_last_name_normalized LIKE ? OR 
+      p.maternal_last_name_normalized LIKE ? OR 
       p.document_number LIKE ?
     ${orderByClause};
   `;

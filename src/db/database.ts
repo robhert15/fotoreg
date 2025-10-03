@@ -1,5 +1,6 @@
 import * as SQLite from 'expo-sqlite';
 import { logger } from '@/utils/logger';
+import { normalizeText } from '@/utils/textUtils';
 
 const db = SQLite.openDatabaseAsync('fotoreg.db');
 
@@ -9,7 +10,7 @@ export const initializeDatabase = async () => {
     // Sentencia para habilitar llaves foráneas en SQLite
     await dbInstance.execAsync('PRAGMA foreign_keys = ON;');
 
-    const queries = [
+    const schemaQueries = [
       // --- Schema V3: Pacientes y Responsables ---
       `CREATE TABLE IF NOT EXISTS patients (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,7 +63,6 @@ export const initializeDatabase = async () => {
         last_updated TEXT NOT NULL,
         FOREIGN KEY (patient_id) REFERENCES patients (id) ON DELETE CASCADE
       );`,
-      // SOLUCIÓN: Se elimina DROP TABLE y se usa CREATE TABLE IF NOT EXISTS para no perder datos.
       `CREATE TABLE IF NOT EXISTS photos (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         consultation_id INTEGER NOT NULL, -- Puede referirse a 'consultations' o 'consultation_drafts'
@@ -75,30 +75,65 @@ export const initializeDatabase = async () => {
         data TEXT, -- JSON con trazos/colores/etc.
         updated_at TEXT NOT NULL
       );`,
+    ];
 
-      // --- Índices para rendimiento ---
+    for (const query of schemaQueries) {
+      await dbInstance.runAsync(query);
+    }
+
+    // --- Migraciones --- 
+    // --- Migraciones de columnas ---
+    const columnMigrations = [
+      { column: 'last_accessed_at', type: 'TEXT' },
+      { column: 'first_name_normalized', type: 'TEXT' },
+      { column: 'paternal_last_name_normalized', type: 'TEXT' },
+      { column: 'maternal_last_name_normalized', type: 'TEXT' },
+    ];
+
+    for (const { column, type } of columnMigrations) {
+      try {
+        await dbInstance.execAsync(`ALTER TABLE patients ADD COLUMN ${column} ${type};`);
+        if (__DEV__) {
+          logger.info(`Columna '${column}' añadida a la tabla 'patients'.`);
+        }
+      } catch (error: any) {
+        if (!error.message.includes('duplicate column name')) {
+          logger.error(`Error al añadir la columna '${column}'`, error);
+        }
+      }
+    }
+
+    // --- Creación de Índices ---
+    const indexQueries = [
       `CREATE INDEX IF NOT EXISTS idx_consultations_patient_date ON consultations(patient_id, consultation_date);`,
       `CREATE INDEX IF NOT EXISTS idx_patients_name ON patients(paternal_last_name, maternal_last_name, first_name);`,
       `CREATE INDEX IF NOT EXISTS idx_patients_document_number ON patients(document_number);`,
       `CREATE INDEX IF NOT EXISTS idx_photos_consultation ON photos(consultation_id);`,
       `CREATE INDEX IF NOT EXISTS idx_patients_last_accessed ON patients(last_accessed_at);`,
+      `CREATE INDEX IF NOT EXISTS idx_patients_normalized_name ON patients(paternal_last_name_normalized, maternal_last_name_normalized, first_name_normalized);`,
     ];
 
-    for (const query of queries) {
+    for (const query of indexQueries) {
       await dbInstance.runAsync(query);
     }
 
-    // --- Migraciones --- 
-    // Añadir columna last_accessed_at a patients si no existe
-    try {
-      await dbInstance.execAsync('ALTER TABLE patients ADD COLUMN last_accessed_at TEXT;');
+    // Migración de datos para normalizar texto de pacientes existentes
+    const unmigratedPatients = await dbInstance.getAllAsync<{ id: number, first_name: string, paternal_last_name: string, maternal_last_name: string | null }>(
+      'SELECT id, first_name, paternal_last_name, maternal_last_name FROM patients WHERE first_name_normalized IS NULL'
+    );
+
+    if (unmigratedPatients.length > 0) {
       if (__DEV__) {
-        logger.info('Columna `last_accessed_at` añadida a la tabla `patients`.');
+        logger.info(`Migrando ${unmigratedPatients.length} pacientes para normalización de texto...`);
       }
-    } catch (error: any) {
-      // Ignorar el error si la columna ya existe, que es lo esperado en ejecuciones normales
-      if (!error.message.includes('duplicate column name')) {
-        logger.error('Error al añadir la columna `last_accessed_at`', error);
+      for (const p of unmigratedPatients) {
+        await dbInstance.runAsync(
+          'UPDATE patients SET first_name_normalized = ?, paternal_last_name_normalized = ?, maternal_last_name_normalized = ? WHERE id = ?',
+          normalizeText(p.first_name),
+          normalizeText(p.paternal_last_name),
+          p.maternal_last_name ? normalizeText(p.maternal_last_name) : null,
+          p.id
+        );
       }
     }
 
