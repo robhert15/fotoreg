@@ -72,9 +72,11 @@ export default function AddPatientScreen() {
   const firstNameInputRef = useRef<TextInput>(null);
 
   const toISODate = (d: Date) => {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
+    // Usar métodos UTC para extraer los componentes de la fecha
+    // y evitar que la zona horaria local la altere.
+    const y = d.getUTCFullYear();
+    const m = String(d.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(d.getUTCDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   };
   const dobDate = dateOfBirth ? new Date(dateOfBirth) : null;
@@ -151,9 +153,9 @@ export default function AddPatientScreen() {
               title="Fecha de Nacimiento"
               date={dobDate}
               onDateChange={(d) => setDateOfBirth(toISODate(d))}
-              display="spinner"
               maximumDate={new Date()}
               minimumDate={new Date(1900, 0, 1)}
+              useCustomModal={true}
             />
 
             <Text style={globalStyles.label}>Sexo</Text>

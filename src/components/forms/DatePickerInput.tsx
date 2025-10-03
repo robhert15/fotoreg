@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet, Platform } from 'react-native';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import CustomDatePickerModal from '@/components/modals/CustomDatePickerModal';
 
 interface DatePickerInputProps {
   title: string;
@@ -11,6 +12,7 @@ interface DatePickerInputProps {
   display?: 'default' | 'spinner' | 'calendar' | 'inline';
   minimumDate?: Date;
   maximumDate?: Date;
+  useCustomModal?: boolean;
 }
 
 export const DatePickerInput = ({
@@ -21,6 +23,7 @@ export const DatePickerInput = ({
   display,
   minimumDate,
   maximumDate,
+  useCustomModal = false,
 }: DatePickerInputProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const textColor = useThemeColor({}, 'text');
@@ -56,15 +59,29 @@ export const DatePickerInput = ({
         </View>
       </Pressable>
 
-      {showPicker && (
-        <DateTimePicker
-          value={date || new Date()}
-          mode="date"
-          display={display ?? (Platform.OS === 'android' ? 'spinner' : 'default')}
+      {useCustomModal ? (
+        <CustomDatePickerModal
+          visible={showPicker}
+          onClose={() => setShowPicker(false)}
+          onDateSelect={(newDate) => {
+            onDateChange(newDate);
+            setShowPicker(false);
+          }}
+          initialDate={date}
           minimumDate={minimumDate}
           maximumDate={maximumDate}
-          onChange={handleDateChange}
         />
+      ) : (
+        showPicker && (
+          <DateTimePicker
+            value={date || new Date()}
+            mode="date"
+            display={display ?? (Platform.OS === 'android' ? 'spinner' : 'default')}
+            minimumDate={minimumDate}
+            maximumDate={maximumDate}
+            onChange={handleDateChange}
+          />
+        )
       )}
     </View>
   );
