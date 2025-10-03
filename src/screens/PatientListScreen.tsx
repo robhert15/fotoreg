@@ -135,7 +135,7 @@ export default function PatientListScreen() {
                   <Text style={[styles.resultsCount, { color: colors.textLight }]}>
                     {patients.length} pacientes encontrados
                   </Text>
-                  <Pressable onPress={() => setOrderBy(prev => prev === 'recent' ? 'asc' : prev === 'asc' ? 'desc' : 'recent')} style={styles.orderByButton}>
+                  <Pressable onPress={() => setOrderBy(prev => prev === 'recent' ? 'asc' : prev === 'asc' ? 'desc' : 'recent')} style={styles.orderByButton} hitSlop={20}>
                     <Ionicons name="swap-vertical" size={16} color={colors.textLight} />
                     <Text style={{ color: colors.textLight }}>
                       {orderBy === 'recent' ? 'Recientes' : orderBy === 'asc' ? 'A-Z' : 'Z-A'}
