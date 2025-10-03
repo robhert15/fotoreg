@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, Alert, useWindowDimensions } from 'react-native';
+import { View, Text, StyleSheet, TextInput, Alert, useWindowDimensions, Pressable } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
@@ -111,6 +111,11 @@ export default function PatientListScreen() {
                       value={searchTerm}
                       onChangeText={setSearchTerm}
                     />
+                    {searchTerm.length > 0 && (
+                      <Pressable onPress={() => setSearchTerm('')} style={globalStyles.clearIcon}>
+                        <Ionicons name="close-circle" size={20} color={colors.textLight} />
+                      </Pressable>
+                    )}
                   </View>
                 </View>
                 <Text style={[styles.resultsCount, { color: colors.textLight }]}>

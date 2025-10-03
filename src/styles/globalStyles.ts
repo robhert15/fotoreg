@@ -157,6 +157,12 @@ export const globalStyles = StyleSheet.create({
     left: 18,
     zIndex: 1,
   },
+  // Icono para limpiar el input de búsqueda
+  clearIcon: {
+    position: 'absolute',
+    right: 18,
+    zIndex: 1,
+  },
   // Input de búsqueda estilizado
   searchInput: {
     height: 55,
