@@ -1,7 +1,9 @@
 import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
-import { useNavigation, useRoute, useFocusEffect, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect, RouteProp, CompositeNavigationProp } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { RootStackParamList, BottomTabParamList } from '@/navigation/AppNavigator';
 
 import { ConsultationCard } from '@/components/cards/ConsultationCard';
 import { PatientInfoCard } from '@/components/cards/PatientInfoCard';
@@ -14,10 +16,13 @@ import { Patient, Consultation } from '@/types';
 import { getPatientById, updatePatientAccessTimestamp } from '@/db/api/patients';
 import { getConsultationsForPatient } from '@/db/api/consultations';
 import { logger } from '@/utils/logger';
-import { RootStackParamList } from '@/navigation/AppNavigator';
 
 type PatientDetailScreenRouteProp = RouteProp<RootStackParamList, 'PatientDetail'>;
-type PatientDetailNavigationProp = StackNavigationProp<RootStackParamList, 'PatientDetail'>;
+
+type PatientDetailNavigationProp = CompositeNavigationProp<
+  StackNavigationProp<RootStackParamList, 'PatientDetail'>,
+  BottomTabNavigationProp<BottomTabParamList>
+>;
 
 export default function PatientDetailScreen() {
   const navigation = useNavigation<PatientDetailNavigationProp>();
@@ -87,7 +92,10 @@ export default function PatientDetailScreen() {
 
   return (
     <View style={{ flex: 1 }}>
-      <ScreenLayout title={displayName || 'Paciente'}>
+      <ScreenLayout 
+        title={displayName || 'Paciente'}
+        onBackPress={() => navigation.navigate('MainTabs', { screen: 'PatientsStack' })}
+      >
         <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
             <View style={{ marginBottom: 20 }}>
               <Text style={globalStyles.title}>Datos del Paciente</Text>
@@ -109,18 +117,33 @@ export default function PatientDetailScreen() {
         </View>
       </ScreenLayout>
 
-      <FabButton
-        style={[globalStyles.fab, { top: height * 0.75 }]}
-        variant="primary"
-        onPress={handleNewConsultation}
-        accessibilityLabel="Nueva consulta"
-        icon={<Ionicons name="add" size={24} color="white" />}
-      />
+      <View style={[styles.fabContainer, { top: height * 0.5 }]}>
+        <FabButton
+          variant="primary"
+          onPress={() => navigation.navigate('AddPatient', { patient: patient })}
+          accessibilityLabel="Editar paciente"
+          icon={<Ionicons name="pencil" size={24} color="white" />}
+        />
+        <FabButton
+          variant="primary"
+          onPress={handleNewConsultation}
+          accessibilityLabel="Nueva consulta"
+          icon={<Ionicons name="add" size={24} color="white" />}
+        />
+      </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  fabContainer: {
+    position: 'absolute',
+    right: 20,
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: 12,
+    zIndex: 1,
+  },
   contentContainer: {
     paddingBottom: 150,
     borderTopLeftRadius: 24,

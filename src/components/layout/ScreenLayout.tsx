@@ -30,10 +30,11 @@ type ScrollableComponentProps<T> =
 
 // --- Props del Layout Principal ---
 interface ScreenLayoutProps<T> {
-    scrollRef?: React.Ref<Animated.ScrollView>;
+  scrollRef?: React.Ref<Animated.ScrollView>;
   title: string;
   children?: React.ReactNode; // Children is now optional
   headerRight?: React.ReactNode;
+  onBackPress?: () => void; // Nueva prop para acción de retroceso personalizada
   renderScrollable?: (props: {
     onScroll: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
     scrollEventThrottle: number;
@@ -44,7 +45,7 @@ interface ScreenLayoutProps<T> {
 }
 
 // --- Componente de Cabecera por Defecto ---
-const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: React.ReactNode }) => {
+const DefaultHeader = ({ title, headerRight, onBackPress }: { title: string, headerRight?: React.ReactNode, onBackPress?: () => void }) => {
   const navigation = useNavigation();
   const canGoBack = navigation.canGoBack();
   const insets = useSafeAreaInsets();
@@ -52,7 +53,7 @@ const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: Re
   return (
     <View style={styles.headerContainer}>
       {canGoBack ? (
-        <Pressable style={styles.headerButton} onPress={() => navigation.goBack()}>
+        <Pressable style={styles.headerButton} onPress={onBackPress || (() => navigation.goBack())}>
           <Ionicons name="arrow-back" size={24} color="white" />
         </Pressable>
       ) : <View style={{ width: 44 }} /> // Placeholder for alignment
@@ -65,7 +66,7 @@ const DefaultHeader = ({ title, headerRight }: { title: string, headerRight?: Re
 };
 
 // --- Layout Principal con Parallax Integrado ---
-export const ScreenLayout = <T extends {}>({ title, children, headerRight, renderScrollable, contentPadding = 15, contentBottomPadding = 150, scrollRef }: ScreenLayoutProps<T>) => {
+export const ScreenLayout = <T extends {}>({ title, children, headerRight, onBackPress, renderScrollable, contentPadding = 15, contentBottomPadding = 150, scrollRef }: ScreenLayoutProps<T>) => {
   const scrollY = useSharedValue(0);
   const handleScroll = useAnimatedScrollHandler((event) => {
     scrollY.value = event.contentOffset.y;
@@ -97,7 +98,7 @@ export const ScreenLayout = <T extends {}>({ title, children, headerRight, rende
     <ParallaxScrollView
       headerHeight={headerHeight}
       headerColor={headerBackgroundColor}
-      header={<DefaultHeader title={title} headerRight={headerRight} />}
+      header={<DefaultHeader title={title} headerRight={headerRight} onBackPress={onBackPress} />}
       scrollY={scrollY} // Pasar scrollY para que ParallaxScrollView lo use
     >
       {scrollableContent}

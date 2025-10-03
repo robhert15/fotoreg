@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavigationContainer, RouteProp } from '@react-navigation/native';
+import { NavigationContainer, RouteProp, NavigatorScreenParams } from '@react-navigation/native';
 import { createStackNavigator, StackCardInterpolationProps } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,14 +15,15 @@ import CameraScreen from '@/screens/CameraScreen';
 import AppointmentsScreen from '@/screens/AppointmentsScreen';
 import ReportsScreen from '@/screens/ReportsScreen';
 import SettingsScreen from '@/screens/SettingsScreen';
+import { Patient } from '@/types';
 
 // Define los tipos para las rutas
 export type RootStackParamList = {
-  MainTabs: undefined;
+  MainTabs: NavigatorScreenParams<BottomTabParamList>;
   PatientDetail: { patientId: number };
   NewConsultation: { patientId: number; consultationId?: number };
   ConsultationDetail: { consultationId: number };
-  AddPatient: undefined;
+  AddPatient: { patient?: Patient }; // Hacer el paciente opcional
   Camera: { draftId: number; stage: 'antes' | 'despues' | 'voucher' };
 };
 

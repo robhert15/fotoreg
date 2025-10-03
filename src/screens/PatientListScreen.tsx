@@ -1,39 +1,32 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, Alert, useWindowDimensions, Pressable } from 'react-native';
 import { TouchableOpacity } from 'react-native-gesture-handler';
 import Animated from 'react-native-reanimated';
 import { globalStyles } from '@/styles/globalStyles';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
-import { useNavigation, useFocusEffect, CompositeNavigationProp } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, NavigationProp } from '@react-navigation/native';
+import { RootStackParamList } from '@/navigation/AppNavigator';
 import { Ionicons } from '@expo/vector-icons';
 import { FabButton } from '@/components/buttons/FabButton';
+import { PatientCard } from '@/components/PatientCard';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { logger } from '@/utils/logger';
 
 import { PatientWithLastDiagnosis } from '@/types';
 import { findPatientsWithLastConsultation } from '@/db/api/patients';
 
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { PatientCard } from '@/components/PatientCard';
-import { StackNavigationProp } from '@react-navigation/stack';
-import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
-import { RootStackParamList, BottomTabParamList } from '@/navigation/AppNavigator';
-import { logger } from '@/utils/logger';
-
-type PatientListNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<BottomTabParamList, 'PatientsStack'>,
-  StackNavigationProp<RootStackParamList>
->;
-
 const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 15,
-    paddingBottom: 150, // Aumentar espacio para el FAB flotante y la barra de navegación
+    paddingTop: 10,
+    paddingBottom: 150,
   },
   subHeaderContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 15,
-    marginBottom: 10,
+    paddingBottom: 10,
   },
   resultsCount: {
     fontSize: 14,
@@ -46,13 +39,12 @@ const styles = StyleSheet.create({
 });
 
 export default function PatientListScreen() {
-  const navigation = useNavigation<PatientListNavigationProp>();
+  const navigation = useNavigation<NavigationProp<RootStackParamList>>();
   const [patients, setPatients] = useState<PatientWithLastDiagnosis[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [orderBy, setOrderBy] = useState<'recent' | 'asc' | 'desc'>('recent');
   const { height } = useWindowDimensions();
 
-  // Carga de colores del tema
   const colors = {
     primary: useThemeColor({}, 'primary'),
     secondary: useThemeColor({}, 'secondary'),
@@ -73,19 +65,16 @@ export default function PatientListScreen() {
     }
   }, [searchTerm, orderBy]);
 
-  // Efecto para la búsqueda en tiempo real con debounce
   useEffect(() => {
     const handler = setTimeout(() => {
       loadPatients();
-    }, 300); // 300ms de debounce
+    }, 300);
 
-    // Limpieza: cancela el timeout si el usuario sigue escribiendo
     return () => {
       clearTimeout(handler);
     };
   }, [searchTerm, orderBy, loadPatients]);
 
-  // Efecto para recargar al volver a la pantalla (sin el término de búsqueda)
   useFocusEffect(
     useCallback(() => {
       if (searchTerm === '') {
@@ -151,7 +140,7 @@ export default function PatientListScreen() {
       <FabButton
         style={[globalStyles.fab, { top: height * 0.75 }]}
         variant="primary"
-        onPress={() => navigation.navigate('AddPatient')}
+        onPress={() => navigation.navigate('AddPatient', {})}
         accessibilityLabel="Registrar paciente"
         icon={<Ionicons name="add" size={24} color={colors.white} />}
       />

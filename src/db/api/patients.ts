@@ -39,6 +39,43 @@ export const addPatient = async (patient: NewPatient): Promise<number> => {
 };
 
 /**
+ * Actualiza los datos de un paciente existente.
+ * @param patientId El ID del paciente a actualizar.
+ * @param patientData Los nuevos datos del paciente.
+ */
+export const updatePatient = async (patientId: number, patientData: Partial<Omit<Patient, 'id' | 'created_at'>>): Promise<void> => {
+  const dbInstance = await db;
+  
+  const fields = Object.keys(patientData).filter(k => k !== 'id' && k !== 'created_at');
+  const values = fields.map(k => (patientData as any)[k]);
+
+  // Normalizar nombres si están presentes en la actualización
+  if ('first_name' in patientData) {
+    fields.push('first_name_normalized');
+    values.push(normalizeText(patientData.first_name!));
+  }
+  if ('paternal_last_name' in patientData) {
+    fields.push('paternal_last_name_normalized');
+    values.push(normalizeText(patientData.paternal_last_name!));
+  }
+  if ('maternal_last_name' in patientData) {
+    fields.push('maternal_last_name_normalized');
+    values.push(patientData.maternal_last_name ? normalizeText(patientData.maternal_last_name) : null);
+  }
+
+  const setClause = fields.map(field => `${field} = ?`).join(', ');
+
+  if (fields.length === 0) {
+    return; // No hay nada que actualizar
+  }
+
+  const query = `UPDATE patients SET ${setClause} WHERE id = ?`;
+  values.push(patientId);
+
+  await dbInstance.runAsync(query, ...values);
+};
+
+/**
  * Actualiza la marca de tiempo de último acceso de un paciente.
  * @param patientId El ID del paciente a actualizar.
  */
