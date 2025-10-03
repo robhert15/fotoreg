@@ -12,6 +12,7 @@ import { NewPatient, Patient } from '@/types';
 import { logger } from '@/utils/logger';
 import { Colors } from '@/constants/theme';
 import BirthDateInput from '@/components/forms/BirthDateInput';
+import GenderInput from '@/components/forms/GenderInput';
 
 const styles = StyleSheet.create({
   fabContainer: {
@@ -60,7 +61,7 @@ export default function AddPatientScreen() {
   const [maternalLastName, setMaternalLastName] = useState('');
   const [documentNumber, setDocumentNumber] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
-  const [gender, setGender] = useState('');
+  const [gender, setGender] = useState<'Masculino' | 'Femenino' | null>(null);
   const [address, setAddress] = useState('');
   const [occupation, setOccupation] = useState('');
   const [whatsapp, setWhatsapp] = useState('');
@@ -101,11 +102,7 @@ export default function AddPatientScreen() {
       return;
     }
 
-    const allowedGenders: Patient['gender'][] = ['masculino', 'femenino', 'otro', 'no especificado'];
-    const normalizedGender = (() => {
-      const g = gender.trim().toLowerCase();
-      return (allowedGenders as string[]).includes(g) ? (g as Patient['gender']) : undefined;
-    })();
+    const normalizedGender = gender ? (gender.toLowerCase() as Patient['gender']) : undefined;
 
     const newPatient: NewPatient = {
       first_name: trimmedFirstName,
@@ -159,8 +156,7 @@ export default function AddPatientScreen() {
               onChange={(d) => setDateOfBirth(ddmmyyyyToISO(d))}
             />
 
-            <Text style={globalStyles.label}>Sexo</Text>
-            <FocusedInput placeholder="masculino / femenino / otro" value={gender} onChangeText={setGender} />
+            <GenderInput label="Sexo" value={gender} onValueChange={setGender} />
 
             <Text style={globalStyles.label}>Domicilio</Text>
             <FocusedInput placeholder="Dirección del paciente" value={address} onChangeText={setAddress} />
