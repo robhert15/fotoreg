@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { View, Text, TextInput, StyleSheet, Alert, useWindowDimensions } from 'react-native';
+import { View, Text, TextInput, StyleSheet, Alert, useWindowDimensions, TextInputProps } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { BaseCard } from '@/components/cards/BaseCard';
@@ -10,6 +10,8 @@ import { addPatient } from '@/db/api/patients';
 import { globalStyles } from '@/styles/globalStyles';
 import { NewPatient, Patient } from '@/types';
 import { logger } from '@/utils/logger';
+import { Colors } from '@/constants/theme';
+import { DatePickerInput } from '@/components/forms/DatePickerInput';
 
 const styles = StyleSheet.create({
   fabContainer: {
@@ -21,6 +23,36 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
 });
+
+// Input con borde destacado al enfocar (usa tu tema)
+const fiStyles = StyleSheet.create({
+  focused: {
+    borderColor: Colors.light.primary,
+    borderWidth: 2,
+  },
+});
+
+const FocusedInput = React.forwardRef<TextInput, TextInputProps>(
+  ({ style, onFocus, onBlur, editable = true, ...rest }, ref) => {
+    const [focused, setFocused] = useState(false);
+    return (
+      <TextInput
+        ref={ref}
+        {...rest}
+        editable={editable}
+        onFocus={(e) => {
+          setFocused(true);
+          onFocus?.(e);
+        }}
+        onBlur={(e) => {
+          setFocused(false);
+          onBlur?.(e);
+        }}
+        style={[globalStyles.input, style, editable && focused && fiStyles.focused]}
+      />
+    );
+  }
+);
 
 export default function AddPatientScreen() {
   const [firstName, setFirstName] = useState('');
@@ -38,6 +70,14 @@ export default function AddPatientScreen() {
   const navigation = useNavigation();
   const { height } = useWindowDimensions();
   const firstNameInputRef = useRef<TextInput>(null);
+
+  const toISODate = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  };
+  const dobDate = dateOfBirth ? new Date(dateOfBirth) : null;
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -96,35 +136,41 @@ export default function AddPatientScreen() {
         <View style={{ paddingBottom: 150 }}>
           <BaseCard>
             <Text style={globalStyles.label}>Nombres *</Text>
-            <TextInput ref={firstNameInputRef} style={globalStyles.input} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
+            <FocusedInput ref={firstNameInputRef} placeholder="Nombres del paciente" value={firstName} onChangeText={setFirstName} />
 
             <Text style={globalStyles.label}>Apellido Paterno *</Text>
-            <TextInput style={globalStyles.input} placeholder="Apellido paterno" value={paternalLastName} onChangeText={setPaternalLastName} />
+            <FocusedInput placeholder="Apellido paterno" value={paternalLastName} onChangeText={setPaternalLastName} />
 
             <Text style={globalStyles.label}>Apellido Materno</Text>
-            <TextInput style={globalStyles.input} placeholder="Apellido materno" value={maternalLastName} onChangeText={setMaternalLastName} />
+            <FocusedInput placeholder="Apellido materno" value={maternalLastName} onChangeText={setMaternalLastName} />
 
             <Text style={globalStyles.label}>Número de Documento</Text>
-            <TextInput style={globalStyles.input} placeholder="DNI o Cédula" value={documentNumber} onChangeText={setDocumentNumber} keyboardType="numeric" />
+            <FocusedInput placeholder="DNI o Cédula" value={documentNumber} onChangeText={setDocumentNumber} keyboardType="numeric" />
 
-            <Text style={globalStyles.label}>Fecha de Nacimiento</Text>
-            <TextInput style={globalStyles.input} placeholder="YYYY-MM-DD" value={dateOfBirth} onChangeText={setDateOfBirth} />
+            <DatePickerInput
+              title="Fecha de Nacimiento"
+              date={dobDate}
+              onDateChange={(d) => setDateOfBirth(toISODate(d))}
+              display="spinner"
+              maximumDate={new Date()}
+              minimumDate={new Date(1900, 0, 1)}
+            />
 
             <Text style={globalStyles.label}>Sexo</Text>
-            <TextInput style={globalStyles.input} placeholder="masculino / femenino / otro" value={gender} onChangeText={setGender} />
+            <FocusedInput placeholder="masculino / femenino / otro" value={gender} onChangeText={setGender} />
 
             <Text style={globalStyles.label}>Domicilio</Text>
-            <TextInput style={globalStyles.input} placeholder="Dirección del paciente" value={address} onChangeText={setAddress} />
+            <FocusedInput placeholder="Dirección del paciente" value={address} onChangeText={setAddress} />
             
             <Text style={globalStyles.label}>Ocupación</Text>
-            <TextInput style={globalStyles.input} placeholder="Ocupación actual" value={occupation} onChangeText={setOccupation} />
+            <FocusedInput placeholder="Ocupación actual" value={occupation} onChangeText={setOccupation} />
 
             <Text style={globalStyles.label}>WhatsApp</Text>
-            <TextInput style={globalStyles.input} placeholder="Número de WhatsApp" value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" />
+            <FocusedInput placeholder="Número de WhatsApp" value={whatsapp} onChangeText={setWhatsapp} keyboardType="phone-pad" />
 
             <Text style={globalStyles.label}>Celular de Contacto</Text>
-            <TextInput style={globalStyles.input} placeholder="Otro celular de contacto" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
-            <TextInput style={globalStyles.input} placeholder="Tipo y frecuencia. Ej: Correr, 3/semana" value={physicalActivity} onChangeText={setPhysicalActivity} />
+            <FocusedInput placeholder="Otro celular de contacto" value={contactPhone} onChangeText={setContactPhone} keyboardType="phone-pad" />
+            <FocusedInput placeholder="Tipo y frecuencia. Ej: Correr, 3/semana" value={physicalActivity} onChangeText={setPhysicalActivity} />
           </BaseCard>
         </View>
       </ScreenLayout>

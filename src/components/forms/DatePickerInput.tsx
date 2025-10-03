@@ -8,9 +8,20 @@ interface DatePickerInputProps {
   date: Date | null;
   onDateChange: (newDate: Date) => void;
   disabled?: boolean;
+  display?: 'default' | 'spinner' | 'calendar' | 'inline';
+  minimumDate?: Date;
+  maximumDate?: Date;
 }
 
-export const DatePickerInput = ({ title, date, onDateChange, disabled = false }: DatePickerInputProps) => {
+export const DatePickerInput = ({
+  title,
+  date,
+  onDateChange,
+  disabled = false,
+  display,
+  minimumDate,
+  maximumDate,
+}: DatePickerInputProps) => {
   const [showPicker, setShowPicker] = useState(false);
   const textColor = useThemeColor({}, 'text');
   const textLightColor = useThemeColor({}, 'textLight');
@@ -49,7 +60,9 @@ export const DatePickerInput = ({ title, date, onDateChange, disabled = false }:
         <DateTimePicker
           value={date || new Date()}
           mode="date"
-          display="default"
+          display={display ?? (Platform.OS === 'android' ? 'spinner' : 'default')}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
           onChange={handleDateChange}
         />
       )}

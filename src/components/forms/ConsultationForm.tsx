@@ -15,6 +15,7 @@ import { ImageLightbox } from '@/components/viewers/ImageLightbox';
 import { Collapsible } from '../Collapsible';
 import { NewConsultation, Photo } from '@/types/index';
 import { getPhotosForConsultation } from '@/db/api/consultations';
+import { Colors } from '@/constants/theme';
 
 export interface ConsultationFormProps {
   formData: Partial<NewConsultation>;
@@ -38,6 +39,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 10,
   },
+  focusedInput: {
+    borderColor: Colors.light.primary,
+    borderWidth: 2,
+  },
 });
 
 export const ConsultationForm: React.FC<ConsultationFormProps> = ({
@@ -52,6 +57,11 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
   const firstInputRef = useRef<TextInput>(null);
   const { height: screenHeight } = useWindowDimensions();
+  const [focusReason, setFocusReason] = useState(false);
+  const [focusDiagnosis, setFocusDiagnosis] = useState(false);
+  const [focusTreatment, setFocusTreatment] = useState(false);
+  const [focusNotes, setFocusNotes] = useState(false);
+  const [focusShoeType, setFocusShoeType] = useState(false);
 
   useEffect(() => {
     if (autoFocusFirstInput && scrollRef?.current) {
@@ -224,32 +234,57 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
           />
           <TextInput
             ref={firstInputRef}
-            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            style={[
+              globalStyles.input,
+              isReadOnly && globalStyles.inputDisabled,
+              !isReadOnly && focusReason && styles.focusedInput,
+            ]}
             placeholder="Motivo de la visita"
             value={formData.reason || ''}
             onChangeText={(t: string) => handleSimpleChange('reason', t)}
+            onFocus={() => setFocusReason(true)}
+            onBlur={() => setFocusReason(false)}
             editable={!isReadOnly}
           />
           <TextInput
-            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            style={[
+              globalStyles.input,
+              isReadOnly && globalStyles.inputDisabled,
+              !isReadOnly && focusDiagnosis && styles.focusedInput,
+            ]}
             placeholder="Diagnóstico"
             value={formData.diagnosis || ''}
             onChangeText={(t: string) => handleSimpleChange('diagnosis', t)}
+            onFocus={() => setFocusDiagnosis(true)}
+            onBlur={() => setFocusDiagnosis(false)}
             editable={!isReadOnly}
           />
           <TextInput
-            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            style={[
+              globalStyles.input,
+              isReadOnly && globalStyles.inputDisabled,
+              !isReadOnly && focusTreatment && styles.focusedInput,
+            ]}
             placeholder="Tratamiento"
             value={formData.treatment || ''}
             onChangeText={(t: string) => handleSimpleChange('treatment', t)}
+            onFocus={() => setFocusTreatment(true)}
+            onBlur={() => setFocusTreatment(false)}
             editable={!isReadOnly}
           />
           <TextInput
-            style={[globalStyles.input, { height: 100 }, isReadOnly && globalStyles.inputDisabled]}
+            style={[
+              globalStyles.input,
+              { height: 100 },
+              isReadOnly && globalStyles.inputDisabled,
+              !isReadOnly && focusNotes && styles.focusedInput,
+            ]}
             placeholder="Notas adicionales"
             multiline
             value={formData.notes || ''}
             onChangeText={(t: string) => handleSimpleChange('notes', t)}
+            onFocus={() => setFocusNotes(true)}
+            onBlur={() => setFocusNotes(false)}
             editable={!isReadOnly}
           />
         </BaseCard>
@@ -300,10 +335,16 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
             disabled={isReadOnly}
           />
           <TextInput
-            style={[globalStyles.input, isReadOnly && globalStyles.inputDisabled]}
+            style={[
+              globalStyles.input,
+              isReadOnly && globalStyles.inputDisabled,
+              !isReadOnly && focusShoeType && styles.focusedInput,
+            ]}
             placeholder="Tipo de Calzado Habitual"
             value={formData.shoe_type || ''}
             onChangeText={handleShoeTypeChange}
+            onFocus={() => setFocusShoeType(true)}
+            onBlur={() => setFocusShoeType(false)}
             editable={!isReadOnly}
           />
         </BaseCard>
