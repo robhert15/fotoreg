@@ -87,6 +87,20 @@ export const initializeDatabase = async () => {
       await dbInstance.runAsync(query);
     }
 
+    // --- Migraciones --- 
+    // Añadir columna last_accessed_at a patients si no existe
+    try {
+      await dbInstance.execAsync('ALTER TABLE patients ADD COLUMN last_accessed_at TEXT;');
+      if (__DEV__) {
+        logger.info('Columna `last_accessed_at` añadida a la tabla `patients`.');
+      }
+    } catch (error: any) {
+      // Ignorar el error si la columna ya existe, que es lo esperado en ejecuciones normales
+      if (!error.message.includes('duplicate column name')) {
+        logger.error('Error al añadir la columna `last_accessed_at`', error);
+      }
+    }
+
     if (__DEV__) {
       logger.info('Base de datos V3 inicializada correctamente.');
     }

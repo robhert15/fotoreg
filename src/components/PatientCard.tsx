@@ -17,7 +17,17 @@ export const PatientCard = ({ patient, onPress }: PatientCardProps) => {
   const successColor = useThemeColor({}, 'success');
   const primaryColor = useThemeColor({}, 'primary');
 
-  const displayName = [patient.first_name, patient.paternal_last_name, patient.maternal_last_name].filter(Boolean).join(' ');
+  const displayName = useMemo(() => {
+    const capitalize = (s: string) => s.toLowerCase().replace(/\b\w/g, char => char.toUpperCase());
+
+    const formattedFirstName = patient.first_name ? capitalize(patient.first_name) : '';
+    const formattedPaternalLastName = patient.paternal_last_name ? capitalize(patient.paternal_last_name) : '';
+    const formattedMaternalLastName = patient.maternal_last_name ? capitalize(patient.maternal_last_name) : '';
+
+    const lastNames = [formattedPaternalLastName, formattedMaternalLastName].filter(Boolean).join(' ');
+    
+    return lastNames ? `${lastNames}, ${formattedFirstName}` : formattedFirstName;
+  }, [patient]);
 
   const indicatorVariant = useMemo(() => {
     // Si hay última visita y es muy antigua (>180 días), marcar warning; si no, success por "Activo"

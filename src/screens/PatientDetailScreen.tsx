@@ -11,7 +11,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { ScreenLayout } from '@/components/layout/ScreenLayout';
 import { globalStyles } from '@/styles/globalStyles';
 import { Patient, Consultation } from '@/types';
-import { getPatientById } from '@/db/api/patients';
+import { getPatientById, updatePatientAccessTimestamp } from '@/db/api/patients';
 import { getConsultationsForPatient } from '@/db/api/consultations';
 import { logger } from '@/utils/logger';
 import { RootStackParamList } from '@/navigation/AppNavigator';
@@ -44,6 +44,9 @@ export default function PatientDetailScreen() {
             throw new Error('Paciente no encontrado');
           }
           setPatient(patientData);
+
+          // Actualizar la marca de tiempo de último acceso
+          await updatePatientAccessTimestamp(patientId);
 
           const consultationHistory = await getConsultationsForPatient(patientData.id);
           if (isMounted) {

@@ -14,8 +14,8 @@ export const addPatient = async (patient: NewPatient): Promise<number> => {
   const result = await dbInstance.runAsync(
     `INSERT INTO patients (
       first_name, paternal_last_name, maternal_last_name, document_number, date_of_birth, 
-      gender, address, occupation, whatsapp, contact_phone, physical_activity, created_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      gender, address, occupation, whatsapp, contact_phone, physical_activity, created_at, last_accessed_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     patient.first_name,
     patient.paternal_last_name,
     patient.maternal_last_name || null,
@@ -27,9 +27,20 @@ export const addPatient = async (patient: NewPatient): Promise<number> => {
     patient.whatsapp || null,
     patient.contact_phone || null,
     patient.physical_activity || null,
+    now,
     now
   );
   return result.lastInsertRowId;
+};
+
+/**
+ * Actualiza la marca de tiempo de último acceso de un paciente.
+ * @param patientId El ID del paciente a actualizar.
+ */
+export const updatePatientAccessTimestamp = async (patientId: number): Promise<void> => {
+  const dbInstance = await db;
+  const now = new Date().toISOString();
+  await dbInstance.runAsync('UPDATE patients SET last_accessed_at = ? WHERE id = ?', now, patientId);
 };
 
 /**
@@ -73,7 +84,10 @@ export const getPatientById = async (id: number): Promise<Patient | null> => {
  * @param searchTerm El término de búsqueda.
  * @returns Un array de pacientes con su última información de consulta.
  */
-export const findPatientsWithLastConsultation = async (searchTerm: string): Promise<PatientWithLastDiagnosis[]> => {
+export const findPatientsWithLastConsultation = async (
+  searchTerm: string,
+  orderBy: 'recent' | 'asc' | 'desc' = 'recent'
+): Promise<PatientWithLastDiagnosis[]> => {
   const dbInstance = await db;
   const likeTerm = `%${searchTerm}%`;
 
@@ -96,7 +110,12 @@ export const findPatientsWithLastConsultation = async (searchTerm: string): Prom
       p.paternal_last_name LIKE ? OR 
       p.maternal_last_name LIKE ? OR 
       p.document_number LIKE ?
-    ORDER BY p.paternal_last_name, p.maternal_last_name, p.first_name ASC;
+    ORDER BY 
+      CASE WHEN ? = 'recent' THEN p.last_accessed_at END DESC,
+      CASE WHEN ? = 'asc' THEN p.paternal_last_name END ASC,
+      CASE WHEN ? = 'desc' THEN p.paternal_last_name END DESC,
+      p.maternal_last_name ASC,
+      p.first_name ASC;
   `;
 
   const result = await dbInstance.getAllAsync<PatientWithLastDiagnosis>(
@@ -104,7 +123,10 @@ export const findPatientsWithLastConsultation = async (searchTerm: string): Prom
     likeTerm,
     likeTerm,
     likeTerm,
-    likeTerm
+    likeTerm,
+    orderBy, // 'recent'
+    orderBy, // 'asc'
+    orderBy  // 'desc'
   );
 
   return result;

@@ -27,10 +27,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     paddingBottom: 150, // Aumentar espacio para el FAB flotante y la barra de navegación
   },
+  subHeaderContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 15,
+    marginBottom: 10,
+  },
   resultsCount: {
     fontSize: 14,
-    marginBottom: 10,
-    paddingHorizontal: 15, // Alinear con los items de la lista
+  },
+  orderByButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
 });
 
@@ -38,6 +48,7 @@ export default function PatientListScreen() {
   const navigation = useNavigation<PatientListNavigationProp>();
   const [patients, setPatients] = useState<PatientWithLastDiagnosis[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [orderBy, setOrderBy] = useState<'recent' | 'asc' | 'desc'>('recent');
   const { height } = useWindowDimensions();
 
   // Carga de colores del tema
@@ -53,13 +64,13 @@ export default function PatientListScreen() {
 
   const loadPatients = useCallback(async () => {
     try {
-      const patientsData = await findPatientsWithLastConsultation(searchTerm);
+      const patientsData = await findPatientsWithLastConsultation(searchTerm, orderBy);
       setPatients(patientsData);
     } catch (error) {
       logger.error('loadPatients failed', error as Error);
       Alert.alert('Error', 'No se pudieron buscar los pacientes.');
     }
-  }, [searchTerm]);
+  }, [searchTerm, orderBy]);
 
   // Efecto para la búsqueda en tiempo real con debounce
   useEffect(() => {
@@ -71,7 +82,7 @@ export default function PatientListScreen() {
     return () => {
       clearTimeout(handler);
     };
-  }, [searchTerm, loadPatients]);
+  }, [searchTerm, orderBy, loadPatients]);
 
   // Efecto para recargar al volver a la pantalla (sin el término de búsqueda)
   useFocusEffect(
@@ -79,7 +90,7 @@ export default function PatientListScreen() {
       if (searchTerm === '') {
         loadPatients();
       }
-    }, [searchTerm, loadPatients])
+    }, [searchTerm, orderBy, loadPatients])
   );
 
   return (
@@ -119,9 +130,17 @@ export default function PatientListScreen() {
                     )}
                   </View>
                 </View>
-                <Text style={[styles.resultsCount, { color: colors.textLight }]}>
-                  {patients.length} pacientes encontrados
-                </Text>
+                <View style={styles.subHeaderContainer}>
+                  <Text style={[styles.resultsCount, { color: colors.textLight }]}>
+                    {patients.length} pacientes encontrados
+                  </Text>
+                  <Pressable onPress={() => setOrderBy(prev => prev === 'recent' ? 'asc' : prev === 'asc' ? 'desc' : 'recent')} style={styles.orderByButton}>
+                    <Ionicons name="swap-vertical" size={16} color={colors.textLight} />
+                    <Text style={{ color: colors.textLight }}>
+                      {orderBy === 'recent' ? 'Recientes' : orderBy === 'asc' ? 'A-Z' : 'Z-A'}
+                    </Text>
+                  </Pressable>
+                </View>
               </>
             }
           />
