@@ -10,6 +10,7 @@ import {
   Keyboard,
   Platform,
 } from 'react-native';
+import { Colors } from '@/constants/theme';
 
 type Step = 'year' | 'month' | 'day';
 
@@ -249,14 +250,14 @@ export default function BirthDateInput({
     }
 
     return (
-      <FlatList
-        data={items}
-        numColumns={7}
-        keyExtractor={(it) => it.key}
-        renderItem={({ item }) => {
-          if (item.empty) return <View style={[styles.dayCell, { opacity: 0 }]} />;
+      <View style={styles.daysGridContainer}>
+        {items.map((item) => {
+          if (item.empty) {
+            return <View key={item.key} style={styles.dayCell} />;
+          }
           return (
             <Pressable
+              key={item.key}
               onPress={() => item.day && handleDaySelect(item.day)}
               style={({ pressed }) => [
                 styles.dayCell,
@@ -270,12 +271,8 @@ export default function BirthDateInput({
               </Text>
             </Pressable>
           );
-        }}
-        scrollEnabled={false}
-        ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
-        columnWrapperStyle={{ gap: 8 }}
-        contentContainerStyle={{ gap: 8 }}
-      />
+        })}
+      </View>
     );
   };
 
@@ -407,7 +404,8 @@ export default function BirthDateInput({
                       <Text style={styles.squareCellText}>{y}</Text>
                     </Pressable>
                   )}
-                  ItemSeparatorComponent={() => <View style={{ height: 10 }} />}                  columnWrapperStyle={{ gap: 10 }}
+                  ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                  columnWrapperStyle={{ justifyContent: 'space-between' }}
                   contentContainerStyle={{ gap: 10 }}
                 />
               </View>
@@ -433,7 +431,8 @@ export default function BirthDateInput({
                       <Text style={styles.monthNum}>{m.num}</Text>
                     </Pressable>
                   )}
-                  ItemSeparatorComponent={() => <View style={{ height: 10 }} />}                  columnWrapperStyle={{ gap: 10 }}
+                  ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
+                  columnWrapperStyle={{ justifyContent: 'space-between' }}
                   contentContainerStyle={{ gap: 10 }}
                 />
               </View>
@@ -472,34 +471,31 @@ export default function BirthDateInput({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    // El contenedor del input, no de la pantalla entera
-    // Quitado padding, flex y backgroundColor para que se integre
-  },
+  container: {},
   label: {
-    fontSize: 16, // Coincide con globalStyles.label
+    fontSize: 16,
     fontWeight: 'bold',
-    color: '#334155', // Un gris oscuro, puedes usar tu `Colors.text`
+    color: Colors.light.text,
     marginBottom: 10,
   },
   input: {
     paddingHorizontal: 14,
     paddingVertical: 12,
     paddingRight: 44,
-    borderRadius: 8, // Coincide con globalStyles.input
+    borderRadius: 8,
     fontSize: 16,
     fontWeight: '500',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.light.white,
     borderWidth: 1,
   },
   inputDefault: {
-    borderColor: '#CBD5E1', // Coincide con globalStyles.input
+    borderColor: Colors.light.outline,
   },
   inputError: {
-    borderColor: '#F87171',
+    borderColor: Colors.light.warning, // O un rojo específico para errores
   },
   inputValid: {
-    borderColor: '#4ADE80',
+    borderColor: Colors.light.success,
   },
   calendarBtn: {
     position: 'absolute',
@@ -511,12 +507,12 @@ const styles = StyleSheet.create({
   },
   calendarIcon: {
     fontSize: 20,
-    color: '#64748B',
+    color: Colors.light.icon,
   },
   errorText: {
     marginTop: 6,
     fontSize: 12,
-    color: '#EF4444',
+    color: Colors.light.warning, // O un rojo específico para errores
   },
   backdrop: {
     flex: 1,
@@ -527,10 +523,10 @@ const styles = StyleSheet.create({
     left: '4%',
     right: '4%',
     top: '15%',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.light.white,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: Colors.light.borderColor,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOpacity: 0.1,
@@ -539,7 +535,7 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   header: {
-    backgroundColor: '#4338CA', // Un índigo más oscuro
+    backgroundColor: Colors.light.primary,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
@@ -552,7 +548,7 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   headerBtnText: {
-    color: 'white',
+    color: Colors.light.white,
     fontSize: 20,
     fontWeight: 'bold',
   },
@@ -560,9 +556,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   headerTitle: {
-    color: 'white',
+    color: Colors.light.white,
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: 'bold',
   },
   stepsRow: {
     flexDirection: 'row',
@@ -575,11 +571,11 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
   },
-  stepActive: { backgroundColor: 'white' },
+  stepActive: { backgroundColor: Colors.light.white },
   stepDim: { backgroundColor: 'rgba(255,255,255,0.5)' },
   stepFaint: { backgroundColor: 'rgba(255,255,255,0.25)' },
   previewText: {
-    color: '#C7D2FE',
+    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 13,
     fontWeight: '500',
   },
@@ -596,25 +592,25 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
-    backgroundColor: '#F8FAFC',
+    borderColor: Colors.light.outline,
+    backgroundColor: Colors.light.background,
   },
   toolbarBtnText: {
     fontSize: 13,
-    color: '#475569',
+    color: Colors.light.textLight,
     fontWeight: '600',
   },
   toolbarBtnPrimary: {
-    borderColor: '#A5B4FC',
-    backgroundColor: '#EEF2FF',
+    borderColor: Colors.light.primary,
+    backgroundColor: 'rgba(0, 174, 203, 0.1)', // Tono claro del primario
   },
   toolbarBtnPrimaryText: {
-    color: '#4338CA',
+    color: Colors.light.primary,
   },
   yearRange: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#6B7280',
+    color: Colors.light.textLight,
     marginBottom: 12,
     fontWeight: '500',
   },
@@ -623,32 +619,32 @@ const styles = StyleSheet.create({
     aspectRatio: 1,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: Colors.light.borderColor,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: Colors.light.white,
   },
   squareCellText: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#374151',
+    color: Colors.light.text,
   },
   monthYearText: {
     textAlign: 'center',
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#374151',
+    color: Colors.light.text,
     marginBottom: 16,
   },
   monthShort: {
     fontSize: 12,
-    color: '#6B7280',
+    color: Colors.light.textLight,
     fontWeight: '500',
   },
   monthNum: {
     fontSize: 15,
-    fontWeight: '700',
-    color: '#374151',
+    fontWeight: 'bold',
+    color: Colors.light.text,
   },
   weekHeaderRow: {
     flexDirection: 'row',
@@ -658,11 +654,16 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'center',
     fontSize: 12,
-    color: '#6B7280',
+    color: Colors.light.textLight,
     fontWeight: '600',
   },
+  daysGridContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+  },
   dayCell: {
-    width: `${100/7}%`,
+    width: `${100 / 7}%`,
     aspectRatio: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -671,28 +672,29 @@ const styles = StyleSheet.create({
     borderRadius: 99,
   },
   cellPressed: {
-    backgroundColor: '#F3F4F6',
+    backgroundColor: Colors.light.borderColor,
   },
   dayDefault: {},
   dayToday: {
     borderWidth: 1,
-    borderColor: '#A5B4FC',
+    borderColor: Colors.light.primary,
   },
   dayText: {
     fontSize: 14,
     fontWeight: '600',
+    color: Colors.light.text,
   },
   defaultText: {
-    color: '#374151',
+    color: Colors.light.text,
   },
   todayText: {
-    color: '#4338CA',
+    color: Colors.light.primary,
   },
   footerText: {
     padding: 16,
     paddingTop: 0,
     textAlign: 'center',
     fontSize: 12,
-    color: '#9CA3AF',
+    color: Colors.light.textLight,
   },
 });
