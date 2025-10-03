@@ -105,7 +105,7 @@ export default function PatientDetailScreen() {
       <ScreenLayout title={displayName || 'Paciente'}>
         <View style={[styles.contentContainer, { backgroundColor: contentBackgroundColor }]}>
             <View style={{ marginBottom: 20 }}>
-              <BaseCard>
+              <BaseCard variant="form">
                 <Text style={globalStyles.title}>Detalles</Text>
                 <Text style={globalStyles.bodyText}>Documento: {displayDocument}</Text>
                 {patient.date_of_birth && <Text style={globalStyles.bodyText}>Fecha de Nacimiento: {new Date(patient.date_of_birth).toLocaleDateString('es-ES')}{age !== null ? ` (${age} años)` : ''}</Text>}

@@ -8,7 +8,7 @@ import { BaseCard } from '../cards/BaseCard';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '@/navigation/AppNavigator';
-import { DatePickerInput } from './DatePickerInput';
+import { DatePickerInput } from '@/components/forms/DatePickerInput';
 import { CheckboxGroup } from './Checkbox';
 import { RadioGroup } from './RadioGroup';
 import { ImageLightbox } from '@/components/viewers/ImageLightbox';
@@ -64,7 +64,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
   const [focusShoeType, setFocusShoeType] = useState(false);
 
   useEffect(() => {
-    if (autoFocusFirstInput && scrollRef?.current) {
+    if (autoFocusFirstInput && scrollRef && 'current' in scrollRef && scrollRef.current) {
       const timer = setTimeout(() => {
         const inputNode = firstInputRef.current;
         const scrollNode = scrollRef.current;
@@ -223,9 +223,9 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
     return (
     <View style={{ paddingBottom: 40 }}>
       {/* --- Sección Consulta --- */}
-      <View style={{ marginHorizontal: 15, marginBottom: 20 }}>
+      <View style={{ marginBottom: 20 }}>
         <Text style={globalStyles.sectionTitle}>Consulta</Text>
-        <BaseCard>
+        <BaseCard variant="form">
           <DatePickerInput
             title="Fecha de la Consulta"
             date={formData.consultation_date ? new Date(formData.consultation_date) : new Date()}
@@ -292,7 +292,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
 
       {/* --- Secciones Colapsables --- */}
       <Collapsible title="Historial">
-        <BaseCard>
+        <BaseCard variant="form">
           <CheckboxGroup
             title="¿Padece alguna de las siguientes condiciones?"
             options={medicalConditionsOptions}
@@ -315,7 +315,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       </Collapsible>
 
       <Collapsible title="Hábitos">
-        <BaseCard>
+        <BaseCard variant="form">
           <RadioGroup
             title="¿Fuma?"
             options={["Sí", "No"]}
@@ -351,7 +351,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       </Collapsible>
 
       <Collapsible title="Fotos" isInitiallyExpanded={true}>
-        <BaseCard>
+        <BaseCard variant="form">
           {!isReadOnly && (
             <>
               <View style={styles.photoActionContainer}>
@@ -404,7 +404,7 @@ export const ConsultationForm: React.FC<ConsultationFormProps> = ({
       </Collapsible>
 
       <Collapsible title="Voucher de Pago">
-        <BaseCard>
+        <BaseCard variant="form">
           {!isReadOnly && (
             <>
               <View style={styles.photoActionContainer}>
