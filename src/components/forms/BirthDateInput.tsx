@@ -262,11 +262,12 @@ export default function BirthDateInput({
               style={({ pressed }) => [
                 styles.dayCell,
                 styles.cellBase,
-                item.isToday ? styles.dayToday : styles.dayDefault,
+                item.day === selectedDay && styles.selectedCell,
+                item.isToday && item.day !== selectedDay && styles.dayToday,
                 pressed && styles.cellPressed,
               ]}
             >
-              <Text style={[styles.dayText, item.isToday ? styles.todayText : styles.defaultText]}>
+              <Text style={[styles.dayText, item.day === selectedDay && styles.selectedText, item.isToday && item.day !== selectedDay && styles.todayText]}>
                 {item.day}
               </Text>
             </Pressable>
@@ -398,10 +399,11 @@ export default function BirthDateInput({
                       style={({ pressed }) => [
                         styles.squareCell,
                         styles.cellBase,
+                        y === selectedYear && styles.selectedCell,
                         pressed && styles.cellPressed,
                       ]}
                     >
-                      <Text style={styles.squareCellText}>{y}</Text>
+                      <Text style={[styles.squareCellText, y === selectedYear && styles.selectedText]}>{y}</Text>
                     </Pressable>
                   )}
                   ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
@@ -424,11 +426,12 @@ export default function BirthDateInput({
                       style={({ pressed }) => [
                         styles.squareCell,
                         styles.cellBase,
+                        m.num === selectedMonth && styles.selectedCell,
                         pressed && styles.cellPressed,
                       ]}
                     >
-                      <Text style={styles.monthShort}>{m.short}</Text>
-                      <Text style={styles.monthNum}>{m.num}</Text>
+                      <Text style={[styles.monthShort, m.num === selectedMonth && styles.selectedText]}>{m.short}</Text>
+                      <Text style={[styles.monthNum, m.num === selectedMonth && styles.selectedText]}>{m.num}</Text>
                     </Pressable>
                   )}
                   ItemSeparatorComponent={() => <View style={{ height: 10 }} />}
@@ -629,6 +632,9 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: Colors.light.text,
   },
+  selectedCell: {
+    backgroundColor: Colors.light.primary,
+  },
   monthYearText: {
     textAlign: 'center',
     fontSize: 15,
@@ -683,6 +689,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: Colors.light.text,
+  },
+  selectedText: {
+    color: Colors.light.white,
   },
   defaultText: {
     color: Colors.light.text,
