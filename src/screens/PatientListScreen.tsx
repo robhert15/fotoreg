@@ -102,6 +102,7 @@ export default function PatientListScreen() {
             data={patients}
             keyExtractor={(item) => item.id.toString()}
             keyboardShouldPersistTaps='handled'
+            removeClippedSubviews={true}
             renderItem={({ item }) => (
               <PatientCard 
                 patient={item}
